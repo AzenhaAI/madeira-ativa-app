@@ -638,6 +638,7 @@ class _HomePageState extends State<HomePage> {
   List<NewsItem>? _news;
   List<Broadcast> _tv = [];
   List<TrailGeo> _geo = [];
+  Map<String, dynamic>? _status;
 
   @override
   void initState() {
@@ -659,6 +660,10 @@ class _HomePageState extends State<HomePage> {
     try {
       final g = await fetchTrailGeo();
       if (mounted) setState(() => _geo = g);
+    } catch (_) {}
+    try {
+      final s = await fetchTrailStatus();
+      if (mounted) setState(() => _status = s);
     } catch (_) {}
     try {
       final data =
@@ -700,6 +705,33 @@ class _HomePageState extends State<HomePage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if ((_status?['alerts'] as List?)?.isNotEmpty ?? false)
+            GestureDetector(
+              onTap: () => widget.onNavigate(3),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: context.cTerraTint,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: context.cTerraText, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                        '${(_status!['alerts'] as List).length} ${t('closed_now')} · ${(_status!['counts']?['partial'] ?? 0)} ${t('partial')}',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.cTerraText)),
+                  ),
+                  Icon(Icons.chevron_right, color: context.cTerraText),
+                ]),
+              ),
+            ),
           if (_geo.isNotEmpty)
             GestureDetector(
               onTap: () => widget.onNavigate(2),
@@ -1666,6 +1698,12 @@ class Levada {
   final LatLng? center;
   final List<double> profile;
   final String fromP, toP;
+  String? official;
+
+  /// Official feed wins over the bundled levadas.json status.
+  String get state => (official?.isNotEmpty ?? false) ? official! : status;
+  bool get isOpen => state == 'open';
+  bool get isPartial => state == 'partial';
 
   Levada.fromJson(Map<String, dynamic> j)
       : code = j['code'] ?? '',
@@ -1687,12 +1725,34 @@ class Levada {
 
 List<Levada>? _levadaCache;
 
+/// Official trail-status feed: fresher than levadas.json and it knows the
+/// 'partial' state plus an alerts list of what is closed right now.
+Map<String, dynamic>? _statusCache;
+
+Future<Map<String, dynamic>> fetchTrailStatus() async {
+  if (_statusCache != null) return _statusCache!;
+  final d = await cachedJson('https://shpara.com/madeira/trails_status.json');
+  _statusCache = Map<String, dynamic>.from(d as Map);
+  return _statusCache!;
+}
+
 Future<List<Levada>> fetchLevadas() async {
   if (_levadaCache != null) return _levadaCache!;
   final data = await cachedJson('https://shpara.com/madeira/levadas.json');
   _levadaCache = (data['levadas'] as List)
       .map((j) => Levada.fromJson(j))
       .toList();
+  try {
+    final st = await fetchTrailStatus();
+    final by = {
+      for (final t in (st['trails'] as List? ?? []))
+        (t['code'] ?? '').toString(): (t['status'] ?? '').toString()
+    };
+    for (final l in _levadaCache!) {
+      final s = by[l.code];
+      if (s != null && s.isNotEmpty) l.official = s;
+    }
+  } catch (_) {}
   _checkStatusChanges(_levadaCache!);
   return _levadaCache!;
 }
@@ -1730,13 +1790,13 @@ Future<List<TrailGeo>> fetchTrailGeo() async {
 void _checkStatusChanges(List<Levada> ls) {
   try {
     final prev = prefs.getString('levada_status') ?? '';
-    final now = ls.map((l) => '\${l.code}:\${l.status}').join(',');
+    final now = ls.map((l) => '${l.code}:${l.status}').join(',');
     if (prev.isNotEmpty && prev != now) {
       final old = {for (final p in prev.split(',')) p.split(':')[0]: p.split(':').last};
       final diffs = [
         for (final l in ls)
           if (old[l.code] != null && old[l.code] != l.status)
-            '\${l.code} → \${l.status}'
+            '${l.code} → ${l.status}'
       ];
       if (diffs.isNotEmpty) {
         notifyNow(t('status_changed'), diffs.take(4).join(' · '));
@@ -1899,7 +1959,8 @@ class _LevadasPageState extends State<LevadasPage> {
           );
         }
         final l = shown[i - 1];
-        final open = l.status == 'open';
+        final open = l.isOpen;
+        final part = l.isPartial;
         return Card(
           color: context.cSurface,
           elevation: 0,
@@ -1922,7 +1983,11 @@ class _LevadasPageState extends State<LevadasPage> {
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: open ? context.cTitle : Colors.grey)),
+                        color: open
+                            ? context.cTitle
+                            : (part
+                                ? const Color(0xFFB06A00)
+                                : Colors.grey))),
               ),
             ),
             title: Text(l.name,
@@ -1933,7 +1998,9 @@ class _LevadasPageState extends State<LevadasPage> {
                 '${l.fee.isNotEmpty && l.fee != 'None' ? ' · ${t('fee')} ${l.fee}' : ''}',
                 style: TextStyle(
                     fontSize: 12,
-                    color: open ? Colors.grey.shade700 : Colors.red)),
+                    color: open
+                        ? Colors.grey.shade700
+                        : (part ? const Color(0xFFB06A00) : Colors.red))),
             onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => LevadaPage(l: l))),
             trailing: ValueListenableBuilder(
@@ -2094,9 +2161,11 @@ class _MapPageState extends State<MapPage> {
                               onTap: () => _showTrail(l),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: l.status == 'open'
+                                  color: l.isOpen
                                       ? kGreen
-                                      : Colors.grey,
+                                      : (l.isPartial
+                                          ? const Color(0xFFE8920E)
+                                          : Colors.grey),
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                       color: Colors.white, width: 2),

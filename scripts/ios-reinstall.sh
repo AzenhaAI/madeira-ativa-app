@@ -13,14 +13,33 @@ if ! xcrun devicectl list devices 2>/dev/null | grep -qi "connected"; then
     TS=$(sed -n "1,${LAST}p" "$LOG" | grep "^=== " | tail -1 | sed 's/=== //;s/ ===//')
     AGE=$(( ( $(date +%s) - $(date -j -f "%a %b %d %T %Z %Y" "$TS" +%s 2>/dev/null || echo 0) ) / 86400 ))
     if [ "$AGE" -ge 5 ] 2>/dev/null; then
-      osascript -e 'display notification "Подключи iPhone кабелем — подпись истекает через '"$((7-AGE))"' дн." with title "Madeira Ativa"' 2>/dev/null
+      osascript -e 'display notification "Connect the iPhone by cable - signature expires in '"$((7-AGE))"' days." with title "Madeira Ativa"' 2>/dev/null
     fi
   fi
   exit 0
 fi
 cd ~/Projects/ativa || exit 1
-xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release \
-  -destination "id=$DEV" -allowProvisioningUpdates build >> "$LOG" 2>&1
-APP=$(find ~/Library/Developer/Xcode/DerivedData -name "Runner.app" -path "*Release-iphoneos*" | head -1)
+
+# Build straight at this UDID rather than at a generic device: that is also what
+# registers the phone with the team, without which a fresh Apple ID can issue no
+# profile at all. Pin DerivedData to this project — the sibling Flutter apps
+# (alfacat_app, bulldozer_app) all build a product called Runner.app, and picking
+# the first match under the shared DerivedData root could install the wrong one.
+DD=~/Projects/ativa/build/ios-dd
+BUILD_OUT=$(xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release \
+  -destination "id=$DEV" -derivedDataPath "$DD" -allowProvisioningUpdates build 2>&1)
+BUILD_RC=$?
+echo "$BUILD_OUT" >> "$LOG"
+
+if [ $BUILD_RC -ne 0 ]; then
+  echo "build FAILED" >> "$LOG"
+  # The one cause a human must clear before any retry can work.
+  if grep -q "No Accounts" <<<"$BUILD_OUT"; then
+    osascript -e 'display notification "No Apple ID in Xcode - Settings > Apple Accounts > + (needs your password and 2FA)." with title "Madeira Ativa: signing blocked"' 2>/dev/null
+  fi
+  exit 1
+fi
+
+APP=$(find "$DD" -name "Runner.app" -path "*Release-iphoneos*" | head -1)
 xcrun devicectl device install app --device "$DEV" "$APP" >> "$LOG" 2>&1 \
-  && { echo "reinstalled OK" >> "$LOG"; osascript -e 'display notification "Приложение переустановлено на iPhone" with title "Madeira Ativa"' 2>/dev/null; } || echo "install FAILED" >> "$LOG"
+  && { echo "reinstalled OK" >> "$LOG"; osascript -e 'display notification "App reinstalled on the iPhone" with title "Madeira Ativa"' 2>/dev/null; } || echo "install FAILED" >> "$LOG"

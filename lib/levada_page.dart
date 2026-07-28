@@ -9,7 +9,8 @@ class LevadaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final open = l.status == 'open';
+    final open = l.isOpen;
+    final part = l.isPartial;
     return Scaffold(
       appBar: AppBar(title: Text(l.code)),
       body: ListView(
@@ -36,7 +37,7 @@ class LevadaPage extends StatelessWidget {
               children: [
                 _S('${l.distance} km', 'dist'),
                 _S('↑${l.ascent} m', 'climb'),
-                _S(t(open ? 'open' : 'closed'), 'status',
+                _S(t(open ? 'open' : (part ? 'partial' : 'closed')), 'status',
                     warn: !open),
                 if (l.fee.isNotEmpty && l.fee != 'None') _S(l.fee, t('fee')),
               ],

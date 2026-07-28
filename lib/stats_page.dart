@@ -24,7 +24,8 @@ class _StatsPageState extends State<StatsPage> {
     final out = <String, dynamic>{};
     for (final f in [
       'all_trails', 'clubs_data', 'localities_data',
-      'dnf_by_race', 'finish_hours', 'loyalty_data'
+      'dnf_by_race', 'finish_hours', 'loyalty_data',
+      'country_performance', 'intl_trend', 'time_distributions'
     ]) {
       try {
         out[f] = await cachedJson('$b/$f.json');
@@ -110,6 +111,43 @@ class _StatsPageState extends State<StatsPage> {
       w.addAll(_section(context, t('loyalty'), [
         for (final k in ks.take(8))
           ('$k', (dist['$k'] as num).toDouble(), '${dist['$k']}')
+      ]));
+    }
+
+    // Countries
+    final cp = (_d!['country_performance'] as List?) ?? [];
+    if (cp.isNotEmpty) {
+      w.addAll(_section(context, t('countries'), [
+        for (final c in cp.take(10))
+          (
+            (c['country'] ?? '').toString(),
+            ((c['finishers'] ?? 0) as num).toDouble(),
+            '${c['finishers']}'
+          )
+      ]));
+    }
+    // International trend (% of intl runners by year)
+    final it = (_d!['intl_trend'] as List?) ?? [];
+    if (it.isNotEmpty) {
+      w.addAll(_section(context, t('intl_trend'), [
+        for (final r in it)
+          (
+            '${r['year']}',
+            ((r['pct_intl'] ?? 0) as num).toDouble(),
+            '${(r['pct_intl'] as num).round()}%'
+          )
+      ], accent: kTerracotta, thin: true));
+    }
+    // Finish time spread (median hours by distance bucket)
+    final td = _d!['time_distributions'];
+    if (td is Map && td.isNotEmpty) {
+      w.addAll(_section(context, t('time_dist'), [
+        for (final e in td.entries)
+          (
+            e.key.toString(),
+            ((e.value['median'] ?? 0) as num).toDouble() / 60,
+            '${(((e.value['median'] ?? 0) as num).toDouble() / 60).toStringAsFixed(1)} h'
+          )
       ]));
     }
 
