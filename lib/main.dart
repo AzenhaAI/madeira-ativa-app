@@ -66,6 +66,8 @@ const _tr = {
     'loading': 'Loading…',
     'open': 'open',
     'closed': 'closed',
+    'closed_now': 'closed now',
+    'partial': 'partly open',
     'fee': 'Fee',
     'website': 'Website',
     'telegram': 'Telegram bot',
@@ -113,6 +115,12 @@ const _tr = {
     'sort_name': 'By name',
     'sort_km': 'By distance',
     'sort_climb': 'By climb',
+    'web_failed': 'This map needs a connection. Check your network and try again.',
+    'retry': 'Try again',
+    'privacy': 'Privacy policy',
+    'countries': 'Countries',
+    'intl_trend': 'International runners by year',
+    'time_dist': 'Median finish time',
     'stats': 'Trail stats','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next',
   },
   'pt': {
@@ -135,6 +143,8 @@ const _tr = {
     'loading': 'A carregar…',
     'open': 'aberto',
     'closed': 'fechado',
+    'closed_now': 'fechadas agora',
+    'partial': 'parcial',
     'fee': 'Taxa',
     'website': 'Site',
     'telegram': 'Bot do Telegram',
@@ -182,11 +192,37 @@ const _tr = {
     'sort_name': 'Por nome',
     'sort_km': 'Por distância',
     'sort_climb': 'Por desnível',
+    'web_failed': 'Este mapa precisa de ligação. Verifique a rede e tente novamente.',
+    'retry': 'Tentar novamente',
+    'privacy': 'Política de privacidade',
+    'countries': 'Países',
+    'intl_trend': 'Corredores estrangeiros por ano',
+    'time_dist': 'Tempo mediano',
     'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil de altitude','status_changed':'Estado do trilho mudou','p_next':'Próximo',
   },
 };
 
 String t(String k) => _tr[locale.value]![k] ?? k;
+
+/// Event `type` arrives as a raw feed key — 'road_run', 'swimming_kids',
+/// 'motorsport'. Those are pipeline identifiers, not labels, and they were
+/// leaking straight into the UI. Sentence case, not Title Case: these sit inside
+/// a subtitle line next to a place name.
+String humanType(String raw) {
+  final words = raw.split(RegExp(r'[_\-\s]+')).where((w) => w.isNotEmpty);
+  if (words.isEmpty) return '';
+  final s = words.join(' ');
+  return '${s[0].toUpperCase()}${s.substring(1)}';
+}
+
+/// Feed locations sometimes come glued — 'Camacha,Madeira'. Cheap to make them
+/// readable here rather than chase every producer.
+String tidyPlace(String s) => s.replaceAll(RegExp(r',(?=\S)'), ', ').trim();
+
+/// Joins subtitle parts, dropping the empty ones. Without this an event with no
+/// category rendered a dangling ' · '.
+String dotJoin(Iterable<String> parts) =>
+    parts.map((p) => p.trim()).where((p) => p.isNotEmpty).join(' · ');
 
 const _wdName = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const _moName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -346,12 +382,31 @@ class _HomeShellState extends State<HomeShell> {
         title: const Text('Madeira Ativa',
             style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
         actions: [
+          // Used to print just the current locale ('EN'), which reads as a state
+          // label: nothing announced that a Portuguese version existed, and the
+          // tap did something the label never promised. Showing both with the
+          // active one marked makes the control explain itself — and on an island
+          // whose locals read Portuguese, that discoverability is the point. The
+          // drawer row still says 'Português' (the target), which is the right
+          // wording for a menu item.
           TextButton(
             onPressed: () =>
                 locale.value = locale.value == 'en' ? 'pt' : 'en',
-            child: Text(locale.value.toUpperCase(),
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, color: kGreen)),
+            child: Text.rich(TextSpan(children: [
+              TextSpan(
+                  text: 'EN',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: locale.value == 'en' ? kGreen : context.cSubtle)),
+              TextSpan(
+                  text: '  ·  ',
+                  style: TextStyle(color: context.cHairline)),
+              TextSpan(
+                  text: 'PT',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: locale.value == 'pt' ? kGreen : context.cSubtle)),
+            ])),
           ),
           Builder(
             builder: (ctx) => IconButton(
@@ -398,7 +453,7 @@ class _HomeShellState extends State<HomeShell> {
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const WebPage(
                       title: '3D flyover',
-                      url: 'https://shpara.com/madeira/mapfly'))),
+                      url: 'https://shpara.com/ativa/mapfly?app=1'))),
             ),
             ListTile(
               leading: const Icon(Icons.terrain, color: kGreen),
@@ -406,7 +461,13 @@ class _HomeShellState extends State<HomeShell> {
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const WebPage(
                       title: 'Aerial',
-                      url: 'https://shpara.com/madeira/mapbay'))),
+                      url: 'https://shpara.com/ativa/mapbay?app=1'))),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined, color: kGreen),
+              title: Text(t('privacy')),
+              onTap: () => openUrl('https://shpara.com/ativa/privacy'),
             ),
             const Divider(),
             ListTile(
@@ -433,12 +494,6 @@ class _HomeShellState extends State<HomeShell> {
               subtitle: const Text('azenha.agent@gmail.com'),
               onTap: () => openUrl(
                   'mailto:azenha.agent@gmail.com?subject=Madeira%20Ativa'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.code, color: kGreen),
-              title: const Text('GitHub'),
-              subtitle: const Text('github.com/kirshp/ativa'),
-              onTap: () => openUrl('https://github.com/kirshp/ativa'),
             ),
             const Divider(),
             ListTile(
@@ -545,12 +600,17 @@ class NewsItem {
   final String link;
   final String date;
   final String lang;
+
+  /// The outlet the item came from ('JM Madeira', …). The feed always carried it;
+  /// the app just never showed it, so third-party headlines appeared unattributed.
+  final String source;
   final Map<String, String> titles;
   final Map<String, String> snippets;
 
   NewsItem.fromJson(Map<String, dynamic> j)
       : title = j['title'] ?? '',
         snippet = j['snippet'] ?? '',
+        source = j['source'] ?? '',
         link = j['link'] ?? '',
         date = j['date'] ?? '',
         lang = (j['lang'] ?? 'en').toString().toLowerCase(),
@@ -837,8 +897,10 @@ class _HomePageState extends State<HomePage> {
           GestureDetector(
             onTap: () => hero != null ? openUrl(hero.url) : null,
             child: Container(
-              height: 120,
-              padding: const EdgeInsets.all(14),
+              // Was a fixed 120pt with the text bottom-aligned, which left ~50pt
+              // of empty green above it — reads as a broken image slot rather
+              // than a design. Let the card hug its two lines instead.
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: kGreen,
                 borderRadius: BorderRadius.circular(14),
@@ -880,7 +942,8 @@ class _HomePageState extends State<HomePage> {
               _EventTile(
                 icon: _typeIcons[e.type] ?? Icons.event,
                 title: e.name,
-                subtitle: '${fmtDate(e.date)} · ${e.location} · ${e.type}',
+                subtitle: dotJoin(
+                    [fmtDate(e.date), tidyPlace(e.location), humanType(e.type)]),
                 onTap: () => showEventActions(context, e),
               ),
           const SizedBox(height: 20),
@@ -901,13 +964,18 @@ class _HomePageState extends State<HomePage> {
                   dense: true,
                   leading:
                       const Icon(Icons.article_outlined, color: kGreen),
-                  title: Text(n.title,
+                  // n.title is the headline in the outlet's own language, so an
+                  // English session read Portuguese here while the News tab —
+                  // which asks for titleFor(lang) — read English. Same item, two
+                  // languages, one screen apart.
+                  title: Text(n.titleFor(locale.value),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w500)),
-                  subtitle:
-                      Text(n.date, style: const TextStyle(fontSize: 11)),
+                  subtitle: Text(
+                      n.source.isEmpty ? n.date : '${n.date} · ${n.source}',
+                      style: const TextStyle(fontSize: 11)),
                   trailing: const Icon(Icons.open_in_new,
                       size: 14, color: Colors.grey),
                   onTap: () => openUrl(n.link),
@@ -1060,8 +1128,11 @@ void showEventActions(BuildContext context, AtivaEvent e) {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Text(
-                [fmtDate(e.date), if (e.location.isNotEmpty) e.location, e.type]
-                    .join(' · '),
+                dotJoin([
+                  fmtDate(e.date),
+                  tidyPlace(e.location),
+                  humanType(e.type),
+                ]),
                 style: TextStyle(fontSize: 13, color: ctx.cSubtle)),
           ),
           FutureBuilder<(Levada, double)?>(
@@ -1083,7 +1154,7 @@ void showEventActions(BuildContext context, AtivaEvent e) {
                   title: Text('${t('nearby_heritage')} · ${km.toStringAsFixed(1)} km',
                       style: TextStyle(
                           fontSize: 12, color: ctx.cTerraText)),
-                  subtitle: Text('${l.code} · ${l.name}',
+                  subtitle: Text('${l.code} · ${l.displayName}',
                       style: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600)),
                   trailing: const Icon(Icons.chevron_right, size: 18),
@@ -1107,9 +1178,12 @@ void showEventActions(BuildContext context, AtivaEvent e) {
             title: Text(t('add_calendar')),
             onTap: () {
               Navigator.pop(ctx);
-              final parts = e.date.split('-');
-              final start = DateTime(int.parse(parts[0]), int.parse(parts[1]),
-                  int.parse(parts[2]), 9);
+              // The feed is clean ISO today, but int.parse on a split string
+              // turns any future '2026-08' or 'TBC' into a crash inside a tap
+              // handler. Parse defensively and just skip the action instead.
+              final day = DateTime.tryParse(e.date);
+              if (day == null) return;
+              final start = DateTime(day.year, day.month, day.day, 9);
               Add2Calendar.addEvent2Cal(Event(
                 title: e.name,
                 location: e.location,
@@ -1527,9 +1601,14 @@ class _EventsPageState extends State<EventsPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 3),
                   child: FilterChip(
                     showCheckmark: false,
-                    label: Text(cat.$1 == 'all'
-                        ? cat.$3
-                        : '${cat.$2} ${cat.$3}'),
+                    // The emoji belongs in the avatar slot, not inside the label
+                    // string: a glyph from the emoji font inside the label made
+                    // the label measure short and clip mid-word — 'Trail' came
+                    // out as 'Tra'.
+                    avatar: cat.$2.isEmpty
+                        ? null
+                        : Text(cat.$2, style: const TextStyle(fontSize: 14)),
+                    label: Text(cat.$3, maxLines: 1, softWrap: false),
                     selected: _filter == cat.$1,
                     selectedColor: kGreen,
                     backgroundColor: context.cSurface,
@@ -1610,9 +1689,8 @@ class _EventsPageState extends State<EventsPage> {
                         _EventTile(
                           icon: _typeIcons[e.type] ?? Icons.event,
                           title: e.name,
-                          subtitle: e.location.isEmpty
-                              ? e.type
-                              : '${e.location} · ${e.type}',
+                          subtitle: dotJoin(
+                              [tidyPlace(e.location), humanType(e.type)]),
                           onTap: () => showEventActions(context, e),
                           favKey: _favKey(e),
                         ),
@@ -1699,6 +1777,12 @@ class Levada {
   final List<double> profile;
   final String fromP, toP;
   String? official;
+
+  /// PR 13.1 ships with an empty `name` in levadas.json, which rendered a row
+  /// with a blank title. The route code is always present, so fall back to it —
+  /// a nameless row is a bug the user should never have to see, whatever the feed
+  /// does.
+  String get displayName => name.trim().isEmpty ? code : name;
 
   /// Official feed wins over the bundled levadas.json status.
   String get state => (official?.isNotEmpty ?? false) ? official! : status;
@@ -1845,7 +1929,7 @@ class _LevadasPageState extends State<LevadasPage> {
       final q = _query.toLowerCase();
       shown = shown
           .where((l) =>
-              l.name.toLowerCase().contains(q) ||
+              l.displayName.toLowerCase().contains(q) ||
               l.code.toLowerCase().contains(q))
           .toList();
     }
@@ -1990,7 +2074,7 @@ class _LevadasPageState extends State<LevadasPage> {
                                 : Colors.grey))),
               ),
             ),
-            title: Text(l.name,
+            title: Text(l.displayName,
                 style: const TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w600)),
             subtitle: Text(
@@ -2061,7 +2145,7 @@ class _MapPageState extends State<MapPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${l.code} · ${l.name}',
+            Text('${l.code} · ${l.displayName}',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -2202,7 +2286,7 @@ class _MapPageState extends State<MapPage> {
                     MaterialPageRoute(
                         builder: (_) => const WebPage(
                             title: 'Heatmap',
-                            url: 'https://shpara.com/madeira/map'))),
+                            url: 'https://shpara.com/ativa/map?app=1'))),
                 icon: const Icon(Icons.local_fire_department),
                 label: const Text('Heat'),
               ),
@@ -2215,7 +2299,7 @@ class _MapPageState extends State<MapPage> {
                     MaterialPageRoute(
                         builder: (_) => const WebPage(
                             title: '3D',
-                            url: 'https://shpara.com/madeira/map3d'))),
+                            url: 'https://shpara.com/ativa/map3d?app=1'))),
                 icon: const Icon(Icons.threed_rotation),
                 label: const Text('3D'),
               ),
@@ -2265,15 +2349,40 @@ class WebPage extends StatefulWidget {
 class _WebPageState extends State<WebPage> {
   late final WebViewController _c;
   bool _loading = true;
+  bool _failed = false;
 
   @override
   void initState() {
     super.initState();
+    _load();
+  }
+
+  void _load() {
+    setState(() {
+      _loading = true;
+      _failed = false;
+    });
     _c = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(onPageFinished: (_) {
-        if (mounted) setState(() => _loading = false);
-      }))
+      // Only onPageFinished was handled, so a navigation that died — no network,
+      // captive wifi, a 5xx — left the spinner turning forever, because iOS
+      // never reports a finish for a load that failed. These screens are the
+      // ones a reviewer on flaky hotel wifi is most likely to open.
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (_) {
+          if (mounted) setState(() => _loading = false);
+        },
+        onWebResourceError: (err) {
+          if (!mounted || !err.isForMainFrame!) return;
+          setState(() {
+            _loading = false;
+            _failed = true;
+          });
+        },
+        onHttpError: (_) {
+          if (mounted) setState(() => _loading = false);
+        },
+      ))
       ..loadRequest(Uri.parse(widget.url));
   }
 
@@ -2281,13 +2390,33 @@ class _WebPageState extends State<WebPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _c),
-          if (_loading)
-            const Center(child: CircularProgressIndicator(color: kGreen)),
-        ],
-      ),
+      body: _failed
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.cloud_off, size: 40, color: context.cSubtle),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(t('web_failed'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: context.cSubtle)),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                      onPressed: _load, child: Text(t('retry'))),
+                ],
+              ),
+            )
+          : Stack(
+              children: [
+                WebViewWidget(controller: _c),
+                if (_loading)
+                  const Center(
+                      child: CircularProgressIndicator(color: kGreen)),
+              ],
+            ),
     );
   }
 }
@@ -2432,6 +2561,20 @@ class _NewsPageState extends State<NewsPage> {
                       Text(n.date,
                           style: const TextStyle(
                               fontSize: 11, color: Colors.grey)),
+                      if (n.source.isNotEmpty) ...[
+                        const Text(' · ',
+                            style:
+                                TextStyle(fontSize: 11, color: Colors.grey)),
+                        Flexible(
+                          child: Text(n.source,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey)),
+                        ),
+                      ],
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(

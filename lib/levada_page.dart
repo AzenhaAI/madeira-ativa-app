@@ -16,7 +16,7 @@ class LevadaPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text(l.name,
+          Text(l.displayName,
               style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,

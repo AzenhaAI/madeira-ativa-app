@@ -19,15 +19,30 @@ Future<void> initStore() async {
 /// body is cached; if the network fails, the last cached body is returned so
 /// the app still works offline / with a weak signal in the mountains.
 Future<dynamic> cachedJson(String url) async {
+  final key = 'cache:$url';
   try {
     final r =
         await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
+    // Cache only what actually parsed, and only from a 200. Writing the body
+    // first meant a 5xx error page overwrote the last good JSON, and then the
+    // fallback below re-read that same HTML and threw a second time — the
+    // offline cache stayed poisoned even after the server recovered.
+    if (r.statusCode != 200) {
+      throw http.ClientException('HTTP ${r.statusCode}', Uri.parse(url));
+    }
     final body = utf8.decode(r.bodyBytes);
-    await prefs.setString('cache:$url', body);
-    return jsonDecode(body);
+    final parsed = jsonDecode(body);
+    await prefs.setString(key, body);
+    return parsed;
   } catch (e) {
-    final c = prefs.getString('cache:$url');
-    if (c != null) return jsonDecode(c);
+    final cached = prefs.getString(key);
+    if (cached != null) {
+      try {
+        return jsonDecode(cached);
+      } catch (_) {
+        await prefs.remove(key); // written by an older, less careful version
+      }
+    }
     rethrow;
   }
 }
