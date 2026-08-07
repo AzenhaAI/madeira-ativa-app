@@ -542,7 +542,9 @@ class _HomeShellState extends State<HomeShell> {
           ],
         ),
       ),
-      body: SafeArea(child: pages[_tab]),
+      body: SafeArea(
+        child: _tab == 2 ? pages[_tab] : ReadableWidth(child: pages[_tab]),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: _goTo,
@@ -1112,8 +1114,16 @@ void showEventActions(BuildContext context, AtivaEvent e) {
   showModalBottomSheet(
     context: context,
     showDragHandle: true,
+    // A short window (iPad compatibility mode, landscape phone, large text)
+    // used to clip the bottom of this sheet — the last actions were simply
+    // unreachable. Let it take the height it needs and scroll for the rest.
+    isScrollControlled: true,
+    constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
+        maxWidth: 760),
     builder: (ctx) => SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1235,8 +1245,29 @@ void showEventActions(BuildContext context, AtivaEvent e) {
           const SizedBox(height: 8),
         ],
       ),
+      ),
     ),
   );
+}
+
+/// Caps how wide content is allowed to grow and centres it.
+///
+/// The phone layout stretched edge to edge on a 13" iPad: paragraphs ran to
+/// ~150 characters a line, and list rows put the title and its star a hand-span
+/// apart. That is what App Review meant by "laid out in a way that made it
+/// difficult to use". Full-bleed screens (the map) deliberately opt out.
+class ReadableWidth extends StatelessWidget {
+  final Widget child;
+  final double maxWidth;
+  const ReadableWidth({super.key, required this.child, this.maxWidth = 760});
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: child,
+        ),
+      );
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -2139,7 +2170,13 @@ class _MapPageState extends State<MapPage> {
   void _showTrail(Levada l) {
     showModalBottomSheet(
       context: context,
-      builder: (_) => Padding(
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+          maxWidth: 760),
+      builder: (_) => SafeArea(
+        child: SingleChildScrollView(
+        child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2188,6 +2225,8 @@ class _MapPageState extends State<MapPage> {
             ]),
             const SizedBox(height: 8),
           ],
+        ),
+        ),
         ),
       ),
     );
