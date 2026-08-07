@@ -13,7 +13,8 @@ class LevadaPage extends StatelessWidget {
     final part = l.isPartial;
     return Scaffold(
       appBar: AppBar(title: Text(l.code)),
-      body: ListView(
+      body: ReadableWidth(
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(l.displayName,
@@ -79,6 +80,7 @@ class LevadaPage extends StatelessWidget {
             label: const Text('visitmadeira.com'),
           ),
         ],
+        ),
       ),
     );
   }
