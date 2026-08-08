@@ -668,12 +668,15 @@ Future<List<WatchItem>> fetchWatchlist() async {
 }
 
 const kNewsLangs = ['en', 'pt', 'de', 'pl', 'uk', 'ru'];
+// Keys stay ISO 639-1 (the feed's own codes); labels are what a reader sees.
+// 'uk' is genuinely Ukrainian in ISO, but next to EN it reads as the United
+// Kingdom — so the chip says UA, the country flag code everyone recognises.
 const kNewsLangLabels = {
   'en': 'EN',
   'pt': 'PT',
   'de': 'DE',
   'pl': 'PL',
-  'uk': 'UK',
+  'uk': 'UA',
   'ru': 'RU',
 };
 
