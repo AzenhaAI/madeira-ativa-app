@@ -69,6 +69,9 @@ const _tr = {
     'closed_now': 'closed now',
     'partial': 'partly open',
     'fee': 'Fee',
+    'races_here': 'Races along this trail', 'covers': 'covers',
+    'of_trail': 'of the trail', 'editions': 'editions', 'finishers_total': 'finishers',
+    'course_record': 'Course record', 'race_not_trail': 'Times are for the full race, not this section',
     'descent': 'Descent', 'marking': 'Waymark', 'route_type': 'Route',
     'roundtrip': 'Round trip', 'one_way': 'Point to point',
     'on_foot': 'On foot', 'altitude': 'Altitude', 'steepest': 'Steepest climb',
@@ -151,6 +154,9 @@ const _tr = {
     'closed_now': 'fechadas agora',
     'partial': 'parcial',
     'fee': 'Taxa',
+    'races_here': 'Provas que passam aqui', 'covers': 'cobre',
+    'of_trail': 'do trilho', 'editions': 'edições', 'finishers_total': 'finalistas',
+    'course_record': 'Recorde da prova', 'race_not_trail': 'Tempos da prova completa, não deste troço',
     'descent': 'Descida', 'marking': 'Marcação', 'route_type': 'Percurso',
     'roundtrip': 'Circular', 'one_way': 'Ponto a ponto',
     'on_foot': 'A pé', 'altitude': 'Altitude', 'steepest': 'Subida mais dura',
@@ -1917,6 +1923,17 @@ Future<Map<String, dynamic>> fetchTrailStatus() async {
   final d = await cachedJson('https://shpara.com/madeira/trails_status.json');
   _statusCache = Map<String, dynamic>.from(d as Map);
   return _statusCache!;
+}
+
+/// Races whose recorded course runs along each PR trail, with the results the
+/// site already publishes for them. Built by scripts/build_trail_races.py.
+Map<String, dynamic>? _trailRaceCache;
+
+Future<Map<String, dynamic>> fetchTrailRaces() async {
+  if (_trailRaceCache != null) return _trailRaceCache!;
+  final d = await cachedJson('https://shpara.com/ativa/trail_races.json');
+  _trailRaceCache = Map<String, dynamic>.from((d as Map)['trails'] as Map);
+  return _trailRaceCache!;
 }
 
 Future<List<Levada>> fetchLevadas() async {

@@ -73,6 +73,7 @@ class LevadaPage extends StatelessWidget {
                   style: TextStyle(fontSize: 11, color: context.cSubtle)),
             ),
           ],
+          _RacesHere(code: l.code),
           const SizedBox(height: 20),
           FilledButton.icon(
             style: FilledButton.styleFrom(backgroundColor: kGreen),
@@ -84,6 +85,116 @@ class LevadaPage extends StatelessWidget {
         ],
         ),
       ),
+    );
+  }
+}
+
+/// Races whose course runs along this trail, and what the site knows about
+/// them. Silent when no race passes here, so it never leaves an empty heading.
+///
+/// The times shown belong to the race. Results are recorded per race distance,
+/// never per trail segment, so there is no honest "record for this levada" to
+/// print and none is invented.
+class _RacesHere extends StatefulWidget {
+  final String code;
+  const _RacesHere({required this.code});
+
+  @override
+  State<_RacesHere> createState() => _RacesHereState();
+}
+
+class _RacesHereState extends State<_RacesHere> {
+  List<dynamic>? _races;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTrailRaces().then((all) {
+      if (!mounted) return;
+      setState(() => _races = all[widget.code] as List<dynamic>?);
+    }).catchError((Object e) {
+      // Swallowing this silently is how a broken feed turns into a section
+      // that simply never appears, with nothing to explain why.
+      debugPrint('trail races unavailable for ${widget.code}: $e');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final races = _races;
+    if (races == null || races.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 22),
+        Text(t('races_here'),
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: context.cTitle)),
+        const SizedBox(height: 8),
+        for (final race in races.cast<Map<String, dynamic>>())
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: race['url'] == null
+                  ? null
+                  : () => openUrl('https://shpara.com${race['url']}'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: context.cSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: context.cHairline, width: 0.5),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(race['race'] as String,
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.cTitle)),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${t('covers')} ${race['coverage_pct']}% ${t('of_trail')}'
+                            '${race['editions'] != null ? ' · ${race['editions']} ${t('editions')}' : ''}'
+                            '${race['finishers'] != null ? ' · ${race['finishers']} ${t('finishers_total')}' : ''}',
+                            style: TextStyle(
+                                fontSize: 12, color: context.cSubtle),
+                          ),
+                          if (race['best'] != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '${t('course_record')} '
+                              '${(race['best']['distance_km'] as num).round()} km — '
+                              '${race['best']['time']} · ${race['best']['holder']}',
+                              style: TextStyle(
+                                  fontSize: 12, color: context.cSubtle),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (race['url'] != null)
+                      Icon(Icons.chevron_right,
+                          size: 20, color: context.cSubtle),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        if (races.any((r) => (r as Map)['best'] != null))
+          Text(t('race_not_trail'),
+              style: TextStyle(fontSize: 11, color: context.cSubtle)),
+      ],
     );
   }
 }
