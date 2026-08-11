@@ -69,6 +69,11 @@ const _tr = {
     'closed_now': 'closed now',
     'partial': 'partly open',
     'fee': 'Fee',
+    'descent': 'Descent', 'marking': 'Waymark', 'route_type': 'Route',
+    'roundtrip': 'Round trip', 'one_way': 'Point to point',
+    'on_foot': 'On foot', 'altitude': 'Altitude', 'steepest': 'Steepest climb',
+    'difficulty': 'Difficulty', 'easy': 'Easy', 'moderate': 'Moderate', 'hard': 'Hard',
+    'time_note': 'Estimate — 12 min/km, plus climb and descent',
     'website': 'Website',
     'telegram': 'Telegram bot',
     'language': 'Português',
@@ -146,6 +151,11 @@ const _tr = {
     'closed_now': 'fechadas agora',
     'partial': 'parcial',
     'fee': 'Taxa',
+    'descent': 'Descida', 'marking': 'Marcação', 'route_type': 'Percurso',
+    'roundtrip': 'Circular', 'one_way': 'Ponto a ponto',
+    'on_foot': 'A pé', 'altitude': 'Altitude', 'steepest': 'Subida mais dura',
+    'difficulty': 'Dificuldade', 'easy': 'Fácil', 'moderate': 'Moderado', 'hard': 'Difícil',
+    'time_note': 'Estimativa — 12 min/km, mais subida e descida',
     'website': 'Site',
     'telegram': 'Bot do Telegram',
     'language': 'English',
@@ -1810,7 +1820,59 @@ class Levada {
   final LatLng? center;
   final List<double> profile;
   final String fromP, toP;
+  final String descent;
+  final String marking;
+  final bool roundtrip;
   String? official;
+
+  /// Rough time on foot: Naismith's 12 min per km plus 10 min for every 100 m
+  /// of climb, and a gentler 10 min per 300 m of descent.
+  ///
+  /// The descent term matters here. Several PR routes only go down — PR 19 is
+  /// 1.8 km with 464 m of drop and no climb at all — and plain Naismith calls
+  /// that 22 minutes, which nobody walking it would recognise.
+  String? get walkingTime {
+    final km = double.tryParse(distance);
+    if (km == null) return null;
+    final climb = double.tryParse(ascent) ?? 0;
+    final drop = double.tryParse(descent) ?? 0;
+    final minutes = (km * 12 + climb / 100 * 10 + drop / 300 * 10).round();
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    return h > 0 ? '${h}h ${m.toString().padLeft(2, '0')}m' : '${m}m';
+  }
+
+  /// Highest and lowest point walked, straight off the elevation profile.
+  ({double min, double max})? get altitudeRange {
+    if (profile.length < 2) return null;
+    return (
+      min: profile.reduce((a, b) => a < b ? a : b),
+      max: profile.reduce((a, b) => a > b ? a : b),
+    );
+  }
+
+  /// Biggest jump between two profile samples — a plain proxy for how brutal
+  /// the steepest stretch is. PR 1 sits at 61 m, PR 1.1 at 747 m.
+  double? get steepestStep {
+    if (profile.length < 2) return null;
+    var worst = 0.0;
+    for (var i = 0; i < profile.length - 1; i++) {
+      final step = (profile[i + 1] - profile[i]).abs();
+      if (step > worst) worst = step;
+    }
+    return worst;
+  }
+
+  /// Easy / moderate / hard from distance and climb together, so nobody has to
+  /// do the arithmetic in their head.
+  String get difficultyKey {
+    final km = double.tryParse(distance) ?? 0;
+    final climb = double.tryParse(ascent) ?? 0;
+    final score = km + climb / 100;
+    if (score < 8) return 'easy';
+    if (score < 16) return 'moderate';
+    return 'hard';
+  }
 
   /// PR 13.1 ships with an empty `name` in levadas.json, which rendered a row
   /// with a blank title. The route code is always present, so fall back to it —
@@ -1835,6 +1897,9 @@ class Levada {
         profile = _parseProfile(j['profile']),
         fromP = j['from'] ?? '',
         toP = j['to'] ?? '',
+        descent = j['descent_m']?.toString() ?? '',
+        marking = j['marking']?.toString() ?? '',
+        roundtrip = j['roundtrip'] == true,
         center = j['center'] == null
             ? null
             : LatLng((j['center'][0] as num).toDouble(),
