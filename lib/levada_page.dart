@@ -44,6 +44,8 @@ class LevadaPage extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 18),
+          _DetailGrid(l: l),
           if (l.profile.length > 2) ...[
             const SizedBox(height: 20),
             Text(t('elev_profile'),
@@ -82,6 +84,79 @@ class LevadaPage extends StatelessWidget {
         ],
         ),
       ),
+    );
+  }
+}
+
+/// Facts that levadas.json always carries but the page never showed, plus the
+/// few worth deriving from the elevation profile. Laid out as a wrap so a wide
+/// iPad window fills across instead of leaving a column of empty space.
+class _DetailGrid extends StatelessWidget {
+  final Levada l;
+  const _DetailGrid({required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    final range = l.altitudeRange;
+    final steep = l.steepestStep;
+
+    final rows = <(String, String)>[
+      if (l.walkingTime != null) (t('on_foot'), '~${l.walkingTime}'),
+      (t('difficulty'), t(l.difficultyKey)),
+      if (l.descent.isNotEmpty && l.descent != 'null')
+        (t('descent'), '↓${l.descent} m'),
+      if (range != null)
+        (t('altitude'), '${range.min.round()}–${range.max.round()} m'),
+      if (steep != null && steep > 0)
+        (t('steepest'), '${steep.round()} m'),
+      (t('route_type'), t(l.roundtrip ? 'roundtrip' : 'one_way')),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final (label, value) in rows)
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 132),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: context.cSurface,
+                    borderRadius: BorderRadius.circular(12),
+                    border:
+                        Border.all(color: context.cHairline, width: 0.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(label,
+                          style: TextStyle(
+                              fontSize: 11, color: context.cSubtle)),
+                      const SizedBox(height: 2),
+                      Text(value,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: context.cTitle)),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (l.walkingTime != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(t('time_note'),
+                style: TextStyle(fontSize: 11, color: context.cSubtle)),
+          ),
+      ],
     );
   }
 }
