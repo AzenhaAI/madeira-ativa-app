@@ -1,4 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+// Only LatLng: latlong2 also exports a Path, which shadows the dart:ui Path
+// that the elevation profile is drawn with.
+import 'package:latlong2/latlong.dart' show LatLng;
 
 import 'main.dart';
 
@@ -73,7 +78,14 @@ class LevadaPage extends StatelessWidget {
                   style: TextStyle(fontSize: 11, color: context.cSubtle)),
             ),
           ],
+          // Only 2 of the 44 trails carry a description in the feed, so a
+          // detail page used to be a row of numbers and nothing else. These
+          // sections add what can be known for certain rather than written:
+          // the forecast at this trail's own altitude, and what else is
+          // walkable from the same trailhead.
+          if (l.center != null) _WeatherHere(at: l.center!),
           _RacesHere(code: l.code),
+          _NearbyTrails(here: l),
           const SizedBox(height: 20),
           FilledButton.icon(
             style: FilledButton.styleFrom(backgroundColor: kGreen),
@@ -321,4 +333,192 @@ class _ProfilePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ProfilePainter o) => o.pts != pts;
+}
+
+/// The forecast where the trail actually is.
+class _WeatherHere extends StatefulWidget {
+  final LatLng at;
+  const _WeatherHere({required this.at});
+
+  @override
+  State<_WeatherHere> createState() => _WeatherHereState();
+}
+
+class _WeatherHereState extends State<_WeatherHere> {
+  Map<String, dynamic>? _f;
+  bool _done = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTrailWeather(widget.at).then((f) {
+      if (mounted) setState(() { _f = f; _done = true; });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Nothing at all until the forecast lands, and nothing ever if it fails:
+    // a hiking page should not show an empty weather frame in a dead spot.
+    if (!_done || _f == null) return const SizedBox.shrink();
+    final d = _f!['daily'] as Map<String, dynamic>;
+    final days = List<String>.from(d['time'] as List);
+    final elev = (_f!['elevation'] as num?)?.round();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Text(t('weather'),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: context.cTitle)),
+            if (elev != null) ...[
+              const SizedBox(width: 8),
+              Text('· $elev m',
+                  style: TextStyle(fontSize: 13, color: context.cSubtle)),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        for (var i = 0; i < days.length; i++)
+          Builder(builder: (context) {
+            final code = (d['weather_code'] as List)[i] as int;
+            final face = weatherFace(code);
+            final lo = (d['temperature_2m_min'] as List)[i];
+            final hi = (d['temperature_2m_max'] as List)[i];
+            final rain = (d['precipitation_probability_max'] as List)[i];
+            final wind = (d['wind_speed_10m_max'] as List)[i];
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                children: [
+                  SizedBox(
+                      width: 84,
+                      child: Text(i == 0 ? t('today') : days[i].substring(5),
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: context.cBody))),
+                  Text(face.$1, style: const TextStyle(fontSize: 17)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(face.$2,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13, color: context.cBody)),
+                  ),
+                  if (rain != null && (rain as num) >= 20) ...[
+                    Text('💧$rain%',
+                        style:
+                            TextStyle(fontSize: 12, color: context.cSubtle)),
+                    const SizedBox(width: 8),
+                  ],
+                  if (wind != null && (wind as num) >= 30) ...[
+                    Text('💨${wind.round()}',
+                        style:
+                            TextStyle(fontSize: 12, color: context.cSubtle)),
+                    const SizedBox(width: 8),
+                  ],
+                  Text('${(lo as num).round()}–${(hi as num).round()}°',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.cTitle)),
+                ],
+              ),
+            );
+          }),
+        const SizedBox(height: 4),
+        Text(t('weather_src'),
+            style: TextStyle(fontSize: 11, color: context.cSubtle)),
+      ],
+    );
+  }
+}
+
+/// Other trails within a short drive of this one's midpoint.
+///
+/// Straight-line distance, and labelled as such: on Madeira a ridge two
+/// kilometres away can be an hour by road, so the number is a hint about which
+/// walks pair up in a day, not a travel estimate.
+class _NearbyTrails extends StatefulWidget {
+  final Levada here;
+  const _NearbyTrails({required this.here});
+
+  @override
+  State<_NearbyTrails> createState() => _NearbyTrailsState();
+}
+
+class _NearbyTrailsState extends State<_NearbyTrails> {
+  List<(Levada, double)> _near = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    final c = widget.here.center;
+    if (c == null) return;
+    fetchLevadas().then((all) {
+      if (!mounted) return;
+      final rows = <(Levada, double)>[];
+      for (final o in all) {
+        if (o.code == widget.here.code || o.center == null) continue;
+        rows.add((o, _km(c, o.center!)));
+      }
+      rows.sort((a, b) => a.$2.compareTo(b.$2));
+      setState(() => _near = rows.take(4).toList());
+    }).catchError((Object e) => debugPrint('nearby trails unavailable: $e'));
+  }
+
+  static double _km(LatLng a, LatLng b) {
+    const r = 6371.0;
+    final dLat = (b.latitude - a.latitude) * pi / 180;
+    final dLon = (b.longitude - a.longitude) * pi / 180;
+    final la1 = a.latitude * pi / 180, la2 = b.latitude * pi / 180;
+    final h = sin(dLat / 2) * sin(dLat / 2) +
+        cos(la1) * cos(la2) * sin(dLon / 2) * sin(dLon / 2);
+    return 2 * r * asin(min(1.0, sqrt(h)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_near.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(t('nearby'),
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: context.cTitle)),
+        const SizedBox(height: 8),
+        for (final (o, km) in _near)
+          Card(
+            margin: const EdgeInsets.symmetric(vertical: 3),
+            child: ListTile(
+              dense: true,
+              title: Text(o.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600)),
+              subtitle: Text(
+                  '${km.toStringAsFixed(1)} km ${t('as_the_crow')}'
+                  '${o.distance.isEmpty ? '' : ' · ${o.distance} km'}',
+                  style: TextStyle(fontSize: 12, color: context.cSubtle)),
+              trailing: Icon(
+                  o.isOpen ? Icons.check_circle_outline : Icons.error_outline,
+                  size: 18,
+                  color: o.isOpen ? kGreen : kTerracotta),
+              onTap: () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => LevadaPage(l: o))),
+            ),
+          ),
+      ],
+    );
+  }
 }

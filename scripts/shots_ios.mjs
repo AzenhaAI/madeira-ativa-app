@@ -23,11 +23,14 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 // slot it offers depends on the app record — so both are buildable:
 //   node scripts/shots_ios.mjs 6.9   ->  1320x2868 (iPhone 16/17 Pro Max)
 //   node scripts/shots_ios.mjs 6.5   ->  1284x2778 (iPhone 13/14 Pro Max)
-const SIZES = { '6.9': [440, 956], '6.5': [428, 926], 'play': [360, 640], 'land': [956, 440], 'ipad': [834, 1194], 'ipad13': [1032, 1376] };
+const SIZES = { '6.9': [440, 956], '6.5': [428, 926], 'play': [360, 640], 'land': [956, 440], 'ipad': [834, 1194], 'ipad13': [1032, 1376],
+  // Real device widths in points, for judging the content cap by eye:
+  'mini': [744, 1133], 'ipad11': [820, 1180],
+  'ipad13p': [1024, 1366], 'ipad13l': [1366, 1024] };
 const SIZE = process.argv[2] ?? '6.9';
 if (!SIZES[SIZE]) throw new Error(`unknown size ${SIZE}; use 6.9 or 6.5`);
 const [VW, VH] = SIZES[SIZE];
-const DSF = SIZE === 'ipad13' ? 2 : 3;
+const DSF = SIZE.startsWith('ipad') || SIZE === 'mini' ? 2 : 3;
 const OUT = join(ROOT, `store/screenshots/ios-${SIZE}`);
 
 // Six NavigationDestinations spread evenly; icons sit just above the home indicator.

@@ -21,6 +21,7 @@ Future<void> _pumpAt(WidgetTester tester, Size size) async {
 }
 
 void main() {
+  _langSwitchTest();
   testWidgets('shell renders every tab on a phone', (tester) async {
     await _pumpAt(tester, const Size(390, 844));
     for (final label in _tabs) {
@@ -39,5 +40,28 @@ void main() {
   testWidgets('shell survives a short landscape window', (tester) async {
     await _pumpAt(tester, const Size(956, 440));
     expect(tester.takeException(), isNull);
+  });
+}
+
+// The language switch was inert for a release: MaterialApp rebuilt on a locale
+// change, but its home was a const instance, so Flutter skipped the subtree and
+// not one string changed. This asserts the strings actually move.
+void _langSwitchTest() {
+  testWidgets('switching locale changes the strings on screen', (tester) async {
+    locale.value = 'en';
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    addTearDown(() => locale.value = 'en');
+
+    await tester.pumpWidget(const AtivaApp());
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Events'), findsWidgets, reason: 'English label missing');
+
+    locale.value = 'pt';
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Events'), findsNothing,
+        reason: 'still English after switching to Portuguese');
   });
 }
