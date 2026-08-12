@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'gazetteer.dart';
+import 'ask_review.dart';
 import 'levada_page.dart';
 import 'stats_page.dart';
 import 'notify.dart';
@@ -70,6 +71,7 @@ const _tr = {
     'partial': 'partly open',
     'fee': 'Fee',
     'races_here': 'Races along this trail', 'covers': 'covers',
+    'rate_app': 'Rate the app',
     'weather': 'Weather here', 'weather_src': 'Forecast for this trail\u2019s own coordinates \u00b7 Open-Meteo', 'today': 'Today',
     'nearby': 'Walkable nearby', 'as_the_crow': 'away',
     'of_trail': 'of the trail', 'editions': 'editions', 'finishers_total': 'finishers',
@@ -157,6 +159,7 @@ const _tr = {
     'partial': 'parcial',
     'fee': 'Taxa',
     'races_here': 'Provas que passam aqui', 'covers': 'cobre',
+    'rate_app': 'Avaliar a app',
     'weather': 'Tempo aqui', 'weather_src': 'Previs\u00e3o para as coordenadas deste trilho \u00b7 Open-Meteo', 'today': 'Hoje',
     'nearby': 'Perto daqui', 'as_the_crow': 'de dist\u00e2ncia',
     'of_trail': 'do trilho', 'editions': 'edições', 'finishers_total': 'finalistas',
@@ -394,13 +397,21 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    // None of these may be const, and the reason is the same trap that made
+    // MaterialApp.home inert: Dart canonicalises const instances, so a
+    // `const EventsPage()` is the *identical* object on every rebuild, and
+    // Flutter skips an element update when the new widget is identical to the
+    // old one. HomePage was the only non-const entry here — it takes a
+    // callback — which is exactly why the language switch appeared to work on
+    // Home and nowhere else. State is still preserved: same type, same
+    // position, so the tab keeps its scroll and its loaded data.
     final pages = [
       HomePage(onNavigate: _goTo),
-      const EventsPage(),
-      const MapPage(),
-      const LevadasPage(),
-      const NewsPage(),
-      const RootsPage(),
+      EventsPage(),
+      MapPage(),
+      LevadasPage(),
+      NewsPage(),
+      RootsPage(),
     ];
     return Scaffold(
       appBar: AppBar(
@@ -515,6 +526,16 @@ class _HomeShellState extends State<HomeShell> {
               title: const Text('azenha.ai'),
               subtitle: const Text('Where data finds its form'),
               onTap: () => openUrl('https://shpara.com/azenha.ai/'),
+            ),
+            // No quota on this one: a person pressed it. The system prompt
+            // (see ask_review.dart) is the scarce one.
+            ListTile(
+              leading: const Icon(Icons.star_outline, color: kGreen),
+              title: Text(t('rate_app')),
+              onTap: () {
+                Navigator.pop(context);
+                AskReview.openStoreListing();
+              },
             ),
             ListTile(
               leading: const Icon(Icons.mail_outline, color: kGreen),
@@ -1652,16 +1673,20 @@ class _EventsPageState extends State<EventsPage> {
             ],
           ),
         ),
-        SizedBox(
-          height: 40,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+        // Nine categories in a horizontal strip showed five and clipped the
+        // sixth mid-chip, which reads as the end of the list rather than as
+        // "scroll me" — four filters were effectively invisible. Wrap shows
+        // every one of them, using two rows on a phone and folding back to a
+        // single row on a tablet, where the width is there anyway.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
               for (final cat in _modeCats)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: FilterChip(
+                Builder(
+                  builder: (context) => FilterChip(
                     showCheckmark: false,
                     // The emoji belongs in the avatar slot, not inside the label
                     // string: a glyph from the emoji font inside the label made
@@ -2157,13 +2182,17 @@ class _LevadasPageState extends State<LevadasPage> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _stat('${_levadas!.length}', t('stat_routes')),
-                    _stat(km.round().toString(), t('stat_km')),
-                    _stat('${(climb / 1000).toStringAsFixed(0)}k',
-                        t('stat_climb')),
-                    _stat('1848', t('stat_peak')),
+                    Expanded(
+                        child: _stat(
+                            '${_levadas!.length}', t('stat_routes'))),
+                    Expanded(
+                        child: _stat(km.round().toString(), t('stat_km'))),
+                    Expanded(
+                        child: _stat('${(climb / 1000).toStringAsFixed(0)}k',
+                            t('stat_climb'))),
+                    Expanded(child: _stat('1848', t('stat_peak'))),
                   ],
                 ),
               ),
@@ -2794,6 +2823,13 @@ class BroadcastsPage extends StatelessWidget {
   }
 }
 
+/// One cell of the Levadas stat band. Always used inside an [Expanded], so the
+/// four cells split the width instead of asking for their natural size.
+///
+/// The label wraps to two lines rather than overflowing. English fits on one —
+/// "km trails", "m climb" — but Portuguese does not: "km de trilhos" and
+/// "m de subida" ran the row 65pt off the right edge of a 390pt phone, so the
+/// band was broken in Portuguese for as long as the translation has existed.
 Widget _stat(String value, String label) {
   return Column(
     mainAxisSize: MainAxisSize.min,
@@ -2804,7 +2840,10 @@ Widget _stat(String value, String label) {
               fontWeight: FontWeight.w700,
               color: Colors.white)),
       Text(label,
-          style: const TextStyle(fontSize: 10, color: Color(0xFF9FE1CB))),
+          maxLines: 2,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+              fontSize: 10, height: 1.2, color: Color(0xFF9FE1CB))),
     ],
   );
 }
