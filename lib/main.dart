@@ -90,7 +90,7 @@ const _tr = {
     'timeline': 'The timeline',
     'timeline_sub': 'Six hundred years in six chapters — worth a slow scroll.',
     'album': 'The Album',
-    'album_sub': 'Nineteen pictures of old Madeira.',
+    'album_sub': 'Eighteen pictures of old Madeira.',
     'pessoa': 'Tudo vale a pena se a alma não é pequena.',
     'pessoa_by': '— Fernando Pessoa',
     'stat_routes': 'routes',
@@ -178,7 +178,7 @@ const _tr = {
     'timeline': 'A linha do tempo',
     'timeline_sub': 'Seiscentos anos em seis capítulos — vale a pena descer devagar.',
     'album': 'O Álbum',
-    'album_sub': 'Dezanove imagens da Madeira antiga.',
+    'album_sub': 'Dezoito imagens da Madeira antiga.',
     'pessoa': 'Tudo vale a pena se a alma não é pequena.',
     'pessoa_by': '— Fernando Pessoa',
     'stat_routes': 'percursos',
@@ -2319,10 +2319,15 @@ class _MapPageState extends State<MapPage> {
               Text(' ${l.distance} km   '),
               const Icon(Icons.trending_up, size: 16, color: kGreen),
               Text(' ↑${l.ascent} m   '),
-              Icon(l.status == 'open' ? Icons.check_circle : Icons.cancel,
+              Icon(
+                  l.isOpen
+                      ? Icons.check_circle
+                      : (l.isPartial ? Icons.error_outline : Icons.cancel),
                   size: 16,
-                  color: l.status == 'open' ? kGreen : Colors.red),
-              Text(' ${t(l.status == 'open' ? 'open' : 'closed')}'),
+                  color: l.isOpen
+                      ? kGreen
+                      : (l.isPartial ? kTerracotta : Colors.red)),
+              Text(' ${t(l.isOpen ? 'open' : (l.isPartial ? 'partial' : 'closed'))}'),
             ]),
             if (l.fee.isNotEmpty && l.fee != 'None')
               Padding(
