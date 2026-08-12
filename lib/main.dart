@@ -70,6 +70,8 @@ const _tr = {
     'partial': 'partly open',
     'fee': 'Fee',
     'races_here': 'Races along this trail', 'covers': 'covers',
+    'weather': 'Weather here', 'weather_src': 'Forecast for this trail\u2019s own coordinates \u00b7 Open-Meteo', 'today': 'Today',
+    'nearby': 'Walkable nearby', 'as_the_crow': 'away',
     'of_trail': 'of the trail', 'editions': 'editions', 'finishers_total': 'finishers',
     'course_record': 'Course record', 'race_not_trail': 'Times are for the full race, not this section',
     'descent': 'Descent', 'marking': 'Waymark', 'route_type': 'Route',
@@ -155,6 +157,8 @@ const _tr = {
     'partial': 'parcial',
     'fee': 'Taxa',
     'races_here': 'Provas que passam aqui', 'covers': 'cobre',
+    'weather': 'Tempo aqui', 'weather_src': 'Previs\u00e3o para as coordenadas deste trilho \u00b7 Open-Meteo', 'today': 'Hoje',
+    'nearby': 'Perto daqui', 'as_the_crow': 'de dist\u00e2ncia',
     'of_trail': 'do trilho', 'editions': 'edições', 'finishers_total': 'finalistas',
     'course_record': 'Recorde da prova', 'race_not_trail': 'Tempos da prova completa, não deste troço',
     'descent': 'Descida', 'marking': 'Marcação', 'route_type': 'Percurso',
@@ -361,7 +365,16 @@ class AtivaApp extends StatelessWidget {
           bottomSheetTheme:
               const BottomSheetThemeData(backgroundColor: kDarkCard),
         ),
-        home: const HomeShell(),
+        // Deliberately not const. Dart canonicalises const instances, so a
+        // const HomeShell() hands MaterialApp the identical object on every
+        // rebuild — and Flutter short-circuits an element update when the new
+        // widget is identical to the old one, skipping the entire subtree. The
+        // ListenableBuilder above did fire on a locale change, MaterialApp did
+        // rebuild, and nothing under it ever heard about it: the language
+        // switched in memory and not one string on screen changed. A fresh
+        // instance each build costs nothing and keeps State, so the selected
+        // tab and scroll position survive the switch.
+        home: HomeShell(),
       ),
     );
   }
@@ -405,24 +418,22 @@ class _HomeShellState extends State<HomeShell> {
           // whose locals read Portuguese, that discoverability is the point. The
           // drawer row still says 'Português' (the target), which is the right
           // wording for a menu item.
-          TextButton(
-            onPressed: () =>
-                locale.value = locale.value == 'en' ? 'pt' : 'en',
-            child: Text.rich(TextSpan(children: [
-              TextSpan(
-                  text: 'EN',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: locale.value == 'en' ? kGreen : context.cSubtle)),
-              TextSpan(
-                  text: '  ·  ',
-                  style: TextStyle(color: context.cHairline)),
-              TextSpan(
-                  text: 'PT',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: locale.value == 'pt' ? kGreen : context.cSubtle)),
-            ])),
+          // Two targets, each of which SELECTS its language. It used to be one
+          // TextButton over both labels whose onPressed inverted the locale, so
+          // tapping "EN" while already on English sent you to Portuguese, and
+          // the whole pair lit up as one control. Worse, this build() read
+          // locale.value without listening to it, so the highlight never moved
+          // after a tap and both labels looked equally active.
+          ValueListenableBuilder<String>(
+            valueListenable: locale,
+            builder: (context, lang, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _LangTab(label: 'EN', code: 'en', active: lang),
+                Text('·', style: TextStyle(color: context.cHairline)),
+                _LangTab(label: 'PT', code: 'pt', active: lang),
+              ],
+            ),
           ),
           Builder(
             builder: (ctx) => IconButton(
@@ -449,7 +460,12 @@ class _HomeShellState extends State<HomeShell> {
             ListTile(
               leading: const Icon(Icons.public, color: kGreen),
               title: Text(t('website')),
-              onTap: () => openUrl('https://shpara.com/madeira/'),
+              // /ativa is the canonical address; /ative redirects to it and
+              // /madeira is a legacy page kept alive only for old links. The
+              // data endpoints below still fetch from /madeira on purpose —
+              // that is where the feeds are published, and a shipped app must
+              // keep reading the path it was released with.
+              onTap: () => openUrl('https://shpara.com/ativa/'),
             ),
             ListTile(
               leading: const Icon(Icons.send, color: kGreen),
@@ -486,23 +502,19 @@ class _HomeShellState extends State<HomeShell> {
               onTap: () => openUrl('https://shpara.com/ativa/privacy'),
             ),
             const Divider(),
+            // The menu used to carry three GitHub links: this app's repository,
+            // the website's, and an unrelated product's. A menu is not a
+            // portfolio, and the account name in those URLs put a personal
+            // handle in front of every user. The app is published by Azenha AI;
+            // that, and an address that reaches it, is all anyone needs.
+            // The practice that publishes the app, and it has its own page —
+            // this row briefly pointed at the app's own website instead, which
+            // made it a button promising one place and going to another.
             ListTile(
-              leading: const Icon(Icons.code, color: kGreen),
-              title: const Text('GitHub · app'),
-              subtitle: const Text('kirshp/ativa'),
-              onTap: () => openUrl('https://github.com/kirshp/ativa'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.public, color: kGreen),
-              title: const Text('GitHub · web'),
-              subtitle: const Text('kirshp/madeira-ative'),
-              onTap: () => openUrl('https://github.com/kirshp/madeira-ative'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.analytics_outlined, color: kGreen),
-              title: const Text('GitHub · BullDozer'),
-              subtitle: const Text('kirshp/bulldozer'),
-              onTap: () => openUrl('https://github.com/kirshp/bulldozer'),
+              leading: const Icon(Icons.auto_awesome_outlined, color: kGreen),
+              title: const Text('azenha.ai'),
+              subtitle: const Text('Where data finds its form'),
+              onTap: () => openUrl('https://shpara.com/azenha.ai/'),
             ),
             ListTile(
               leading: const Icon(Icons.mail_outline, color: kGreen),
@@ -2813,4 +2825,86 @@ Widget histImage(String path, {double height = 190}) {
     errorBuilder: (_, __, ___) =>
         Container(height: 60, color: kTerracottaLight),
   );
+}
+
+/// One half of the EN · PT switch in the app bar.
+///
+/// Selects a language rather than toggling one, so the label and the outcome
+/// agree: tapping EN gives you English whatever you were reading. The active
+/// side is inert — there is nothing to do when you are already there — and the
+/// tap target is padded out to 44pt, which the bare text was not.
+class _LangTab extends StatelessWidget {
+  final String label;
+  final String code;
+  final String active;
+
+  const _LangTab(
+      {required this.label, required this.code, required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    final on = active == code;
+    return InkWell(
+      onTap: on ? null : () => locale.value = code,
+      borderRadius: BorderRadius.circular(8),
+      child: Semantics(
+        selected: on,
+        button: !on,
+        label: code == 'en' ? 'English' : 'Português',
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: on ? kGreen : context.cSubtle),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Three-day forecast for a trail's own coordinates.
+///
+/// Not the island's forecast: on Madeira the difference between the coast and
+/// the ridge is the whole point. The same August day is 25 °C in Funchal and
+/// 11 °C on Pico Ruivo, and a walker who packed for the first number is the
+/// one who turns back. IPMA publishes only Funchal and Porto Santo for the
+/// islands, which cannot express that, so the forecast is requested per
+/// latitude/longitude and the elevation the model resolved is shown with it —
+/// if that number looks wrong, so does everything under it.
+///
+/// Open-Meteo needs no key and receives nothing but a public trail's
+/// coordinates.
+Future<Map<String, dynamic>?> fetchTrailWeather(LatLng at) async {
+  final url = 'https://api.open-meteo.com/v1/forecast'
+      '?latitude=${at.latitude.toStringAsFixed(4)}'
+      '&longitude=${at.longitude.toStringAsFixed(4)}'
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,'
+      'precipitation_probability_max,wind_speed_10m_max'
+      '&timezone=Atlantic%2FMadeira&forecast_days=3';
+  try {
+    final d = await cachedJson(url);
+    if (d is Map && d['daily'] != null) return Map<String, dynamic>.from(d);
+  } catch (e) {
+    debugPrint('forecast unavailable for ${at.latitude},${at.longitude}: $e');
+  }
+  return null;
+}
+
+/// WMO weather codes, collapsed to the handful of cases a walker acts on.
+(String, String) weatherFace(int code) {
+  if (code == 0) return ('☀️', 'Clear');
+  if (code <= 2) return ('🌤️', 'Mostly clear');
+  if (code == 3) return ('☁️', 'Overcast');
+  if (code == 45 || code == 48) return ('🌫️', 'Fog');
+  if (code >= 51 && code <= 57) return ('🌦️', 'Drizzle');
+  if (code >= 61 && code <= 67) return ('🌧️', 'Rain');
+  if (code >= 71 && code <= 77) return ('🌨️', 'Snow');
+  if (code >= 80 && code <= 82) return ('🌧️', 'Showers');
+  if (code >= 95) return ('⛈️', 'Thunderstorm');
+  return ('🌥️', 'Cloudy');
 }
