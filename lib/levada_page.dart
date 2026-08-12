@@ -5,15 +5,32 @@ import 'package:flutter/material.dart';
 // that the elevation profile is drawn with.
 import 'package:latlong2/latlong.dart' show LatLng;
 
+import 'ask_review.dart';
 import 'main.dart';
 
 /// Detail screen for one PR trail: stats, elevation profile, link.
-class LevadaPage extends StatelessWidget {
+class LevadaPage extends StatefulWidget {
   final Levada l;
   const LevadaPage({super.key, required this.l});
 
   @override
+  State<LevadaPage> createState() => _LevadaPageState();
+}
+
+class _LevadaPageState extends State<LevadaPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Opening trail pages is what someone here to plan a walk actually does,
+    // so it is the honest signal that the app was useful. Fire-and-forget:
+    // AskReview decides whether this is the third time, and iOS decides
+    // whether to draw anything at all.
+    AskReview.maybeAskForReview();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l = widget.l;
     final open = l.isOpen;
     final part = l.isPartial;
     return Scaffold(

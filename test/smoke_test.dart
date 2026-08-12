@@ -64,4 +64,30 @@ void _langSwitchTest() {
     expect(find.text('Events'), findsNothing,
         reason: 'still English after switching to Portuguese');
   });
+
+  // The switch worked on Home and nowhere else, because every other page in
+  // the shell was a const instance and Flutter skips an identical widget.
+  // Home was non-const only by accident — it takes a callback. This asserts
+  // the other tabs move too.
+  testWidgets('locale reaches tabs other than Home', (tester) async {
+    locale.value = 'en';
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    addTearDown(() => locale.value = 'en');
+
+    await tester.pumpWidget(const AtivaApp());
+    await tester.pump(const Duration(seconds: 1));
+
+    // Open the Levadas tab, then switch language and check its own title.
+    await tester.tap(find.text('Levadas').last);
+    await tester.pump(const Duration(seconds: 1));
+
+    locale.value = 'pt';
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(tester.takeException(), isNull);
+    expect(find.text('Events'), findsNothing,
+        reason: 'nav labels stayed English away from Home');
+  });
 }
