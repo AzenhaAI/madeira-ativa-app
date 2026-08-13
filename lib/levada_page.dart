@@ -58,9 +58,9 @@ class _LevadaPageState extends State<LevadaPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _S('${l.distance} km', 'dist'),
-                _S('↑${l.ascent} m', 'climb'),
-                _S(t(open ? 'open' : (part ? 'partial' : 'closed')), 'status',
+                _S('${l.distance} km', t('dist')),
+                _S('↑${l.ascent} m', t('climb')),
+                _S(t(open ? 'open' : (part ? 'partial' : 'closed')), t('status'),
                     warn: !open),
                 if (l.fee.isNotEmpty && l.fee != 'None') _S(l.fee, t('fee')),
               ],

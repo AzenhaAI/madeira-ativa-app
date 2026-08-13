@@ -72,6 +72,7 @@ const _tr = {
     'fee': 'Fee',
     'races_here': 'Races along this trail', 'covers': 'covers',
     'rate_app': 'Rate the app',
+    'dist': 'dist', 'climb': 'climb', 'status': 'status',
     'weather': 'Weather here', 'weather_src': 'Forecast for this trail\u2019s own coordinates \u00b7 Open-Meteo', 'today': 'Today',
     'nearby': 'Walkable nearby', 'as_the_crow': 'away',
     'of_trail': 'of the trail', 'editions': 'editions', 'finishers_total': 'finishers',
@@ -160,6 +161,7 @@ const _tr = {
     'fee': 'Taxa',
     'races_here': 'Provas que passam aqui', 'covers': 'cobre',
     'rate_app': 'Avaliar a app',
+    'dist': 'distância', 'climb': 'subida', 'status': 'estado',
     'weather': 'Tempo aqui', 'weather_src': 'Previs\u00e3o para as coordenadas deste trilho \u00b7 Open-Meteo', 'today': 'Hoje',
     'nearby': 'Perto daqui', 'as_the_crow': 'de dist\u00e2ncia',
     'of_trail': 'do trilho', 'editions': 'edições', 'finishers_total': 'finalistas',
@@ -221,7 +223,7 @@ const _tr = {
     'countries': 'Países',
     'intl_trend': 'Corredores estrangeiros por ano',
     'time_dist': 'Tempo mediano',
-    'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil de altitude','status_changed':'Estado do trilho mudou','p_next':'Próximo',
+    'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo',
   },
 };
 
@@ -318,12 +320,24 @@ void main() async {
   final saved = prefs.getString('themeMode');
   themeModeN.value = ThemeMode.values.firstWhere((m) => m.name == saved,
       orElse: () => ThemeMode.light);
+  // The theme survived a relaunch and the language did not, so anyone reading
+  // the app in Portuguese had to switch it again on every single launch — on
+  // an island where Portuguese is the first language, that is most of the
+  // audience being asked to re-state the obvious daily.
+  final lang = prefs.getString('locale');
+  if (lang == 'pt' || lang == 'en') locale.value = lang!;
   runApp(const AtivaApp());
 }
 
 void setThemeMode(ThemeMode m) {
   themeModeN.value = m;
   prefs.setString('themeMode', m.name);
+}
+
+/// Sets the interface language and remembers it.
+void setLocale(String code) {
+  locale.value = code;
+  prefs.setString('locale', code);
 }
 
 class AtivaApp extends StatelessWidget {
@@ -549,7 +563,7 @@ class _HomeShellState extends State<HomeShell> {
               leading: const Icon(Icons.translate, color: kTerracotta),
               title: Text(t('language')),
               onTap: () {
-                locale.value = locale.value == 'en' ? 'pt' : 'en';
+                setLocale(locale.value == 'en' ? 'pt' : 'en');
                 Navigator.pop(context);
               },
             ),
@@ -2889,7 +2903,7 @@ class _LangTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final on = active == code;
     return InkWell(
-      onTap: on ? null : () => locale.value = code,
+      onTap: on ? null : () => setLocale(code),
       borderRadius: BorderRadius.circular(8),
       child: Semantics(
         selected: on,
@@ -2940,15 +2954,21 @@ Future<Map<String, dynamic>?> fetchTrailWeather(LatLng at) async {
 }
 
 /// WMO weather codes, collapsed to the handful of cases a walker acts on.
+///
+/// Localised, because the first Portuguese screenshot of a trail page showed
+/// "Fog" and "Overcast" sitting in the middle of an otherwise Portuguese
+/// screen. Fog in particular is the word that matters here: on the Paul da
+/// Serra it is the difference between a walk and a whiteout.
 (String, String) weatherFace(int code) {
-  if (code == 0) return ('☀️', 'Clear');
-  if (code <= 2) return ('🌤️', 'Mostly clear');
-  if (code == 3) return ('☁️', 'Overcast');
-  if (code == 45 || code == 48) return ('🌫️', 'Fog');
-  if (code >= 51 && code <= 57) return ('🌦️', 'Drizzle');
-  if (code >= 61 && code <= 67) return ('🌧️', 'Rain');
-  if (code >= 71 && code <= 77) return ('🌨️', 'Snow');
-  if (code >= 80 && code <= 82) return ('🌧️', 'Showers');
-  if (code >= 95) return ('⛈️', 'Thunderstorm');
-  return ('🌥️', 'Cloudy');
+  final pt = locale.value == 'pt';
+  if (code == 0) return ('☀️', pt ? 'Céu limpo' : 'Clear');
+  if (code <= 2) return ('🌤️', pt ? 'Pouco nublado' : 'Mostly clear');
+  if (code == 3) return ('☁️', pt ? 'Encoberto' : 'Overcast');
+  if (code == 45 || code == 48) return ('🌫️', pt ? 'Nevoeiro' : 'Fog');
+  if (code >= 51 && code <= 57) return ('🌦️', pt ? 'Chuvisco' : 'Drizzle');
+  if (code >= 61 && code <= 67) return ('🌧️', pt ? 'Chuva' : 'Rain');
+  if (code >= 71 && code <= 77) return ('🌨️', pt ? 'Neve' : 'Snow');
+  if (code >= 80 && code <= 82) return ('🌧️', pt ? 'Aguaceiros' : 'Showers');
+  if (code >= 95) return ('⛈️', pt ? 'Trovoada' : 'Thunderstorm');
+  return ('🌥️', pt ? 'Nublado' : 'Cloudy');
 }
