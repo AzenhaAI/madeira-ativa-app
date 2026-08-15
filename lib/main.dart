@@ -72,6 +72,9 @@ const _tr = {
     'fee': 'Fee',
     'races_here': 'Races along this trail', 'covers': 'covers',
     'rate_app': 'Rate the app',
+    'cat_all': 'All', 'cat_trail': 'Trail', 'cat_road': 'Road',
+    'cat_orient': 'Orient', 'cat_bike': 'Bike', 'cat_kids': 'Kids',
+    'cat_pro': 'Pro', 'cat_swim': 'Swim', 'cat_fest': 'Fest',
     'dist': 'dist', 'climb': 'climb', 'status': 'status',
     'weather': 'Weather here', 'weather_src': 'Forecast for this trail\u2019s own coordinates \u00b7 Open-Meteo', 'today': 'Today',
     'nearby': 'Walkable nearby', 'as_the_crow': 'away',
@@ -161,6 +164,9 @@ const _tr = {
     'fee': 'Taxa',
     'races_here': 'Provas que passam aqui', 'covers': 'cobre',
     'rate_app': 'Avaliar a app',
+    'cat_all': 'Todos', 'cat_trail': 'Trail', 'cat_road': 'Estrada',
+    'cat_orient': 'Orient.', 'cat_bike': 'Bike', 'cat_kids': 'Crianças',
+    'cat_pro': 'Pro', 'cat_swim': 'Natação', 'cat_fest': 'Festas',
     'dist': 'distância', 'climb': 'subida', 'status': 'estado',
     'weather': 'Tempo aqui', 'weather_src': 'Previs\u00e3o para as coordenadas deste trilho \u00b7 Open-Meteo', 'today': 'Hoje',
     'nearby': 'Perto daqui', 'as_the_crow': 'de dist\u00e2ncia',
@@ -233,7 +239,34 @@ String t(String k) => _tr[locale.value]![k] ?? k;
 /// 'motorsport'. Those are pipeline identifiers, not labels, and they were
 /// leaking straight into the UI. Sentence case, not Title Case: these sit inside
 /// a subtitle line next to a place name.
+/// The feed's event_type, in the reader's language.
+///
+/// It used to be a mechanical de-underscore of the raw value, so a Portuguese
+/// row read "Madeira · Road run" directly beneath a filter chip that said
+/// "Estrada" — the same category named twice, differently, one of them in the
+/// wrong language. The words here match the chips deliberately.
+const _typeNames = {
+  'trail': {'en': 'Trail', 'pt': 'Trail'},
+  'running': {'en': 'Running', 'pt': 'Corrida'},
+  'road_run': {'en': 'Road run', 'pt': 'Estrada'},
+  'orienteering': {'en': 'Orienteering', 'pt': 'Orientação'},
+  'cycling': {'en': 'Cycling', 'pt': 'Ciclismo'},
+  'cycling_pro': {'en': 'Cycling pro', 'pt': 'Ciclismo pro'},
+  'cycling_kids': {'en': 'Cycling kids', 'pt': 'Ciclismo infantil'},
+  'motorsport': {'en': 'Motorsport', 'pt': 'Automobilismo'},
+  'swimming': {'en': 'Swimming', 'pt': 'Natação'},
+  'swimrun': {'en': 'Swimrun', 'pt': 'Swimrun'},
+  'triathlon': {'en': 'Triathlon', 'pt': 'Triatlo'},
+  'triathlon_pro': {'en': 'Triathlon pro', 'pt': 'Triatlo pro'},
+  'children': {'en': 'Children', 'pt': 'Crianças'},
+  'festival': {'en': 'Festival', 'pt': 'Festa'},
+};
+
 String humanType(String raw) {
+  final known = _typeNames[raw];
+  if (known != null) return known[locale.value] ?? known['en']!;
+  // Unknown value from the feed: de-underscore it rather than print nothing,
+  // so a new category shows up as itself instead of vanishing.
   final words = raw.split(RegExp(r'[_\-\s]+')).where((w) => w.isNotEmpty);
   if (words.isEmpty) return '';
   final s = words.join(' ');
@@ -249,14 +282,29 @@ String tidyPlace(String s) => s.replaceAll(RegExp(r',(?=\S)'), ', ').trim();
 String dotJoin(Iterable<String> parts) =>
     parts.map((p) => p.trim()).where((p) => p.isNotEmpty).join(' · ');
 
-const _wdName = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const _moName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Day and month names, per language. An events calendar that prints "Sat,
+// 15 Aug" inside an otherwise Portuguese screen is the most visible kind of
+// half-translation there is — it is the first thing on every row.
+const _wdName = {
+  'en': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  'pt': ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+};
+const _moName = {
+  'en': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  // Portuguese abbreviates months in lower case: 15 ago, 3 set.
+  'pt': ['jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+         'jul', 'ago', 'set', 'out', 'nov', 'dez'],
+};
 
-/// '2026-07-11' -> 'Sat, 11 Jul'
+List<String> _wdFor() => _wdName[locale.value] ?? _wdName['en']!;
+List<String> _moFor() => _moName[locale.value] ?? _moName['en']!;
+
+/// '2026-07-11' -> 'Sat, 11 Jul' / 'Sáb, 11 jul'
 String fmtDate(String iso) {
   final d = DateTime.tryParse(iso);
   if (d == null) return iso;
-  return '${_wdName[d.weekday - 1]}, ${d.day} ${_moName[d.month - 1]}';
+  return '${_wdFor()[d.weekday - 1]}, ${d.day} ${_moFor()[d.month - 1]}';
 }
 
 Future<void> openUrl(String url) async {
@@ -1447,16 +1495,20 @@ class _EventsPageState extends State<EventsPage> {
   String _favKey(AtivaEvent e) => 'event:${e.name}|${e.date}';
 
   // Event categories mirror the Madeira site's mode filter (grouped by `mode`).
+  // Labels go through t(): they were hard-coded English, so a Portuguese
+  // reader got "All / Road / Kids / Swim / Fest" in an otherwise translated
+  // screen. Trail, Bike and Pro stay as they are — those are the words used
+  // in Portuguese sport too, and the site's own filter row uses them.
   static const _modeCats = <(String, String, String)>[
-    ('all', '', 'All'),
-    ('trail', '🏃', 'Trail'),
-    ('road', '🛣', 'Road'),
-    ('orienteering', '🧭', 'Orient'),
-    ('cycling', '🚴', 'Bike'),
-    ('kids', '👶', 'Kids'),
-    ('pro', '🏆', 'Pro'),
-    ('swim', '🏊', 'Swim'),
-    ('festivals', '🎪', 'Fest'),
+    ('all', '', 'cat_all'),
+    ('trail', '🏃', 'cat_trail'),
+    ('road', '🛣', 'cat_road'),
+    ('orienteering', '🧭', 'cat_orient'),
+    ('cycling', '🚴', 'cat_bike'),
+    ('kids', '👶', 'cat_kids'),
+    ('pro', '🏆', 'cat_pro'),
+    ('swim', '🏊', 'cat_swim'),
+    ('festivals', '🎪', 'cat_fest'),
   ];
 
   @override
@@ -1478,7 +1530,7 @@ class _EventsPageState extends State<EventsPage> {
     } catch (_) {}
   }
 
-  static const _wd = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
 
   // Same heuristic as the site: orientation events live under mode 'trail'.
   bool _isOrientacao(AtivaEvent e) =>
@@ -1655,7 +1707,7 @@ class _EventsPageState extends State<EventsPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(_wd[d.weekday - 1],
+                          Text(_wdFor()[d.weekday - 1].toUpperCase(),
                               style: TextStyle(
                                   fontSize: 10,
                                   color: sel
@@ -1709,7 +1761,7 @@ class _EventsPageState extends State<EventsPage> {
                     avatar: cat.$2.isEmpty
                         ? null
                         : Text(cat.$2, style: const TextStyle(fontSize: 14)),
-                    label: Text(cat.$3, maxLines: 1, softWrap: false),
+                    label: Text(t(cat.$3), maxLines: 1, softWrap: false),
                     selected: _filter == cat.$1,
                     selectedColor: kGreen,
                     backgroundColor: context.cSurface,
