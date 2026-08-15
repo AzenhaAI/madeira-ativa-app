@@ -262,6 +262,25 @@ const _typeNames = {
   'festival': {'en': 'Festival', 'pt': 'Festa'},
 };
 
+/// The subtype, unless it merely restates the filter the row already sits
+/// under.
+///
+/// The chip comes from `mode` and the label from `event_type`, and for a third
+/// of the calendar the two say the same word twice: 33 festivals labelled
+/// "Festival" under the Festas chip, 13 trails labelled "Trail" under Trail.
+/// Where the label is genuinely more specific — cycling_pro under Pro, swimrun
+/// under Swim — it stays.
+const _redundantType = {
+  'trail': 'trail',
+  'festivals': 'festival',
+  'cycling': 'cycling',
+  'swim': 'swimming',
+  'kids': 'children',
+};
+
+String typeFor(String mode, String type) =>
+    _redundantType[mode] == type ? '' : humanType(type);
+
 String humanType(String raw) {
   final known = _typeNames[raw];
   if (known != null) return known[locale.value] ?? known['en']!;
@@ -1059,7 +1078,7 @@ class _HomePageState extends State<HomePage> {
                 icon: _typeIcons[e.type] ?? Icons.event,
                 title: e.name,
                 subtitle: dotJoin(
-                    [fmtDate(e.date), tidyPlace(e.location), humanType(e.type)]),
+                    [fmtDate(e.date), tidyPlace(e.location), typeFor(e.mode, e.type)]),
                 onTap: () => showEventActions(context, e),
               ),
           const SizedBox(height: 20),
@@ -1255,7 +1274,7 @@ void showEventActions(BuildContext context, AtivaEvent e) {
                 dotJoin([
                   fmtDate(e.date),
                   tidyPlace(e.location),
-                  humanType(e.type),
+                  typeFor(e.mode, e.type),
                 ]),
                 style: TextStyle(fontSize: 13, color: ctx.cSubtle)),
           ),
@@ -1843,7 +1862,7 @@ class _EventsPageState extends State<EventsPage> {
                           icon: _typeIcons[e.type] ?? Icons.event,
                           title: e.name,
                           subtitle: dotJoin(
-                              [tidyPlace(e.location), humanType(e.type)]),
+                              [tidyPlace(e.location), typeFor(e.mode, e.type)]),
                           onTap: () => showEventActions(context, e),
                           favKey: _favKey(e),
                         ),
