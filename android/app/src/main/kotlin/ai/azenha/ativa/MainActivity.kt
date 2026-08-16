@@ -1,4 +1,4 @@
-package com.shpara.ativa
+package ai.azenha.ativa
 
 import io.flutter.embedding.android.FlutterActivity
 
