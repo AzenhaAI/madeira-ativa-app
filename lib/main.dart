@@ -557,7 +557,7 @@ class _HomeShellState extends State<HomeShell> {
               // data endpoints below still fetch from /madeira on purpose —
               // that is where the feeds are published, and a shipped app must
               // keep reading the path it was released with.
-              onTap: () => openUrl('https://shpara.com/ativa/'),
+              onTap: () => openUrl('https://azenha.ai/ativa/'),
             ),
             ListTile(
               leading: const Icon(Icons.send, color: kGreen),
@@ -577,7 +577,7 @@ class _HomeShellState extends State<HomeShell> {
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const WebPage(
                       title: '3D flyover',
-                      url: 'https://shpara.com/ativa/mapfly?app=1'))),
+                      url: 'https://azenha.ai/ativa/mapfly?app=1'))),
             ),
             ListTile(
               leading: const Icon(Icons.terrain, color: kGreen),
@@ -585,13 +585,13 @@ class _HomeShellState extends State<HomeShell> {
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const WebPage(
                       title: 'Aerial',
-                      url: 'https://shpara.com/ativa/mapbay?app=1'))),
+                      url: 'https://azenha.ai/ativa/mapbay?app=1'))),
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.privacy_tip_outlined, color: kGreen),
               title: Text(t('privacy')),
-              onTap: () => openUrl('https://shpara.com/ativa/privacy'),
+              onTap: () => openUrl('https://azenha.ai/ativa/privacy'),
             ),
             const Divider(),
             // The menu used to carry three GitHub links: this app's repository,
@@ -606,7 +606,7 @@ class _HomeShellState extends State<HomeShell> {
               leading: const Icon(Icons.auto_awesome_outlined, color: kGreen),
               title: const Text('azenha.ai'),
               subtitle: const Text('Where data finds its form'),
-              onTap: () => openUrl('https://shpara.com/azenha.ai/'),
+              onTap: () => openUrl('https://azenha.ai/'),
             ),
             // No quota on this one: a person pressed it. The system prompt
             // (see ask_review.dart) is the scarce one.
@@ -621,9 +621,9 @@ class _HomeShellState extends State<HomeShell> {
             ListTile(
               leading: const Icon(Icons.mail_outline, color: kGreen),
               title: Text(t('contact')),
-              subtitle: const Text('azenha.agent@gmail.com'),
+              subtitle: const Text('agent@azenha.ai'),
               onTap: () => openUrl(
-                  'mailto:azenha.agent@gmail.com?subject=Madeira%20Ativa'),
+                  'mailto:agent@azenha.ai?subject=Madeira%20Ativa'),
             ),
             const Divider(),
             ListTile(
@@ -951,7 +951,7 @@ class _HomePageState extends State<HomePage> {
                         TileLayer(
                           urlTemplate:
                               'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.shpara.ativa',
+                          userAgentPackageName: 'ai.azenha.ativa',
                         ),
                         PolylineLayer(polylines: [
                           for (final t in _geo)
@@ -2464,7 +2464,7 @@ class _MapPageState extends State<MapPage> {
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.shpara.ativa',
+              userAgentPackageName: 'ai.azenha.ativa',
             ),
             MarkerLayer(
               markers: showEvents
@@ -2541,7 +2541,7 @@ class _MapPageState extends State<MapPage> {
                     MaterialPageRoute(
                         builder: (_) => const WebPage(
                             title: 'Heatmap',
-                            url: 'https://shpara.com/ativa/map?app=1'))),
+                            url: 'https://azenha.ai/ativa/map?app=1'))),
                 icon: const Icon(Icons.local_fire_department),
                 label: const Text('Heat'),
               ),
@@ -2554,7 +2554,7 @@ class _MapPageState extends State<MapPage> {
                     MaterialPageRoute(
                         builder: (_) => const WebPage(
                             title: '3D',
-                            url: 'https://shpara.com/ativa/map3d?app=1'))),
+                            url: 'https://azenha.ai/ativa/map3d?app=1'))),
                 icon: const Icon(Icons.threed_rotation),
                 label: const Text('3D'),
               ),

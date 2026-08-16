@@ -170,7 +170,7 @@ class _RacesHereState extends State<_RacesHere> {
               borderRadius: BorderRadius.circular(12),
               onTap: race['url'] == null
                   ? null
-                  : () => openUrl('https://shpara.com${race['url']}'),
+                  : () => openUrl('https://azenha.ai${race['url']}'),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 12),
