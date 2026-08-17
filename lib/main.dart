@@ -717,7 +717,7 @@ class AtivaEvent {
 }
 
 Future<List<AtivaEvent>> fetchEvents() async {
-  final data = await cachedJson('https://shpara.com/madeira/events.json');
+  final data = await cachedJson('https://azenha.ai/madeira/events.json');
   final today = DateTime.now().toIso8601String().substring(0, 10);
   return (data['events'] as List)
       .map((e) => AtivaEvent.fromJson(e))
@@ -770,7 +770,7 @@ class Broadcast {
 }
 
 Future<List<Broadcast>> fetchBroadcasts() async {
-  final data = await cachedJson('https://shpara.com/madeira/tv_broadcasts.json');
+  final data = await cachedJson('https://azenha.ai/madeira/tv_broadcasts.json');
   final list = (data['events'] ?? data['broadcasts'] ?? []) as List;
   final today = DateTime.now().toIso8601String().substring(0, 10);
   return list
@@ -791,7 +791,7 @@ class WatchItem {
 }
 
 Future<List<WatchItem>> fetchWatchlist() async {
-  final data = await cachedJson('https://shpara.com/madeira/watchlist.json');
+  final data = await cachedJson('https://azenha.ai/madeira/watchlist.json');
   final list =
       (data is List ? data : data['watchlist'] ?? data['items'] ?? []) as List;
   return list.map((j) => WatchItem.fromJson(j)).toList();
@@ -862,7 +862,7 @@ class _HomePageState extends State<HomePage> {
     } catch (_) {}
     try {
       final data =
-          await cachedJson('https://shpara.com/madeira/news_feed.json');
+          await cachedJson('https://azenha.ai/madeira/news_feed.json');
       final list =
           (data is List ? data : data['items'] ?? data['news'] ?? []) as List;
       if (mounted) {
@@ -2042,7 +2042,7 @@ Map<String, dynamic>? _statusCache;
 
 Future<Map<String, dynamic>> fetchTrailStatus() async {
   if (_statusCache != null) return _statusCache!;
-  final d = await cachedJson('https://shpara.com/madeira/trails_status.json');
+  final d = await cachedJson('https://azenha.ai/madeira/trails_status.json');
   _statusCache = Map<String, dynamic>.from(d as Map);
   return _statusCache!;
 }
@@ -2053,14 +2053,14 @@ Map<String, dynamic>? _trailRaceCache;
 
 Future<Map<String, dynamic>> fetchTrailRaces() async {
   if (_trailRaceCache != null) return _trailRaceCache!;
-  final d = await cachedJson('https://shpara.com/ativa/trail_races.json');
+  final d = await cachedJson('https://azenha.ai/ativa/trail_races.json');
   _trailRaceCache = Map<String, dynamic>.from((d as Map)['trails'] as Map);
   return _trailRaceCache!;
 }
 
 Future<List<Levada>> fetchLevadas() async {
   if (_levadaCache != null) return _levadaCache!;
-  final data = await cachedJson('https://shpara.com/madeira/levadas.json');
+  final data = await cachedJson('https://azenha.ai/madeira/levadas.json');
   _levadaCache = (data['levadas'] as List)
       .map((j) => Levada.fromJson(j))
       .toList();
@@ -2090,7 +2090,7 @@ List<TrailGeo>? _trailGeoCache;
 
 Future<List<TrailGeo>> fetchTrailGeo() async {
   if (_trailGeoCache != null) return _trailGeoCache!;
-  final data = await cachedJson('https://shpara.com/madeira/trails_geo.json');
+  final data = await cachedJson('https://azenha.ai/madeira/trails_geo.json');
   _trailGeoCache = [
     for (final t in (data['trails'] as List))
       TrailGeo(
@@ -2697,7 +2697,7 @@ class _NewsPageState extends State<NewsPage> {
   Future<void> _load() async {
     try {
       final data =
-          await cachedJson('https://shpara.com/madeira/news_feed.json');
+          await cachedJson('https://azenha.ai/madeira/news_feed.json');
       final list =
           (data is List ? data : data['items'] ?? data['news'] ?? []) as List;
       if (mounted) {
@@ -2940,7 +2940,7 @@ Widget _stat(String value, String label) {
 
 Widget histImage(String path, {double height = 190}) {
   return Image.network(
-    'https://shpara.com/madeira/$path',
+    'https://azenha.ai/madeira/$path',
     height: height,
     width: double.infinity,
     fit: BoxFit.cover,
