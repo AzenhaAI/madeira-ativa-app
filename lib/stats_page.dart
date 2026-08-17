@@ -20,7 +20,7 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Future<void> _load() async {
-    const b = 'https://azenha.ai/madeira';
+    const b = 'https://azenha.ai/ativa';
     final out = <String, dynamic>{};
     for (final f in [
       'all_trails', 'clubs_data', 'localities_data',
