@@ -736,6 +736,12 @@ class NewsItem {
   /// The outlet the item came from ('JM Madeira', …). The feed always carried it;
   /// the app just never showed it, so third-party headlines appeared unattributed.
   final String source;
+
+  /// The feed's own topic for the item — trail, desporto, cultura, educação,
+  /// ocorrências, geral. It has been arriving all along and the site filters by
+  /// it; only the app ignored it, so 50 headlines came as one undifferentiated
+  /// list where most of them are incidents rather than anything sporting.
+  final String cat;
   final Map<String, String> titles;
   final Map<String, String> snippets;
 
@@ -746,6 +752,7 @@ class NewsItem {
         link = j['link'] ?? '',
         date = j['date'] ?? '',
         lang = (j['lang'] ?? 'en').toString().toLowerCase(),
+        cat = (j['cat'] ?? '').toString().toLowerCase(),
         titles = Map<String, String>.from(
             (j['titles'] ?? {}).map((k, v) => MapEntry(k, v.toString()))),
         snippets = Map<String, String>.from(
@@ -2726,9 +2733,22 @@ class NewsPage extends StatefulWidget {
   State<NewsPage> createState() => _NewsPageState();
 }
 
+/// The feed's topics, in the order the site's news page lists them, with the
+/// site's own English labels so the two read the same.
+const kNewsCats = <(String, String)>[
+  ('all', 'All'),
+  ('trail', 'Trail'),
+  ('desporto', 'Sport'),
+  ('cultura', 'Culture'),
+  ('educação', 'Education'),
+  ('ocorrências', 'Incidents'),
+  ('geral', 'General'),
+];
+
 class _NewsPageState extends State<NewsPage> {
   List<NewsItem>? _news;
   late String _lang;
+  String _cat = 'all';
 
   @override
   void initState() {
@@ -2756,12 +2776,22 @@ class _NewsPageState extends State<NewsPage> {
     if (_news == null) {
       return skeletonList(context);
     }
+    // Only offer a topic that this feed actually carries: an empty tab is a
+    // dead end, and the mix shifts from day to day.
+    final present = _news!.map((n) => n.cat).where((c) => c.isNotEmpty).toSet();
+    final cats = kNewsCats
+        .where((c) => c.$1 == 'all' || present.contains(c.$1))
+        .toList();
+    final shown = _cat == 'all'
+        ? _news!
+        : _news!.where((n) => n.cat == _cat).toList();
+
     return RefreshIndicator(
       color: kGreen,
       onRefresh: _load,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _news!.length + 1,
+        itemCount: shown.length + 1,
         itemBuilder: (_, i) {
           if (i == 0) {
             return Column(
@@ -2803,11 +2833,46 @@ class _NewsPageState extends State<NewsPage> {
                       ),
                   ],
                 ),
+                if (cats.length > 1) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final (key, label) in cats)
+                        GestureDetector(
+                          onTap: () => setState(() => _cat = key),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: _cat == key
+                                  ? kGreen.withValues(alpha: 0.12)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: _cat == key
+                                      ? kGreen
+                                      : Colors.grey.shade400,
+                                  width: 0.5),
+                            ),
+                            child: Text(label,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _cat == key
+                                        ? kGreen
+                                        : context.cSubtle)),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 12),
               ],
             );
           }
-          final n = _news![i - 1];
+          final n = shown[i - 1];
           final translated = n.lang != _lang;
           return Card(
             color: context.cSurface,
