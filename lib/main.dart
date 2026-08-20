@@ -1765,8 +1765,50 @@ class _EventsPageState extends State<EventsPage> {
         // single row on a tablet, where the width is there anyway.
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Wrap(
-            spacing: 6,
+          child: LayoutBuilder(builder: (context, box) {
+            // Nine categories with an emoji each need three rows on a 360dp
+            // phone, and the row then eats a third of the screen before a
+            // single event is visible. It gets worse with the system font
+            // enlarged — which is exactly the reader who can least afford the
+            // space. So measure what these labels actually need on this
+            // screen, at this font size, and keep the emoji only while they
+            // still fit in two rows.
+            final scaler = MediaQuery.textScalerOf(context);
+            const labelStyle = TextStyle(fontSize: 13, fontWeight: FontWeight.w600);
+            const spacing = 6.0;
+            const chipChrome = 34.0;  // FilterChip's padding around its label
+            const emojiCost = 30.0;   // the avatar slot plus its gap
+
+            double labelWidth(String text) {
+              final painter = TextPainter(
+                text: TextSpan(text: text, style: labelStyle),
+                textDirection: TextDirection.ltr,
+                textScaler: scaler,
+              )..layout();
+              return painter.width;
+            }
+
+            int rowsNeeded({required bool withEmoji}) {
+              var rows = 1;
+              var used = 0.0;
+              for (final cat in _modeCats) {
+                final width = labelWidth(t(cat.$3)) +
+                    chipChrome +
+                    (withEmoji && cat.$2.isNotEmpty ? emojiCost : 0);
+                if (used > 0 && used + spacing + width > box.maxWidth) {
+                  rows++;
+                  used = width;
+                } else {
+                  used += (used > 0 ? spacing : 0) + width;
+                }
+              }
+              return rows;
+            }
+
+            final showEmoji = rowsNeeded(withEmoji: true) <= 2;
+
+            return Wrap(
+            spacing: spacing,
             runSpacing: 6,
             children: [
               for (final cat in _modeCats)
@@ -1777,7 +1819,7 @@ class _EventsPageState extends State<EventsPage> {
                     // string: a glyph from the emoji font inside the label made
                     // the label measure short and clip mid-word — 'Trail' came
                     // out as 'Tra'.
-                    avatar: cat.$2.isEmpty
+                    avatar: (!showEmoji || cat.$2.isEmpty)
                         ? null
                         : Text(cat.$2, style: const TextStyle(fontSize: 14)),
                     label: Text(t(cat.$3), maxLines: 1, softWrap: false),
@@ -1797,7 +1839,8 @@ class _EventsPageState extends State<EventsPage> {
                   ),
                 ),
             ],
-          ),
+            );
+          }),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
