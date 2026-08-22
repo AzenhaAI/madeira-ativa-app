@@ -1504,7 +1504,11 @@ class _EventsPageState extends State<EventsPage> {
   bool _searching = false;
   bool _favOnly = false;
   bool _compact = false;
-  String _period = 'month';
+  // Three months, not one. A month showed 40 of 120 events and hid both of
+  // the island's next big races — 42 and 92 days out, which is exactly the
+  // horizon someone plans a trail trip on. A near-empty list reads as
+  // 'nothing is happening', not as 'widen the filter'.
+  String _period = '3mo';
 
   static const _periods = <(String, String, int)>[
     ('next', 'p_next', 0),
