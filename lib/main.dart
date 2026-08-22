@@ -61,7 +61,7 @@ const _tr = {
     'roots_hook': 'Old Madeira in 19 pictures — levadas, sugar, wine sledges',
     'levadas_teaser': 'Levadas & trails',
     'levadas_hook': '44 official PR routes with status and elevation',
-    'upcoming': 'upcoming',
+    'upcoming': 'upcoming', 'later': 'later',
     'on': 'on',
     'all_dates': 'All dates',
     'loading': 'Loading…',
@@ -153,7 +153,7 @@ const _tr = {
     'roots_hook': 'A Madeira antiga em 19 imagens — levadas, açúcar, corsas',
     'levadas_teaser': 'Levadas e veredas',
     'levadas_hook': '44 percursos PR oficiais com estado e desnível',
-    'upcoming': 'a seguir',
+    'upcoming': 'a seguir', 'later': 'mais tarde',
     'on': 'em',
     'all_dates': 'Todas as datas',
     'loading': 'A carregar…',
@@ -1436,6 +1436,52 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+
+/// One race, one row — its distances listed underneath rather than as separate
+/// entries. EcoTrail Madeira filled three rows for 30, 45 and 60 km, Ultra X
+/// another three, and a day with two races read as a day with six.
+///
+/// The split is done on the name rather than a list of known series: a trailing
+/// "30 km" or "10 km / 800D+" is the organiser writing one race's options, and
+/// new series appear every season. Events whose name already carries the whole
+/// set — "Camacha Trail (9/15/26 km)" — are left alone; they are one row
+/// already.
+final RegExp _distanceTail = RegExp(r'\s+(\d+(?:[.,]\d+)?\s*km\b.*)$', caseSensitive: false);
+
+class EventGroup {
+  final AtivaEvent lead;
+  final List<String> distances;
+  EventGroup(this.lead, this.distances);
+
+  String get title => distances.isEmpty
+      ? lead.name
+      : lead.name.replaceFirst(_distanceTail, '');
+}
+
+List<EventGroup> groupByRace(List<AtivaEvent> events) {
+  final order = <String>[];
+  final buckets = <String, List<AtivaEvent>>{};
+  for (final e in events) {
+    final m = _distanceTail.firstMatch(e.name);
+    final base = m == null ? e.name : e.name.substring(0, m.start);
+    final key = '${e.date}|$base|${e.location}|${e.mode}';
+    if (!buckets.containsKey(key)) order.add(key);
+    buckets.putIfAbsent(key, () => []).add(e);
+  }
+  return [
+    for (final key in order)
+      () {
+        final group = buckets[key]!;
+        if (group.length < 2) return EventGroup(group.first, const []);
+        final labels = group
+            .map((e) => _distanceTail.firstMatch(e.name)?.group(1)?.trim())
+            .whereType<String>()
+            .toList();
+        return EventGroup(group.first, labels);
+      }(),
+  ];
+}
+
 class _EventTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -1509,6 +1555,7 @@ class _EventsPageState extends State<EventsPage> {
   // horizon someone plans a trail trip on. A near-empty list reads as
   // 'nothing is happening', not as 'widen the filter'.
   String _period = '3mo';
+  int _beyondWindow = 0;
 
   static const _periods = <(String, String, int)>[
     ('next', 'p_next', 0),
@@ -1609,6 +1656,11 @@ class _EventsPageState extends State<EventsPage> {
           .add(Duration(days: _periodDays))
           .toIso8601String()
           .substring(0, 10);
+      // Count what the window is holding back, so the tally can admit to it.
+      // "5 upcoming" reads as "there are five" — it took a user asking where
+      // two well-known races had gone to notice the count never mentioned a
+      // boundary. They were in the data, just past the edge of the filter.
+      _beyondWindow = shown.where((e) => e.date.compareTo(end) > 0).length;
       shown = shown.where((e) => e.date.compareTo(end) <= 0).toList();
     }
     if (_favOnly) {
@@ -1857,7 +1909,11 @@ class _EventsPageState extends State<EventsPage> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Text(
               _day == null
-                  ? '${shown.length} ${t('upcoming')}'
+                  // Counted in races, not start lines: if three distances make
+                  // one row, the tally has to agree with what can be counted
+                  // on screen.
+                  ? '${groupByRace(shown).length} ${t('upcoming')}'
+                      '${_beyondWindow > 0 ? ' · +$_beyondWindow ${t('later')}' : ''}'
                   : '${shown.length} ${t('on')} $_day',
               style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ),
@@ -1876,7 +1932,10 @@ class _EventsPageState extends State<EventsPage> {
                   !_favOnly &&
                   _query.isEmpty &&
                   _watch.isNotEmpty;
-              final watchStart = shown.length;
+              // Counted from the grouped list, not the raw one: folding three
+              // distances into one row shortens it, and the watchlist header
+              // would otherwise be indexed past the end and never drawn.
+              final watchStart = groupByRace(shown).length;
               if (shown.isEmpty && !showWatch) {
                 return ListView(children: [
                   Padding(
@@ -1892,14 +1951,19 @@ class _EventsPageState extends State<EventsPage> {
                   ),
                 ]);
               }
+              // One race, one row: 30/45/60 km of the same event belong under it,
+              // not beside it.
+              final groups = groupByRace(shown);
               return ListView.builder(
                 padding: const EdgeInsets.all(12),
                 itemCount:
-                    shown.length + (showWatch ? 1 + _watch.length : 0),
+                    groups.length + (showWatch ? 1 + _watch.length : 0),
                 itemBuilder: (_, i) {
-                  if (i < shown.length) {
-                    final e = shown[i];
-                    final showDate = i == 0 || shown[i - 1].date != e.date;
+                  if (i < groups.length) {
+                    final g = groups[i];
+                    final e = g.lead;
+                    final showDate =
+                        i == 0 || groups[i - 1].lead.date != e.date;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1914,9 +1978,12 @@ class _EventsPageState extends State<EventsPage> {
                           ),
                         _EventTile(
                           icon: _typeIcons[e.type] ?? Icons.event,
-                          title: e.name,
-                          subtitle: dotJoin(
-                              [tidyPlace(e.location), typeFor(e.mode, e.type)]),
+                          title: g.title,
+                          subtitle: dotJoin([
+                            if (g.distances.isNotEmpty) g.distances.join(', '),
+                            tidyPlace(e.location),
+                            typeFor(e.mode, e.type),
+                          ]),
                           onTap: () => showEventActions(context, e),
                           favKey: _favKey(e),
                         ),
