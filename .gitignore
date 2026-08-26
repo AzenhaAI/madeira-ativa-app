@@ -53,3 +53,9 @@ store/**/*.apk
 store/**/*.ipa
 store/ios/Runner.app/
 store/android/*.png
+
+# Internal store notes (working language) — kept on disk, out of the repo
+store/**/README.txt
+store/PLAY-listing-paste.md
+store/screenshots/HOWTO.txt
+store/ios/README.txt
