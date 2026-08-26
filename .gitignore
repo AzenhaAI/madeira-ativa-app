@@ -59,3 +59,11 @@ store/**/README.txt
 store/PLAY-listing-paste.md
 store/screenshots/HOWTO.txt
 store/ios/README.txt
+
+# Never commit credentials
+.env
+.env.*
+!.env.example
+.dev.vars
+*.pem
+*.key
