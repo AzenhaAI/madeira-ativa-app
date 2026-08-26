@@ -15,7 +15,7 @@ gitignored (holds large binaries); the signing secrets live outside the repo.
 | Privacy policy (live) | https://shpara.com/ativa/privacy |
 | Listing copy (EN/PT) | `store/listing.md` |
 | Screenshots | `store/screenshots/` (add here) |
-| Source repo | https://github.com/kirshp/ativa |
+| Source repo | https://github.com/Azenhaai/ativa |
 | App icon source | `assets/icon.png` |
 
 ## App identity (same on both stores)

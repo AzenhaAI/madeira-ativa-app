@@ -3,13 +3,13 @@ Madeira Ativa is a guide to sport events, hiking trails and local history on Mad
 GUIDELINE 4.2 — WHAT IS NATIVE
 All six tabs are native: Home, Events, Map, Levadas, News and Roots. Four further native screens sit behind them — trail detail with a drawn elevation profile, race statistics with nine chart sections, the photo album, and TV broadcasts. The Map tab is a native map view with OpenStreetMap raster tiles, switchable event and trail layers, 100+ event pins placed from a gazetteer bundled in the binary, and trail geometry drawn as polylines. Native OS integrations: EventKit for "Add to calendar", local notifications (a reminder the evening before an event you follow, and an alert when a trail opens or closes), the system share sheet, haptics, on-device favourites, and an offline cache so the app still works in the mountains. The history section — six themed stories, a six-era timeline and a nineteen-picture album — is compiled into the app in English and Portuguese.
 
-Four secondary screens do embed web content we publish at shpara.com: "Heat", "3D", "3D flyover" and "Aerial". They are WebGL terrain views, the one component we did not reimplement natively. They are optional extras reached from a button on the Map tab and from the side menu — no launch or first-run path goes through them.
+Four secondary screens do embed web content we publish at azenha.ai: "Heat", "3D", "3D flyover" and "Aerial". They are WebGL terrain views, the one component we did not reimplement natively. They are optional extras reached from a button on the Map tab and from the side menu — no launch or first-run path goes through them.
 
 INDEPENDENCE AND SOURCES
 Madeira Ativa is independent and is not affiliated with or endorsed by the Regional Government of Madeira or the Madeira tourism board. Trail names, PR codes and open/closed status come from the public notice-to-walkers list published by visitmadeira.com. Map data is © OpenStreetMap contributors (ODbL). News items credit the publisher and link to the original article. Historical images are public domain or Creative Commons, with author and licence in every caption.
 
-Privacy policy: https://shpara.com/ativa/privacy — also linked from the app's side menu.
-Support: https://shpara.com/ativa/support
+Privacy policy: https://azenha.ai/ativa/privacy — also linked from the app's side menu.
+Support: https://azenha.ai/ativa/support
 
 TESTING NOTE
 The app needs a connection on first launch to populate Events, News and Levadas from our public feed, then serves the cached copy offline. If a feed is unreachable the tab shows a retry state.

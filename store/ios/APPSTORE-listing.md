@@ -174,12 +174,12 @@ Gratuita, sem conta e sem nada para comprar.
 | Version / build | **1.8.0 (13)** — read from `pubspec.yaml`, do not hardcode elsewhere |
 | Primary category | Travel |
 | Secondary category | Sports |
-| **Copyright** | `2026 Kirill Shpara` |
+| **Copyright** | `2026 Azenha AI` |
 | Age rating | **12+** — answer "Alcohol, Tobacco, or Drug Use or References" = *Infrequent/Mild* (the Roots screenshot shows a wine/rum/poncha section) |
 | Privacy policy URL | https://shpara.com/ativa/privacy |
 | Support URL | https://shpara.com/ativa/support |
 | Marketing URL | https://shpara.com/ativa |
-| App Review contact | Kirill Shpara · azenha.agent@gmail.com · phone: **fill in a reachable number** |
+| App Review contact | Azenha AI · agent@azenha.ai · phone: **fill in a reachable number** |
 | Demo account | Not required — nothing in the app is gated |
 | Sign-in required | No |
 | App Privacy | **Data Not Collected** — valid *only* after the GA4/Clarity blocks on `map`, `map3d`, `mapfly`, `mapbay` are gated. Otherwise declare Identifiers (Device ID) + Usage Data (Product Interaction), not linked to identity |
