@@ -87,6 +87,7 @@ const _tr = {
     'time_note': 'Estimate — 12 min/km, plus climb and descent',
     'website': 'Website',
     'telegram': 'Telegram bot',
+    'tg_channel': 'Weekly digest channel',
     'language': 'Português',
     'roots_sub': "The island's memory, one place at a time",
     'view_all': 'View all',
@@ -179,6 +180,7 @@ const _tr = {
     'time_note': 'Estimativa — 12 min/km, mais subida e descida',
     'website': 'Site',
     'telegram': 'Bot do Telegram',
+    'tg_channel': 'Canal do resumo semanal',
     'language': 'English',
     'roots_sub': 'A memória da ilha, um lugar de cada vez',
     'view_all': 'Ver tudo',
@@ -563,6 +565,14 @@ class _HomeShellState extends State<HomeShell> {
               leading: const Icon(Icons.send, color: kGreen),
               title: Text(t('telegram')),
               onTap: () => openUrl('https://t.me/madeira_ebot'),
+            ),
+            // The bot answers a question the moment it is asked; the channel
+            // carries one post a week without being asked. Different needs, so
+            // the app offers both rather than choosing for the reader.
+            ListTile(
+              leading: const Icon(Icons.campaign, color: kGreen),
+              title: Text(t('tg_channel')),
+              onTap: () => openUrl('https://t.me/madeira_ativa'),
             ),
             const Divider(),
             ListTile(
