@@ -2205,7 +2205,17 @@ Future<List<Levada>> fetchLevadas() async {
       final s = by[l.code];
       if (s != null && s.isNotEmpty) l.official = s;
     }
-  } catch (_) {}
+    final missing = _levadaCache!.where((l) => l.official == null).length;
+    if (missing > 0) {
+      debugPrint('trail status: $missing of ${_levadaCache!.length} trails have '
+          'no official status and fall back to the bundled file');
+    }
+  } catch (e) {
+    // Falling back to the bundled statuses is the right behaviour, but it must
+    // not happen quietly: everything on screen is then as old as the last
+    // levadas.json build.
+    debugPrint('trail status feed unavailable, using bundled statuses: $e');
+  }
   _checkStatusChanges(_levadaCache!);
   return _levadaCache!;
 }
@@ -2240,16 +2250,23 @@ Future<List<TrailGeo>> fetchTrailGeo() async {
 
 /// Compares trail statuses with the previously seen ones and fires a local
 /// notification when something opened/closed since last launch.
+///
+/// Reads `state`, not `status`. Every screen in the app shows `state` — the
+/// official feed where there is one, the bundled file otherwise — while this
+/// compared the bundled value alone. So a trail could close on the feed, show
+/// as closed on the levada page, and raise nothing here, because the file it
+/// was watching had not been rebuilt yet. Two surfaces of one app disagreeing
+/// about whether a trail is walkable.
 void _checkStatusChanges(List<Levada> ls) {
   try {
     final prev = prefs.getString('levada_status') ?? '';
-    final now = ls.map((l) => '${l.code}:${l.status}').join(',');
+    final now = ls.map((l) => '${l.code}:${l.state}').join(',');
     if (prev.isNotEmpty && prev != now) {
       final old = {for (final p in prev.split(',')) p.split(':')[0]: p.split(':').last};
       final diffs = [
         for (final l in ls)
-          if (old[l.code] != null && old[l.code] != l.status)
-            '${l.code} → ${l.status}'
+          if (old[l.code] != null && old[l.code] != l.state)
+            '${l.code} → ${l.state}'
       ];
       if (diffs.isNotEmpty) {
         notifyNow(t('status_changed'), diffs.take(4).join(' · '));
