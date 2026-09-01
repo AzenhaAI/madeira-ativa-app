@@ -20,13 +20,13 @@ not tidied up.
 | 1 | 21 Aug | "The map is missing a legend. Not everyone can read symbols and many have forgotten." | **Fixed** — collapsible legend added, covering trail status, running layers and base overlays, in English and Portuguese. |
 | 2 | 21 Aug | "The red ones need a legend too." | **Fixed** — same change; closed trails are now named explicitly. |
 | 3 | 21 Aug | "Why are some closed ones red and others brown?" | **Fixed, and it was a real ambiguity.** They were not all closed: amber dashed means partly open, and the roads overlay is drawn in brown. Two close hues with no key. The legend now separates them. |
-| 4 | 19 Aug | "A Portuguese quote suddenly appears in the English version. Is that deliberate?" | **Accepted, pending.** The Pessoa epigraph is deliberate but unexplained. Planned: keep the Portuguese original and add an English translation beneath it. |
+| 4 | 19 Aug | "A Portuguese quote suddenly appears in the English version. Is that deliberate?" | **Fixed.** It was deliberate and nothing said so. The line stays in Portuguese — it is how Pessoa wrote it, on an island that speaks the language — with an English translation beneath. |
 | 5 | 19 Aug | "The map does not load in the preview." | **Accepted, pending.** It loads, but slowly enough to read as broken. Needs a loading state and a lighter first paint. |
 | 6 | 19 Aug | "The map froze." (with screenshot) | **Under investigation.** Console on the equivalent web view shows canvas errors — drawing into a zero-width element. Likely the same cause. |
 | 7 | 20 Aug | "I thought this back button went one step up the tree, but no. And I could not find a way to return." | **Accepted, pending.** Navigation relies on the bottom bar; no in-page back affordance. Being reworked. |
 | 8 | 20 Aug | "The letters wrap around the texture and are sometimes unreadable." (with screenshot) | **Accepted, pending.** Text over the 3D/map texture loses contrast. |
-| 14 | 24 Aug | "Different status in the preview and in the card." (with screenshot) | **Under investigation.** The same trail reads open in the list and something else when opened. One of the two is stale; a status shown twice must not disagree. |
-| 15 | 24 Aug | The 3D view's "tunnels" filter is ambiguous. "I assume it is about roads. But it looked to me like it was about walking routes." | **Accepted, pending.** It is the road-tunnel overlay. The label needs to say so. |
+| 14 | 24 Aug | "Different status in the preview and in the card." (with screenshot) | **Fixed, and the cause was not where it looked.** The three feeds agree; the disagreement was inside the app. Every screen shows the official trail-status feed, while the watcher that raises "trail status changed" compared the status bundled in the app. A trail could close on the feed, show as closed on its page, and raise nothing. Both now read the same value. |
+| 15 | 24 Aug | The 3D view's "tunnels" filter is ambiguous. "I assume it is about roads. But it looked to me like it was about walking routes." | **Fixed.** It is the road-tunnel overlay and now says "Road tunnels". Her reading was the reasonable one and a different question entirely: people choose walks by whether there are tunnels to pass through. |
 
 ## Suggestions and requests
 
@@ -39,6 +39,20 @@ not tidied up.
 | 16 | 24 Aug | Explain the vocabulary of the trails themselves. "Here we have levadas, veredas, there is PR marking, and ones open in one direction only, or partly open. It is a mess. We are used to it, but a newcomer will not work it out without a bottle. I found no explanation of the names in the app." | **Accepted, pending.** A glossary, reachable from the trail page. The data already distinguishes these; nothing in the app says what they mean. |
 | 17 | 24 Aug | Flag two things people choose routes by: whether the route has tunnels (claustrophobia) and whether it has an open, unfenced drop-off (fear of heights). "Some tourists pick routes with no tunnels and with closed edges. Routes you can walk with a school-age child." | **Logged as a feature.** The strongest suggestion in the set: it is a safety and comfort filter, not decoration, and no other Madeira app offers it. Needs survey data the feed does not carry. |
 | 13 | 20 Aug | Live bus timetables to trailheads. "People rely on local bus schedules, the naive ones." | **Logged.** Acknowledged as genuinely hard — the data is not published in a usable form. |
+
+## Found while acting on her reports
+
+Not reported by her, but found because she asked and someone went looking. Kept
+here because they are the same defect in kind: the product telling a person two
+different things.
+
+- The same amber, `#e0902a`, read "Restricted" in the 3D map legend and
+  "Partially open" everywhere else — including in that map's own popups, so the
+  legend disagreed with the map it belonged to. Those are not synonyms.
+- The trail-status feed was fetched inside a `catch` that swallowed the error
+  whole. Falling back to the bundled statuses is correct, but it was silent:
+  everything on screen would be as old as the last release with nothing saying
+  so.
 
 ## What she said about the product
 
@@ -58,10 +72,16 @@ build is usable, not only where it breaks.
 
 ## Where it stands
 
-Three of seventeen are fixed and shipped. Fourteen are accepted and queued,
-four of them (location, personal history, the tunnel/exposure survey, the
-levada glossary) large enough to need a decision rather than a patch. None were
-dismissed.
+Seven of seventeen are fixed and shipped, in builds 26 and 27. Ten are accepted
+and queued, four of them (location, personal history, the tunnel/exposure
+survey, the levada glossary) large enough to need a decision rather than a
+patch. None were dismissed.
+
+Two of her reports changed the product beyond the fix itself. The colour
+question exposed a legend that disagreed with its own map. The status question
+led to a watcher reading a different value from every screen in the app — a
+defect no one had noticed and which no amount of looking at the data would have
+revealed, because the data was never wrong.
 
 The tester continues through the 14-day window and has said she will report
 anything further.
