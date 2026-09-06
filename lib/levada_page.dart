@@ -62,12 +62,28 @@ class _LevadaPageState extends State<LevadaPage> {
                 _S('↑${l.ascent} m', t('climb')),
                 _S(t(open ? 'open' : (part ? 'partial' : 'closed')), t('status'),
                     warn: !open),
-                if (l.fee.isNotEmpty && l.fee != 'None') _S(l.fee, t('fee')),
+                if (l.fee.isNotEmpty && l.fee != 'None')
+                  // The fee was shown with nowhere to pay it. Booking is
+                  // mandatory and online-only, and the trailhead has no signal.
+                  GestureDetector(
+                    onTap: () => openUrl('https://simplifica.madeira.gov.pt/'),
+                    child: _S(l.fee, t('fee')),
+                  ),
               ],
             ),
           ),
           const SizedBox(height: 18),
           _DetailGrid(l: l),
+          if (l.fee.isNotEmpty && l.fee != 'None') ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => openUrl('https://simplifica.madeira.gov.pt/'),
+              icon: const Icon(Icons.confirmation_number_outlined, size: 18),
+              label: Text(t('pay_link')),
+            ),
+          ],
+          const SizedBox(height: 18),
+          const _Glossary(),
           if (l.profile.length > 2) ...[
             const SizedBox(height: 20),
             Text(t('elev_profile'),
@@ -295,6 +311,33 @@ class _DetailGrid extends StatelessWidget {
             padding: const EdgeInsets.only(top: 8),
             child: Text(t('time_note'),
                 style: TextStyle(fontSize: 11, color: context.cSubtle)),
+          ),
+      ],
+    );
+  }
+}
+
+/// The words on the trail signs, explained once. A tester who has lived here
+/// for years said a newcomer "will not work it out without a bottle": levada,
+/// vereda, PR, partially open, open one way — the app used all of them and
+/// defined none.
+class _Glossary extends StatelessWidget {
+  const _Glossary();
+
+  @override
+  Widget build(BuildContext context) {
+    final keys = ['g_levada', 'g_vereda', 'g_pr', 'g_partial', 'g_oneway'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(t('glossary'),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+        const SizedBox(height: 6),
+        for (final k in keys)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(t(k),
+                style: TextStyle(fontSize: 13, height: 1.35, color: context.cSubtle)),
           ),
       ],
     );
