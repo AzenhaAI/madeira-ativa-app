@@ -34,9 +34,9 @@ not tidied up.
 |---|------|--------------------|--------|
 | 9 | 19 Aug | Uses the "events nearby" filter; expects to see her own position when opening the map. | **Deferred, with a reason.** The app requests no location permission at all, which is why the estimate is island-wide. Adding it means a permission prompt and a store-privacy change; being weighed. |
 | 10 | 20 Aug | "Why this section? I like numbers, but what is the thinking behind having it in the main menu?" (statistics) | **Accepted.** Carried over from the website without rethinking. To be reworked or demoted. |
-| 11 | 20 Aug | For levadas: show which are paid and which are free, and where to pay. "Tourists are struggling with the levadas right now." | **Accepted, pending.** Fee data is already in the feed and shown on the trail page; the payment link is not. |
+| 11 | 20 Aug | For levadas: show which are paid and which are free, and where to pay. "Tourists are struggling with the levadas right now." | **Fixed in build 28.** The fee now opens SIMplifica, the only place a PR trail can be booked and paid, and there is a button for it under the trail details. Booking is mandatory and online-only, and the trailheads have no signal — so the link matters more than the number. |
 | 12 | 21 Aug | Tick off levadas walked and sights visited — a personal history. "Many come back here or winter here. Or simply like ticking things off." Also as a group, with friends. | **Logged as a feature.** Larger than a fix; recorded for planning. |
-| 16 | 24 Aug | Explain the vocabulary of the trails themselves. "Here we have levadas, veredas, there is PR marking, and ones open in one direction only, or partly open. It is a mess. We are used to it, but a newcomer will not work it out without a bottle. I found no explanation of the names in the app." | **Accepted, pending.** A glossary, reachable from the trail page. The data already distinguishes these; nothing in the app says what they mean. |
+| 16 | 24 Aug | Explain the vocabulary of the trails themselves. "Here we have levadas, veredas, there is PR marking, and ones open in one direction only, or partly open. It is a mess. We are used to it, but a newcomer will not work it out without a bottle. I found no explanation of the names in the app." | **Fixed in build 28.** "Words on the signs" on every trail page: levada, vereda, PR, partially open, open one way — each in one sentence, in English and Portuguese. |
 | 17 | 24 Aug | Flag two things people choose routes by: whether the route has tunnels (claustrophobia) and whether it has an open, unfenced drop-off (fear of heights). "Some tourists pick routes with no tunnels and with closed edges. Routes you can walk with a school-age child." | **Logged as a feature.** The strongest suggestion in the set: it is a safety and comfort filter, not decoration, and no other Madeira app offers it. Needs survey data the feed does not carry. |
 | 13 | 20 Aug | Live bus timetables to trailheads. "People rely on local bus schedules, the naive ones." | **Logged.** Acknowledged as genuinely hard — the data is not published in a usable form. |
 
@@ -72,10 +72,10 @@ build is usable, not only where it breaks.
 
 ## Where it stands
 
-Seven of seventeen are fixed and shipped, in builds 26 and 27. Ten are accepted
-and queued, four of them (location, personal history, the tunnel/exposure
-survey, the levada glossary) large enough to need a decision rather than a
-patch. None were dismissed.
+Nine of seventeen are fixed and shipped, in builds 26, 27 and 28. Eight are
+accepted and queued, three of them (location, personal history, the
+tunnel/exposure survey) large enough to need a decision rather than a patch.
+None were dismissed.
 
 Two of her reports changed the product beyond the fix itself. The colour
 question exposed a legend that disagreed with its own map. The status question
