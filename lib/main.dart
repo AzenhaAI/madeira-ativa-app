@@ -2854,6 +2854,9 @@ const kNewsCats = <(String, String)>[
   ('cultura', 'Culture'),
   ('educação', 'Education'),
   ('ocorrências', 'Incidents'),
+  ('política', 'Politics'),
+  ('saúde', 'Health'),
+  ('tempo', 'Weather'),
   ('geral', 'General'),
 ];
 
