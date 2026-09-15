@@ -121,7 +121,7 @@ const _tr = {
     'p_year': 'Year',
     'add_calendar': 'Add to calendar',
     'share': 'Share',
-    'open_site': 'Open site',
+    'open_site': 'Open site', 'open_calendar': 'Open the organiser\'s calendar', 'open_calendar_hint': 'No page for this race yet — a season calendar',
     'remind': 'Remind me',
     'remind_set': 'Reminder set — the day before at 18:00',
     'remind_off': 'Reminder removed',
@@ -221,7 +221,7 @@ const _tr = {
     'p_year': 'Ano',
     'add_calendar': 'Adicionar ao calendário',
     'share': 'Partilhar',
-    'open_site': 'Abrir site',
+    'open_site': 'Abrir site', 'open_calendar': 'Abrir calendário do organizador', 'open_calendar_hint': 'Sem página própria — calendário da época',
     'remind': 'Lembrar-me',
     'remind_set': 'Lembrete definido — véspera às 18:00',
     'remind_off': 'Lembrete removido',
@@ -722,6 +722,14 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 }
+
+
+/// A link to a season calendar or a federation PDF, not to the event. The
+/// same test the export uses to rank sources.
+final RegExp _genericLink = RegExp(
+    r'\.pdf(\?|$)|/calendario|/calendar|/eventos/?$|fpacompeticoes\.pt/?$|visitmadeira\.com/[a-z]{2}(/[a-z-]+)?/?$',
+    caseSensitive: false);
+bool _isGenericLink(String url) => _genericLink.hasMatch(url);
 
 class AtivaEvent {
   final String name;
@@ -1367,10 +1375,19 @@ void showEventActions(BuildContext context, AtivaEvent e) {
               );
             },
           ),
+          // "Open site" promised the event's page and, for the races that only
+          // a federation calendar knows about, delivered a season table or a
+          // PDF. Say which it is before the tap, not after.
           if (e.url.isNotEmpty)
             ListTile(
-              leading: const Icon(Icons.open_in_new, color: kGreen),
-              title: Text(t('open_site')),
+              leading: Icon(
+                  _isGenericLink(e.url) ? Icons.table_chart_outlined : Icons.open_in_new,
+                  color: kGreen),
+              title: Text(t(_isGenericLink(e.url) ? 'open_calendar' : 'open_site')),
+              subtitle: _isGenericLink(e.url)
+                  ? Text(t('open_calendar_hint'),
+                      style: TextStyle(fontSize: 12, color: ctx.cSubtle))
+                  : null,
               onTap: () {
                 Navigator.pop(ctx);
                 openUrl(e.url);
