@@ -7,8 +7,12 @@ reported and what was done about it. Feedback arrived by direct message; the
 quotes below are translated from Russian, and the wording is the tester's own,
 not tidied up.
 
-**Tester:** Kate — resident on Madeira, former IT professional, tests on Android.
-**Period:** 19–24 August 2026 (ongoing; she committed to the full 14 days).
+Two testers have reported in writing so far, each in their own section below.
+
+## Tester 1 — Kate
+
+**Who:** resident on Madeira, former IT professional, tests on Android.
+**Period:** 19–24 August 2026.
 **Volume:** 17 distinct observations over five sessions.
 
 ---
@@ -53,6 +57,29 @@ different things.
   whole. Falling back to the bundled statuses is correct, but it was silent:
   everything on screen would be as old as the last release with nothing saying
   so.
+
+## Tester 2 — Alexander
+
+**Who:** Android, tests with screenshots annotated in red, writes in English
+and Russian. Numbered his findings himself.
+**Period:** 12–15 September 2026, on build 29.
+**Volume:** 7 distinct observations in one sitting, all with screenshots.
+
+Where Kate walked the trails, Alexander walked the map. Five of his seven are
+about the Map tab, and he went looking for the seams between screens — the
+same trail shown two ways, the same count given two answers.
+
+| # | What he reported | Status |
+|---|------------------|--------|
+| A1 | Map → pick an event → tap "Nearby heritage trail". "Result: nothing happens. Expect: opens link of the proper levada." Same on a second event. | **Fixed.** The tile opened the trail's visitmadeira page, and seven of the 44 trails have none, so the tap did nothing. It now opens the app's own trail page, which exists for all 44 — what the chevron promised. |
+| A2 | Home banner says "14 closed now · 6 partly open"; he counted the Levadas list: "9 closed, not 14. 5 partly open, not 6." | **Fixed, and it was three answers, not two.** The banner counted the alerts list, which holds closed *and* partial together (8 + 6 = 14). His list was built from the bundled file before the official feed arrived (9 / 5). The banner now reads the same tally the list is built from. |
+| A3 | Map → Heat and 3D: "both are not working. Looping downloads for both." | **Fixed.** Both pages loaded their one essential library from unpkg.com. When that host does not answer on a mobile network, the page renders nothing and the spinner never stops. The libraries are served from our own domain now. |
+| A4 | Home: "Some map should be in the background?" — the trail sketch on a plain grey card. Next morning: "map was updated. Very strange because theoretically it's the same source." | **Explained; not a code defect.** The card is a real map; the base tiles come from tile.openstreetmap.org and did not arrive that evening. Logged as a risk — same shape as A3, a third-party host — and kept for a decision on hosting tiles. |
+| A5 | Map → PR 23 Levada da Azenha → "visitmadeira.com" button: "broken link". | **Fixed.** No page exists there for that trail, and six others. The button is shown only when there is a page to open. |
+| A6 | "Grey doesn't recognize like closed. Green and yellow are great but grey probably should be red. Red equals prohibited or closed, warning colour." | **Fixed, and he was right on the principle.** Closed trails were grey on the in-app map and red on the web map and in its legend. One state, one colour now: the web map's red, everywhere. |
+| A7 | In English, several strings stay Portuguese: the Pessoa quote, "Next up" event names, "Campeonato da Madeira de Enduro". "P.S. Madeira Ativa should probably remain as a brand without translation." | **Accepted with a distinction.** The quote and the brand are deliberate and now say so (see Kate's #4). Event *names* are the organiser's own title and are not translated by design — a race called Campeonato da Madeira is called that. Logged: an English gloss for festival names is worth considering. |
+
+Five fixed in build 30, one explained, one accepted. None dismissed.
 
 ## What she said about the product
 

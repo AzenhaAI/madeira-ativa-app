@@ -145,7 +145,7 @@ const _tr = {
     'countries': 'Countries',
     'intl_trend': 'International runners by year',
     'time_dist': 'Median finish time',
-    'stats': 'Trail stats','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next',
+    'stats': 'Trail stats','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next','p_today':'Today','p_weekend':'Weekend','organized_by':'Organised by',
   },
   'pt': {
     'home': 'Início',
@@ -245,7 +245,7 @@ const _tr = {
     'countries': 'Países',
     'intl_trend': 'Corredores estrangeiros por ano',
     'time_dist': 'Tempo mediano',
-    'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo',
+    'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:',
   },
 };
 
@@ -730,6 +730,12 @@ class AtivaEvent {
   final String type;
   final String mode;
   final String url;
+  // Present only where the source entered the event by hand — a start time,
+  // a price ("Free", "€25"), who runs it. Posters and federation PDFs carry
+  // none of these, so the fields stay empty rather than guessed.
+  final String time;
+  final String price;
+  final String organizer;
 
   AtivaEvent.fromJson(Map<String, dynamic> j)
       : name = j['name'] ?? '',
@@ -737,7 +743,10 @@ class AtivaEvent {
         location = j['location'] ?? '',
         type = j['event_type'] ?? 'other',
         mode = j['mode'] ?? '',
-        url = j['url'] ?? '';
+        url = j['url'] ?? '',
+        time = j['time'] ?? '',
+        price = j['price'] ?? '',
+        organizer = j['organizer'] ?? '';
 }
 
 Future<List<AtivaEvent>> fetchEvents() async {
@@ -948,7 +957,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                        '${(_status!['alerts'] as List).length} ${t('closed_now')} · ${(_status!['counts']?['partial'] ?? 0)} ${t('partial')}',
+                        // alerts holds closed AND partial together, so this
+                        // read "14 closed" when eight were closed and six
+                        // partly open. counts is what the list is built from.
+                        '${_status!['counts']?['closed'] ?? 0} ${t('closed_now')} · ${(_status!['counts']?['partial'] ?? 0)} ${t('partial')}',
                         style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -970,11 +982,20 @@ class _HomePageState extends State<HomePage> {
                   border: Border.all(color: context.cHairline, width: 0.5),
                 ),
                 child: Stack(children: [
+                  // The trail lines arrive from our own JSON well before the
+                  // base tiles arrive from OpenStreetMap, so for a moment — or,
+                  // on a slow connection, for the evening — this card was
+                  // coloured lines on a plain grey slab, and a tester asked
+                  // whether a map was meant to be there. Paint the sea colour
+                  // beneath, so the wait reads as a map still loading rather
+                  // than as a map that never came.
+                  Container(color: const Color(0xFFAAD3DF)),
                   IgnorePointer(
                     child: FlutterMap(
                       options: const MapOptions(
                         initialCenter: LatLng(32.745, -16.96),
                         initialZoom: 9.1,
+                        backgroundColor: Colors.transparent,
                         interactionOptions: InteractionOptions(
                             flags: InteractiveFlag.none),
                       ),
@@ -993,7 +1014,7 @@ class _HomePageState extends State<HomePage> {
                                 color: t.status == 'open'
                                     ? kGreen
                                     : (t.status == 'closed'
-                                        ? const Color(0xFFD84A3A)
+                                        ? const Color(0xFFE23B2E)
                                         : const Color(0xFFE8920E)),
                               ),
                         ]),
@@ -1304,11 +1325,19 @@ void showEventActions(BuildContext context, AtivaEvent e) {
             child: Text(
                 dotJoin([
                   fmtDate(e.date),
+                  if (e.time.isNotEmpty) e.time,
+                  if (e.price.isNotEmpty) e.price,
                   tidyPlace(e.location),
                   typeFor(e.mode, e.type),
                 ]),
                 style: TextStyle(fontSize: 13, color: ctx.cSubtle)),
           ),
+          if (e.organizer.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text('${t('organized_by')} ${e.organizer}',
+                  style: TextStyle(fontSize: 13, color: ctx.cSubtle)),
+            ),
           FutureBuilder<(Levada, double)?>(
             future: nearestHeritage(e.location),
             builder: (_, snap) {
@@ -1582,6 +1611,11 @@ class _EventsPageState extends State<EventsPage> {
   int _beyondWindow = 0;
 
   static const _periods = <(String, String, int)>[
+    // "Today" and "Weekend" answer the question a resident asks at six in
+    // the evening; the month-scale windows answer the one a visitor asks
+    // while planning. Both belong on the same strip.
+    ('today', 'p_today', 0),
+    ('weekend', 'p_weekend', 0),
     ('next', 'p_next', 0),
     ('week', 'p_week', 7),
     ('month', 'p_month', 31),
@@ -1668,6 +1702,21 @@ class _EventsPageState extends State<EventsPage> {
     };
     if (_day != null) {
       shown = shown.where((e) => e.date == _day).toList();
+    } else if (_period == 'today') {
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      _beyondWindow = shown.where((e) => e.date != today).length;
+      shown = shown.where((e) => e.date == today).toList();
+    } else if (_period == 'weekend') {
+      // The coming Saturday and Sunday. On a Saturday or Sunday, this one.
+      final now = DateTime.now();
+      final toSat = (DateTime.saturday - now.weekday) % 7;
+      final sat = now.weekday == DateTime.sunday
+          ? now.subtract(const Duration(days: 1))
+          : now.add(Duration(days: toSat));
+      final a = sat.toIso8601String().substring(0, 10);
+      final b = sat.add(const Duration(days: 1)).toIso8601String().substring(0, 10);
+      _beyondWindow = shown.where((e) => e.date.compareTo(b) > 0).length;
+      shown = shown.where((e) => e.date.compareTo(a) >= 0 && e.date.compareTo(b) <= 0).toList();
     } else if (_period == 'next') {
       // Only the first upcoming day that has events (site's "Next" mode).
       if (shown.isNotEmpty) {
@@ -2003,7 +2052,13 @@ class _EventsPageState extends State<EventsPage> {
                         _EventTile(
                           icon: _typeIcons[e.type] ?? Icons.event,
                           title: g.title,
+                          // "19:00 · Free · MAMMA · Concert": the time and the
+                          // price lead, because they are what decides whether
+                          // tonight is possible. Absent on most sport rows,
+                          // which read exactly as before.
                           subtitle: dotJoin([
+                            if (e.time.isNotEmpty) e.time,
+                            if (e.price.isNotEmpty) e.price,
                             if (g.distances.isNotEmpty) g.distances.join(', '),
                             tidyPlace(e.location),
                             typeFor(e.mode, e.type),
@@ -2594,12 +2649,16 @@ class _MapPageState extends State<MapPage> {
                 icon: const Icon(Icons.landscape, size: 16),
                 label: Text(t('elev_profile')),
               ),
-              TextButton.icon(
-                onPressed: () =>
-                    openUrl(locale.value == 'pt' ? l.urlPt : l.urlEn),
-                icon: const Icon(Icons.open_in_new, size: 16),
-                label: const Text('visitmadeira.com'),
-              ),
+              // Seven of the 44 trails have no page on visitmadeira. A button
+              // that opens nothing reads as broken, which is how a tester
+              // reported it. No page, no button.
+              if ((locale.value == 'pt' ? l.urlPt : l.urlEn).isNotEmpty)
+                TextButton.icon(
+                  onPressed: () =>
+                      openUrl(locale.value == 'pt' ? l.urlPt : l.urlEn),
+                  icon: const Icon(Icons.open_in_new, size: 16),
+                  label: const Text('visitmadeira.com'),
+                ),
             ]),
             const SizedBox(height: 8),
           ],
@@ -2662,11 +2721,16 @@ class _MapPageState extends State<MapPage> {
                               onTap: () => _showTrail(l),
                               child: Container(
                                 decoration: BoxDecoration(
+                                  // Red, not grey. Grey read as "unknown" or
+                                  // "inactive" to a tester, never as closed —
+                                  // and the same trail is drawn red on the
+                                  // web map and named red in its legend. One
+                                  // state, one colour, on every surface.
                                   color: l.isOpen
                                       ? kGreen
                                       : (l.isPartial
                                           ? const Color(0xFFE8920E)
-                                          : Colors.grey),
+                                          : const Color(0xFFE23B2E)),
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                       color: Colors.white, width: 2),
