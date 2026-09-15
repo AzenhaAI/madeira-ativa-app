@@ -74,12 +74,17 @@ same trail shown two ways, the same count given two answers.
 | A1 | Map → pick an event → tap "Nearby heritage trail". "Result: nothing happens. Expect: opens link of the proper levada." Same on a second event. | **Fixed.** The tile opened the trail's visitmadeira page, and seven of the 44 trails have none, so the tap did nothing. It now opens the app's own trail page, which exists for all 44 — what the chevron promised. |
 | A2 | Home banner says "14 closed now · 6 partly open"; he counted the Levadas list: "9 closed, not 14. 5 partly open, not 6." | **Fixed, and it was three answers, not two.** The banner counted the alerts list, which holds closed *and* partial together (8 + 6 = 14). His list was built from the bundled file before the official feed arrived (9 / 5). The banner now reads the same tally the list is built from. |
 | A3 | Map → Heat and 3D: "both are not working. Looping downloads for both." | **Fixed.** Both pages loaded their one essential library from unpkg.com. When that host does not answer on a mobile network, the page renders nothing and the spinner never stops. The libraries are served from our own domain now. |
-| A4 | Home: "Some map should be in the background?" — the trail sketch on a plain grey card. Next morning: "map was updated. Very strange because theoretically it's the same source." | **Explained; not a code defect.** The card is a real map; the base tiles come from tile.openstreetmap.org and did not arrive that evening. Logged as a risk — same shape as A3, a third-party host — and kept for a decision on hosting tiles. |
+| A4 | Home: "Some map should be in the background?" — the trail sketch on a plain grey card. Next morning: "map was updated. Very strange because theoretically it's the same source." | **Fixed, after being reproduced on iOS.** The card is a real map; the trail lines come from our own JSON and arrive well before the base tiles arrive from OpenStreetMap. For a moment — or an evening, on a slow connection — it was lines on grey with nothing saying a map was still loading. It is painted sea-blue beneath now, so the wait reads as a map loading rather than a map that never came. |
 | A5 | Map → PR 23 Levada da Azenha → "visitmadeira.com" button: "broken link". | **Fixed.** No page exists there for that trail, and six others. The button is shown only when there is a page to open. |
 | A6 | "Grey doesn't recognize like closed. Green and yellow are great but grey probably should be red. Red equals prohibited or closed, warning colour." | **Fixed, and he was right on the principle.** Closed trails were grey on the in-app map and red on the web map and in its legend. One state, one colour now: the web map's red, everywhere. |
 | A7 | In English, several strings stay Portuguese: the Pessoa quote, "Next up" event names, "Campeonato da Madeira de Enduro". "P.S. Madeira Ativa should probably remain as a brand without translation." | **Accepted with a distinction.** The quote and the brand are deliberate and now say so (see Kate's #4). Event *names* are the organiser's own title and are not translated by design — a race called Campeonato da Madeira is called that. Logged: an English gloss for festival names is worth considering. |
 
-Five fixed in build 30, one explained, one accepted. None dismissed.
+Six fixed in build 30, one accepted. None dismissed.
+
+Found while acting on his reports: the heat map's basemap provider had begun
+stamping "API KEY REQUIRED" across every tile — HTTP 200, a valid image, a map
+nobody could read. No status check would have caught it; opening the screen
+did. Replaced with the same OpenStreetMap tiles the other three maps use.
 
 ## What she said about the product
 
@@ -112,3 +117,19 @@ revealed, because the data was never wrong.
 
 The tester continues through the 14-day window and has said she will report
 anything further.
+
+## Summary for the production-access application
+
+| | |
+|---|---|
+| Testers who reported in writing | 2 (Kate, Alexander), of 12 opted in |
+| Observations | 24, all with the tester's own wording; 15 with screenshots |
+| Fixed and shipped | 13, across builds 26–30 |
+| Accepted, queued | 7 |
+| Needs a product decision | 4 (location, personal history, tunnel/exposure survey, bus links) |
+| Dismissed | 0 |
+| How feedback was collected | Direct message on Telegram; screenshots annotated by the testers themselves |
+| Sections of the app exercised | Home, Events (filters, categories, event sheet), Map (markers, event pins, Heat, 3D), Levadas (list, trail page, status, fees, glossary), Statistics |
+| Sections not mentioned by any tester | News, Roots |
+| Defects found beyond what was reported | 5, each traced from a tester's question |
+
