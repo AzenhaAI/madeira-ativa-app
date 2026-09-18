@@ -81,7 +81,7 @@ const _tr = {
     'rate_app': 'Rate the app',
     'cat_all': 'All', 'cat_trail': 'Trail', 'cat_road': 'Road',
     'cat_orient': 'Orient', 'cat_bike': 'Bike', 'cat_kids': 'Kids',
-    'cat_pro': 'Pro', 'cat_swim': 'Swim', 'cat_fest': 'Fest',
+    'cat_pro': 'Pro', 'cat_swim': 'Swim', 'cat_other': 'Other', 'cat_fest': 'Fest',
     'dist': 'dist', 'climb': 'climb', 'status': 'status',
     'weather': 'Weather here', 'weather_src': 'Forecast for this trail\u2019s own coordinates \u00b7 Open-Meteo', 'today': 'Today',
     'nearby': 'Walkable nearby', 'as_the_crow': 'away',
@@ -181,7 +181,7 @@ const _tr = {
     'rate_app': 'Avaliar a app',
     'cat_all': 'Todos', 'cat_trail': 'Trail', 'cat_road': 'Estrada',
     'cat_orient': 'Orient.', 'cat_bike': 'Bike', 'cat_kids': 'Crianças',
-    'cat_pro': 'Pro', 'cat_swim': 'Natação', 'cat_fest': 'Festas',
+    'cat_pro': 'Pro', 'cat_swim': 'Natação', 'cat_other': 'Outros', 'cat_fest': 'Festas',
     'dist': 'distância', 'climb': 'subida', 'status': 'estado',
     'weather': 'Tempo aqui', 'weather_src': 'Previs\u00e3o para as coordenadas deste trilho \u00b7 Open-Meteo', 'today': 'Hoje',
     'nearby': 'Perto daqui', 'as_the_crow': 'de dist\u00e2ncia',
@@ -1403,12 +1403,25 @@ void showEventActions(BuildContext context, AtivaEvent e) {
               // handler. Parse defensively and just skip the action instead.
               final day = DateTime.tryParse(e.date);
               if (day == null) return;
-              final start = DateTime(day.year, day.month, day.day, 9);
+              // A concert at 21:00 went into a tester's phone as 09:00–11:00,
+              // because nine o'clock was invented for every event whether or
+              // not the source knew the real hour. Where the feed carries a
+              // time, use it. Where it does not, an all-day entry is honest:
+              // it says "this day", which is all we know.
+              final hm = RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(e.time);
+              final start = hm == null
+                  ? DateTime(day.year, day.month, day.day)
+                  : DateTime(day.year, day.month, day.day,
+                      int.parse(hm.group(1)!), int.parse(hm.group(2)!));
               Add2Calendar.addEvent2Cal(Event(
                 title: e.name,
                 location: e.location,
                 startDate: start,
-                endDate: start.add(const Duration(hours: 2)),
+                endDate: hm == null
+                    ? start.add(const Duration(days: 1))
+                    : start.add(const Duration(hours: 2)),
+                allDay: hm == null,
+                description: e.url,
               ));
             },
           ),
@@ -1660,6 +1673,7 @@ class _EventsPageState extends State<EventsPage> {
     ('kids', '👶', 'cat_kids'),
     ('pro', '🏆', 'cat_pro'),
     ('swim', '🏊', 'cat_swim'),
+    ('other', '🎾', 'cat_other'),
     ('festivals', '🎪', 'cat_fest'),
   ];
 
@@ -1824,7 +1838,13 @@ class _EventsPageState extends State<EventsPage> {
               onChanged: (v) => setState(() => _query = v),
             ),
           ),
-        AnimatedSize(
+        // ClipRect is not decoration. When the strip collapses on scroll, the
+        // list inside keeps its full height and paints over the day row
+        // beneath it — "Next" across the 18, "Week" between SAT and SUN — and
+        // on a 375-point screen, where the chips sit tighter, a tester
+        // photographed it. Clip to the animated height and nothing leaks.
+        ClipRect(
+          child: AnimatedSize(
           duration: const Duration(milliseconds: 200),
           child: SizedBox(
           height: _compact ? 0 : 38,
@@ -1855,6 +1875,7 @@ class _EventsPageState extends State<EventsPage> {
             ],
           ),
           ),
+        ),
         ),
         SizedBox(
           height: 62,
