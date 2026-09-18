@@ -81,6 +81,28 @@ same trail shown two ways, the same count given two answers.
 
 Six fixed in build 30, one accepted. None dismissed.
 
+## Tester 3 — Alexey
+
+**Who:** iPhone SE-class screen (375 pt), tests the calendar against the real
+world — opened a poster, then the app, then the phone's own calendar, and
+compared. Writes in Russian.
+**Period:** 18 September 2026, on build 30.
+**Volume:** 5 observations in one morning, all with screenshots.
+
+Where Alexander tested the map, Alexey tested whether the app tells the
+truth: does the link go where it says, does the category mean what it says,
+does the time match the poster.
+
+| # | What he reported | Status |
+|---|------------------|--------|
+| B1 | Event sheet → "Open site" lands on a table of the season's races, not the race. "A link to the real landing page when one exists, not to a table of events." | **Fixed in the data and in the app.** The race had a page of its own on lap2go; it lost the merge to a federation PDF on three digits in brackets, because the score never asked where a link went. A real page now outranks any calendar. For the 48 events that have only a table, the row says "Open the organiser's calendar" and says why. |
+| B2 | "Why are football, volleyball and the rest under Trail? Make an Others category before Fest." | **Fixed.** Trail was the remainder — anything not road, bike, water, kids or pro — which held while every source was a running federation. The day an organiser-entered source arrived it put a padel tournament under Trail. Trail is now what looks like trail; "Other" is a tab of its own, before Fest, on the site, in the app and in the bot. |
+| B3 | A concert the poster puts at 21:00 goes into the phone's calendar as 09:00–11:00. | **Fixed, and it was the worst of the set.** Nine in the morning was invented for every event, whether or not the source knew the hour. Where the feed carries a time it is used; where it does not, the entry is all-day. A wrong time in someone's own calendar is the one defect that gets a person to a locked gate. |
+| B4 | "Why does a pile of events link to the main competitor's app? And not even to the event — to their landing page. Great free advertising for the competitor." | **Fixed, and he was right on every count.** 91 events linked to the aggregator the facts had come from; their page carries an App Store banner and every path leads to their app. Those links are gone. The facts stay; the click does not go to them. Where the same event arrives from its organiser with a page of its own, that page is kept. |
+| B5 | (Visible on his screenshot, not reported) The period chips — "Next", "Week", "3 mo" — painted across the day row beneath them. | **Fixed.** The strip collapses on scroll and its contents were never clipped; on a 375-point screen the chips sit tighter and the overlap showed. |
+
+Five fixed in build 31. None dismissed.
+
 Found while acting on his reports: the heat map's basemap provider had begun
 stamping "API KEY REQUIRED" across every tile — HTTP 200, a valid image, a map
 nobody could read. No status check would have caught it; opening the screen
@@ -122,14 +144,15 @@ anything further.
 
 | | |
 |---|---|
-| Testers who reported in writing | 2 (Kate, Alexander), of 12 opted in |
-| Observations | 24, all with the tester's own wording; 15 with screenshots |
-| Fixed and shipped | 13, across builds 26–30 |
+| Testers who reported in writing | 3 (Kate, Alexander, Alexey), of 12 opted in |
+| Observations | 29, all with the tester's own wording; 20 with screenshots |
+| Fixed and shipped | 18, across builds 26–31 |
 | Accepted, queued | 7 |
 | Needs a product decision | 4 (location, personal history, tunnel/exposure survey, bus links) |
 | Dismissed | 0 |
 | How feedback was collected | Direct message on Telegram; screenshots annotated by the testers themselves |
-| Sections of the app exercised | Home, Events (filters, categories, event sheet), Map (markers, event pins, Heat, 3D), Levadas (list, trail page, status, fees, glossary), Statistics |
+| Sections of the app exercised | Home, Events (filters, categories, event sheet, Open site, Add to calendar), Map (markers, event pins, Heat, 3D), Levadas (list, trail page, status, fees, glossary), Statistics |
 | Sections not mentioned by any tester | News, Roots |
-| Defects found beyond what was reported | 5, each traced from a tester's question |
+| Defects found beyond what was reported | 6, each traced from a tester's question |
+| Changed the product beyond the fix | 3 — the map legend, the status watcher, and the decision not to link to an aggregator |
 
