@@ -7,7 +7,7 @@ reported and what was done about it. Feedback arrived by direct message; the
 quotes below are translated from Russian, and the wording is the tester's own,
 not tidied up.
 
-Two testers have reported in writing so far, each in their own section below.
+Three testers have reported in writing so far, each in their own section below.
 
 ## Tester 1 — Kate
 
