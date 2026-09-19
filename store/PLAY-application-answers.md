@@ -148,13 +148,23 @@ to a mouse.
 
 ## About the app
 
-**Target audience** *(under 300)*
+**Who is the intended audience of your app?** *(281 characters, as submitted)*
 
 ```
-People who walk, run and ride on Madeira: residents planning the
-weekend, and visitors planning a week. Every tester so far is a
-resident. The app answers "what is on, is the trail open, when do I
-leave" from official and organiser sources, in English and Portuguese.
+People who walk, race or live on Madeira: residents planning a weekend
+levada, and visitors deciding which route is open today. It is written
+for the island and less than for tourism in general - 44 official PR
+routes, local race calendar, and status that changes with the weather.
+```
+
+**Describe how your app provides value to users** *(287 characters, as submitted)*
+
+```
+Before a walk on Madeira anybody needs four things from four places: is
+the trail open, how hard is it, does it charge, and what is on that
+weekend. The app puts them on one page, with official status, elevation
+profiles and a hundred-odd events. Free, no ads, no account, works
+offline.
 ```
 
 **Expected installs** — say what is true: a small, local audience. The
