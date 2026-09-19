@@ -7,7 +7,7 @@ reported and what was done about it. Feedback arrived by direct message; the
 quotes below are translated from Russian, and the wording is the tester's own,
 not tidied up.
 
-Three testers have reported in writing so far, each in their own section below.
+Four testers have reported in writing so far, each in their own section below.
 
 ## Tester 1 — Kate
 
@@ -103,6 +103,28 @@ does the time match the poster.
 
 Five fixed in build 31. None dismissed.
 
+## Tester 4 — Aileen
+
+**Who:** Android, resident, a professional translator with European
+Portuguese — she went on to test the language app in depth. Writes in
+Russian.
+**Period:** 18–19 August 2026, the first day of the closed test.
+**Volume:** 3 observations, 2 with screenshots.
+
+She was the first to install, and the first thing she reported was that she
+could not: the opt-in link led to an empty Play Store page. Everything she
+said about the app itself fits in two lines, and both lines were acted on.
+
+| # | What she reported | Status |
+|---|------------------|--------|
+| C1 | Opted in, then "when I tap the link I get an empty window in Google Play" — "after tapping 'download it' it opens nothing." (2 screenshots) | **Explained; not the app.** Play does not distribute a closed-test build to a new tester immediately; it took her a restart and a few hours. The onboarding message to the next testers said so up front. |
+| C2 | "Had a quick look — it's all beautiful." | Kept for the record: the first impression on the first day. |
+| C3 | "The one thing for me — the font is a bit small." | **Accepted.** Text scaling is on the list for the next build; the app currently ignores the system font-size setting on some screens. |
+
+One accepted, one explained, none dismissed. Her substantial testing went to
+the language app, where she found errors in the Portuguese itself; that is
+logged separately.
+
 Found while acting on his reports: the heat map's basemap provider had begun
 stamping "API KEY REQUIRED" across every tile — HTTP 200, a valid image, a map
 nobody could read. No status check would have caught it; opening the screen
@@ -144,10 +166,10 @@ anything further.
 
 | | |
 |---|---|
-| Testers who reported in writing | 3 (Kate, Alexander, Alexey), of 12 opted in |
-| Observations | 29, all with the tester's own wording; 20 with screenshots |
+| Testers who reported in writing | 4 (Kate, Alexander, Alexey, Aileen), of 12 opted in |
+| Observations | 32, all with the tester's own wording; 22 with screenshots |
 | Fixed and shipped | 18, across builds 26–31 |
-| Accepted, queued | 7 |
+| Accepted, queued | 8 |
 | Needs a product decision | 4 (location, personal history, tunnel/exposure survey, bus links) |
 | Dismissed | 0 |
 | How feedback was collected | Direct message on Telegram; screenshots annotated by the testers themselves |
