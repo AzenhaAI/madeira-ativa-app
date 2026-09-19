@@ -13,14 +13,14 @@ Character counts are given because the form truncates at 300.
 
 ## Describe the engagement you received from testers
 
-*(298 characters)*
+*(295 characters)*
 
 ```
 Three of twelve testers reported in writing: 29 findings, 20 with their
-own screenshots. One used the app daily for six days, one walked every
-Map screen and counted the trail list against the home banner, one
-checked a concert against its poster and found our calendar export
-put it at 09:00 instead of 21:00.
+own screenshots. One used the app daily for six days; one walked every
+Map screen and counted the trail list against the home banner; one
+checked a concert against its poster and caught our calendar export
+putting it at 09:00, not 21:00.
 ```
 
 **What backs this up.** Kate: 17 findings across five sessions, 19–24
@@ -38,14 +38,14 @@ fees, glossary), Statistics. Not mentioned by anyone: News, Roots.
 
 ## Provide a summary of the feedback you received from testers, and how you collected it
 
-*(297 characters)*
+*(292 characters)*
 
 ```
-Direct messages on Telegram, in the testers' own words; screenshots
-annotated by them. 29 findings: map legend missing, two colours alike,
-grey read as "inactive" not closed, home count disagreed with the
-list, event links led to a season PDF or to a competitor's app, wrong
-hour in calendar export. 18 fixed.
+Direct messages on Telegram, in the testers' own words, screenshots
+annotated by them. 29 findings: no map legend, two colours alike, grey
+read as inactive not closed, home count disagreed with the list, links
+went to a season PDF or a competitor's app, wrong hour in the calendar
+export. 18 fixed.
 ```
 
 **What backs this up.** Full list with dates, quotes and status in
@@ -57,14 +57,13 @@ personal history, a tunnel/exposure survey, bus links), 0 dismissed.
 
 ## What changed as a result of testing
 
-*(299 characters)*
+*(280 characters)*
 
 ```
-Six builds, 26 to 31, over the closed test. Map legend added; closed
-trails red on every surface; home banner reads the same count as the
-list; calendar export uses the real start time; links go to the
-organiser's page, never a competitor's; new "Other" sports tab; trail
-fee opens the official booking site.
+Six builds, 26 to 31, during the test. Map legend added; closed trails
+red everywhere; home banner reads the list's own count; calendar export
+uses the real start time; links go to the organiser, never a competitor;
+new "Other" sports tab; trail fee opens the official booking site.
 ```
 
 **The full list, by tester, with the build it shipped in.**
