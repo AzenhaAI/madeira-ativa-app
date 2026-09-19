@@ -31,14 +31,14 @@ Google account on their phone, which most had to look up.
 
 ## Describe the engagement you received from testers
 
-*(298 characters)*
+*(295 characters)*
 
 ```
-Three of twelve testers reported in writing: 29 findings, 20 with
-screenshots. One used the app daily for six days; one walked every Map
-screen and counted the trail list against the home banner; one checked
-a concert against its poster and caught the calendar export saying
-09:00 for a 21:00 show.
+Three of twelve wrote back, 29 findings, 20 screenshots. One used the
+app six days running. One counted closed trails in the list against the
+home banner and got 9 vs 14 — we found both were wrong. One opened a
+concert poster, then our calendar export: 09:00 for a 21:00 show.
+Fixed in build 31.
 ```
 
 **What backs this up.** Kate: 17 findings across five sessions, 19–24
