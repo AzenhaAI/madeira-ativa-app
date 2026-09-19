@@ -11,6 +11,24 @@ Character counts are given because the form truncates at 300.
 
 ---
 
+## How did you recruit users for your closed test?
+
+*(297 characters)*
+
+```
+Not easy. Friends and acquaintances on Madeira, asked one by one over
+WhatsApp and Telegram; no paid provider. I collected each person's
+Google account address, added them to the email list in Play Console
+and sent the opt-in link with step-by-step instructions. Twelve agreed;
+three sent written feedback.
+```
+
+**How easy was it to recruit testers?** — Difficult. Twelve people took
+about a week of individual messages, and each needed the address of the
+Google account on their phone, which most had to look up.
+
+---
+
 ## Describe the engagement you received from testers
 
 *(298 characters)*
