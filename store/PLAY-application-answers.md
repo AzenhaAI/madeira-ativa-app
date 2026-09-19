@@ -56,14 +56,14 @@ fees, glossary), Statistics. Not mentioned by anyone: News, Roots.
 
 ## Provide a summary of the feedback you received from testers, and how you collected it
 
-*(301 characters)*
+*(289 characters)*
 
 ```
 Direct messages on Telegram, in their own words, screenshots annotated
 by them. 32 findings: no map legend; two colours alike; grey read as
 inactive, not closed; home count disagreed with the list; links led to
-a season PDF or a rival app; 09:00 in the calendar for a 21:00 show;
-small font. 18 fixed.
+a season PDF or a rival app; 09:00 in the calendar for a 21:00 show.
+18 fixed.
 ```
 
 **What backs this up.** Full list with dates, quotes and status in
@@ -75,14 +75,14 @@ personal history, a tunnel/exposure survey, bus links), 0 dismissed.
 
 ## What changed as a result of testing
 
-*(302 characters)*
+*(295 characters)*
 
 ```
 Six builds, 26 to 31, during the test. Map legend added; closed trails
 red everywhere; home banner reads the list's own count; calendar export
 uses the real start time; 91 links to a rival app removed; links go to
-the organiser's page; new "Other" sports tab; trail fee opens the
-official booking site.
+the organiser's page; new "Other" tab; trail fee opens the official
+booking site.
 ```
 
 **The full list, by tester, with the build it shipped in.**
