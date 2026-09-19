@@ -13,13 +13,13 @@ Character counts are given because the form truncates at 300.
 
 ## Describe the engagement you received from testers
 
-*(290 characters)*
+*(298 characters)*
 
 ```
 Three of twelve testers reported in writing: 29 findings, 20 with their
 own screenshots. One used the app daily for six days; one walked every
 Map screen and counted the trail list against the home banner; one
-checked a concert against its poster and caught our calendar export
+checked a concert against its poster and caught the calendar export
 saying 09:00, not 21:00.
 ```
 
