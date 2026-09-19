@@ -13,14 +13,14 @@ Character counts are given because the form truncates at 300.
 
 ## How did you recruit users for your closed test?
 
-*(292 characters)*
+*(291 characters)*
 
 ```
 Not easy. Friends and acquaintances on Madeira, asked one by one over
 WhatsApp and Telegram; no paid provider. I collected each person's
 Google account address, added them to the Play Console email list and
 sent the opt-in link with step-by-step instructions. Twelve agreed;
-three wrote back.
+four wrote back.
 ```
 
 **How easy was it to recruit testers?** — Difficult. Twelve people took
@@ -31,17 +31,17 @@ Google account on their phone, which most had to look up.
 
 ## Describe the engagement you received from testers
 
-*(300 characters)*
+*(299 characters)*
 
 ```
-Three of twelve wrote back: 29 findings, 20 screenshots. One used the
-app six days running. One counted closed trails in the list against the
-home banner, got 9 vs 14 — we found both wrong. One opened a concert
-poster, then our calendar export: 09:00 for a 21:00 show. Each one fixed
-in builds 26–31.
+Four of twelve wrote back: 32 findings, 22 with screenshots. One used
+the app six days running. One counted closed trails in the list against
+the home banner, got 9 vs 14 — we found both wrong. One held a concert
+poster next to our calendar export: 09:00 for a 21:00 show. All fixed in
+builds 26–31.
 ```
 
-**What backs this up.** Kate: 17 findings across five sessions, 19–24
+**What backs this up.** Aileen: first to install, 18 August; 3 findings including the empty Play page every new tester meets. Kate: 17 findings across five sessions, 19–24
 August. Alexander: 7 findings on 12–15 September, each with a red-annotated
 screenshot, numbered by him. Alexey: 5 findings on 18 September, all on an
 iPhone-class 375-point screen, one of them cross-checked against the
@@ -56,18 +56,18 @@ fees, glossary), Statistics. Not mentioned by anyone: News, Roots.
 
 ## Provide a summary of the feedback you received from testers, and how you collected it
 
-*(292 characters)*
+*(301 characters)*
 
 ```
-Direct messages on Telegram, in the testers' own words, screenshots
-annotated by them. 29 findings: no map legend, two colours alike, grey
-read as inactive not closed, home count disagreed with the list, links
-went to a season PDF or a competitor's app, wrong hour in the calendar
-export. 18 fixed.
+Direct messages on Telegram, in their own words, screenshots annotated
+by them. 32 findings: no map legend; two colours alike; grey read as
+inactive, not closed; home count disagreed with the list; links led to
+a season PDF or a rival app; 09:00 in the calendar for a 21:00 show;
+small font. 18 fixed.
 ```
 
 **What backs this up.** Full list with dates, quotes and status in
-`PLAY-tester-feedback-log.md`. Status of the 29: 18 fixed and shipped, 7
+`PLAY-tester-feedback-log.md`. Status of the 32: 18 fixed and shipped, 8
 accepted and queued, 4 needing a product decision (location permission,
 personal history, a tunnel/exposure survey, bus links), 0 dismissed.
 
@@ -75,13 +75,14 @@ personal history, a tunnel/exposure survey, bus links), 0 dismissed.
 
 ## What changed as a result of testing
 
-*(280 characters)*
+*(302 characters)*
 
 ```
 Six builds, 26 to 31, during the test. Map legend added; closed trails
 red everywhere; home banner reads the list's own count; calendar export
-uses the real start time; links go to the organiser, never a competitor;
-new "Other" sports tab; trail fee opens the official booking site.
+uses the real start time; 91 links to a rival app removed; links go to
+the organiser's page; new "Other" sports tab; trail fee opens the
+official booking site.
 ```
 
 **The full list, by tester, with the build it shipped in.**
@@ -183,10 +184,10 @@ none blocking.
 | | |
 |---|---|
 | Testers opted in | 12, continuously since 18 August |
-| Testers who reported in writing | 3 |
-| Findings | 29 (20 with screenshots) |
+| Testers who reported in writing | 4 |
+| Findings | 32 (22 with screenshots) |
 | Fixed and shipped | 18 |
-| Accepted, queued | 7 |
+| Accepted, queued | 8 |
 | Needs a product decision | 4 |
 | Dismissed | 0 |
 | Found beyond what was reported | 6 |
