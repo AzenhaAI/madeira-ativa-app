@@ -805,6 +805,14 @@ class NewsItem {
   String snippetFor(String lg) => lg == lang
       ? snippet
       : (snippets[lg]?.isNotEmpty == true ? snippets[lg]! : snippet);
+
+  /// Whether what the reader sees in [lg] is actually a translation. The
+  /// badge used to say "RU · auto" whenever the article's language differed
+  /// from the chip — including when the feed had fallen back to the original
+  /// under that key, so the badge sat over Portuguese text for four days and
+  /// nothing on screen admitted it.
+  bool isTranslatedTo(String lg) =>
+      lg != lang && titles[lg]?.isNotEmpty == true && titles[lg] != title;
 }
 
 class Broadcast {
@@ -3090,7 +3098,7 @@ class _NewsPageState extends State<NewsPage> {
             );
           }
           final n = shown[i - 1];
-          final translated = n.lang != _lang;
+          final translated = n.isTranslatedTo(_lang);
           return Card(
             color: context.cSurface,
             elevation: 0,
