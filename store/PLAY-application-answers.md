@@ -175,6 +175,26 @@ channel that already exist"*.
 
 ---
 
+## Additional testing — what did you do differently this time?
+
+*(299 characters)*
+
+```
+The first test had one tester writing in detail and the same build for
+14 days. This time four testers wrote back, 32 findings; six builds
+shipped during the window, each answering their reports; and testers
+were asked about specific screens — Map, Levadas, calendar export — not
+"try it". Feedback came within a day of each build.
+```
+
+Three differences, each one Google can check against the track: one
+tester writing in the first round against four in this one; one build
+against six; and testing directed at named screens rather than "have a
+look". The last sentence is what the rejection was about — engagement,
+not installs.
+
+---
+
 ## Production readiness
 
 *(291 characters)*
