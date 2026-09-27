@@ -9,6 +9,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import 'gazetteer.dart';
 import 'ask_review.dart';
+import 'island_now.dart';
 import 'levada_page.dart';
 import 'stats_page.dart';
 import 'notify.dart';
@@ -61,6 +62,24 @@ const _tr = {
   'en': {
     'home': 'Home',
     'ask': 'Ask AI',
+    'get_there': 'How to get there',
+    'upper_end': 'Upper end',
+    'lower_end': 'Lower end',
+    'trail_end': 'Trail end',
+    'loop_end': 'Start and finish',
+    'drive_park': 'Drive to the car park',
+    'from_path': 'from the path',
+    'paid': 'paid',
+    'end_on_map': 'This end on the map',
+    'no_park': 'no mapped car park nearby',
+    'bus_one': 'Bus',
+    'bus_many': 'Buses',
+    'pass_one': 'passes here',
+    'pass_many': 'pass here',
+    'no_route': 'No bus route mapped near this end',
+    'all_timetables': 'All bus timetables (SIGA)',
+    'time_official': 'Official time and difficulty from Visit Madeira, as on the trailhead board.',
+    'ipma_here': 'IPMA warnings for this trail\'s zone',
     'events': 'Events',
     'map': 'Map',
     'levadas': 'Levadas',
@@ -162,6 +181,24 @@ const _tr = {
   'pt': {
     'home': 'Início',
     'ask': 'Ask AI',
+    'get_there': 'Como chegar',
+    'upper_end': 'Extremo superior',
+    'lower_end': 'Extremo inferior',
+    'trail_end': 'Extremo do percurso',
+    'loop_end': 'Início e fim',
+    'drive_park': 'Ir de carro até ao parque',
+    'from_path': 'do percurso',
+    'paid': 'pago',
+    'end_on_map': 'Este extremo no mapa',
+    'no_park': 'sem parque mapeado perto',
+    'bus_one': 'Autocarro',
+    'bus_many': 'Autocarros',
+    'pass_one': 'passa aqui',
+    'pass_many': 'passam aqui',
+    'no_route': 'Sem linha de autocarro mapeada perto deste extremo',
+    'all_timetables': 'Todos os horários (SIGA)',
+    'time_official': 'Duração e dificuldade oficiais da Visit Madeira, como no painel do início do percurso.',
+    'ipma_here': 'Avisos IPMA para a zona deste percurso',
     'events': 'Eventos',
     'map': 'Mapa',
     'levadas': 'Levadas',
@@ -1150,6 +1187,10 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 20),
+          // Coast and summit, the sea, ships in Funchal, the next good sunrise
+          // and IPMA warnings — the same facts and rules as the site's strip.
+          // Keyed by language so a switch rebuilds its wording.
+          IslandNowCard(key: ValueKey('now-${locale.value}')),
           _SectionHeader(
               title: t('coming_up'),
               onMore: () => widget.onNavigate(kTabEvents)),
@@ -2216,6 +2257,17 @@ class Levada {
   final String marking;
   final bool roundtrip;
   String? official;
+  // Madeira or Porto Santo: both islands number their trails from PR 1, so a
+  // code alone does not name a trail.
+  final String island;
+  // Visit Madeira's figures, the ones on the trailhead board, when it has a
+  // page for the route (32 of 44). Ours are only estimates.
+  final String? officialDifficulty;
+  final int? officialMinutes;
+  // Each end of the route: height, nearest car park, bus lines passing it.
+  final List<TrailEnd> ends;
+
+  bool get timeIsOfficial => officialMinutes != null;
 
   /// Rough time on foot: Naismith's 12 min per km plus 10 min for every 100 m
   /// of climb, and a gentler 10 min per 300 m of descent.
@@ -2224,6 +2276,10 @@ class Levada {
   /// 1.8 km with 464 m of drop and no climb at all — and plain Naismith calls
   /// that 22 minutes, which nobody walking it would recognise.
   String? get walkingTime {
+    if (officialMinutes != null) {
+      final h = officialMinutes! ~/ 60, m = officialMinutes! % 60;
+      return h > 0 ? (m > 0 ? '${h}h ${m.toString().padLeft(2, '0')}m' : '${h}h') : '${m}m';
+    }
     final km = double.tryParse(distance);
     if (km == null) return null;
     final climb = double.tryParse(ascent) ?? 0;
@@ -2258,6 +2314,19 @@ class Levada {
   /// Easy / moderate / hard from distance and climb together, so nobody has to
   /// do the arithmetic in their head.
   String get difficultyKey {
+    // The board at the trailhead wins. Ours is computed from the climb, and the
+    // climb is only as right as the direction OSM draws the route in: PR 1.3
+    // runs downhill from Pico Ruivo and we called it hard.
+    switch ((officialDifficulty ?? '').toLowerCase()) {
+      case 'easy':
+        return 'easy';
+      case 'moderate':
+        return 'moderate';
+      case 'difficult':
+      case 'hard':
+      case 'very difficult':
+        return 'hard';
+    }
     final km = double.tryParse(distance) ?? 0;
     final climb = double.tryParse(ascent) ?? 0;
     final score = km + climb / 100;
@@ -2292,10 +2361,60 @@ class Levada {
         descent = j['descent_m']?.toString() ?? '',
         marking = j['marking']?.toString() ?? '',
         roundtrip = j['roundtrip'] == true,
+        island = (j['island'] ?? 'Madeira').toString(),
+        officialDifficulty = (j['official'] is Map) ? j['official']['difficulty']?.toString() : null,
+        officialMinutes = (j['official'] is Map) ? (j['official']['duration_min'] as num?)?.toInt() : null,
+        ends = (j['access'] is Map && j['access']['ends'] is List)
+            ? (j['access']['ends'] as List)
+                .map((e) => TrailEnd.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList()
+            : const [],
         center = j['center'] == null
             ? null
             : LatLng((j['center'][0] as num).toDouble(),
                 (j['center'][1] as num).toDouble());
+}
+
+/// One end of a trail, from levadas.json's `access` (scripts/build_trail_access.py).
+/// A field that is absent means its source did not answer on the last build —
+/// shown as nothing, never as "none".
+class TrailEnd {
+  final double lat, lon;
+  final int elev;
+  final bool parkingKnown, linesKnown;
+  final ({int dist, String name, bool paid, double lat, double lon})? parking;
+  final ({int dist, String stop, List<String> lines})? stop;
+  final List<({String line, String timetable, String name})> lines;
+
+  TrailEnd.fromJson(Map<String, dynamic> j)
+      : lat = (j['lat'] as num).toDouble(),
+        lon = (j['lon'] as num).toDouble(),
+        elev = (j['elev'] as num?)?.round() ?? 0,
+        parkingKnown = j.containsKey('parking'),
+        linesKnown = j.containsKey('lines'),
+        parking = j['parking'] is Map
+            ? (
+                dist: (j['parking']['dist'] as num).round(),
+                name: (j['parking']['name'] ?? '').toString(),
+                paid: j['parking']['fee'] == 'yes',
+                lat: (j['parking']['lat'] as num).toDouble(),
+                lon: (j['parking']['lon'] as num).toDouble(),
+              )
+            : null,
+        stop = j['bus'] is Map
+            ? (
+                dist: (j['bus']['dist'] as num).round(),
+                stop: (j['bus']['stop'] ?? '').toString().replaceAll(RegExp(r'\s*\([^)]*\)\s*$'), ''),
+                lines: ((j['bus']['lines'] as List?) ?? []).map((x) => x.toString()).toList(),
+              )
+            : null,
+        lines = ((j['lines'] as List?) ?? [])
+            .map((x) => (
+                  line: (x['line'] ?? '').toString(),
+                  timetable: (x['timetable'] ?? '').toString(),
+                  name: (x['siga_name'] ?? '').toString(),
+                ))
+            .toList();
 }
 
 List<Levada>? _levadaCache;
@@ -2330,12 +2449,15 @@ Future<List<Levada>> fetchLevadas() async {
       .toList();
   try {
     final st = await fetchTrailStatus();
+    // Keyed by code AND island. Madeira and Porto Santo both have a PR 1, 2
+    // and 3; by code alone Porto Santo's closed PR 3 closed Madeira's PR 3
+    // (Vereda do Burro) too.
     final by = {
       for (final t in (st['trails'] as List? ?? []))
-        (t['code'] ?? '').toString(): (t['status'] ?? '').toString()
+        '${t['code'] ?? ''}|${t['island'] ?? 'Madeira'}': (t['status'] ?? '').toString()
     };
     for (final l in _levadaCache!) {
-      final s = by[l.code];
+      final s = by['${l.code}|${l.island}'];
       if (s != null && s.isNotEmpty) l.official = s;
     }
     final missing = _levadaCache!.where((l) => l.official == null).length;
@@ -2472,6 +2594,17 @@ class _LevadasPageState extends State<LevadasPage> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Warnings first: a thunderstorm over the mountains changes which
+              // of the trails below is worth the drive.
+              FutureBuilder<List<IpmaWarning>>(
+                future: fetchIpmaWarnings(),
+                builder: (context, snap) => (snap.data ?? []).isEmpty
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                        child: IpmaWarningList(warnings: snap.data!),
+                      ),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(4, 4, 0, 10),
                 child: Row(
