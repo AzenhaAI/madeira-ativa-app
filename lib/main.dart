@@ -44,11 +44,23 @@ extension AtivaColors on BuildContext {
 }
 
 final locale = ValueNotifier<String>('en');
+
+// Bottom-bar positions. Home's shortcuts navigate by these names, not by bare
+// numbers, so adding a tab (Ask AI went in after Home) moves one list instead of
+// silently sending "Levadas" to the map.
+const kTabHome = 0;
+const kTabAsk = 1;
+const kTabEvents = 2;
+const kTabMap = 3;
+const kTabLevadas = 4;
+const kTabNews = 5;
+const kTabRoots = 6;
 final themeModeN = ValueNotifier<ThemeMode>(ThemeMode.light);
 
 const _tr = {
   'en': {
     'home': 'Home',
+    'ask': 'Ask AI',
     'events': 'Events',
     'map': 'Map',
     'levadas': 'Levadas',
@@ -149,6 +161,7 @@ const _tr = {
   },
   'pt': {
     'home': 'Início',
+    'ask': 'Ask AI',
     'events': 'Eventos',
     'map': 'Mapa',
     'levadas': 'Levadas',
@@ -504,6 +517,7 @@ class _HomeShellState extends State<HomeShell> {
     // position, so the tab keeps its scroll and its loaded data.
     final pages = [
       HomePage(onNavigate: _goTo),
+      const AskTab(),
       EventsPage(),
       MapPage(),
       LevadasPage(),
@@ -697,7 +711,9 @@ class _HomeShellState extends State<HomeShell> {
         ),
       ),
       body: SafeArea(
-        child: _tab == 2 ? pages[_tab] : ReadableWidth(child: pages[_tab]),
+        child: _tab == kTabMap || _tab == kTabAsk
+            ? pages[_tab]
+            : ReadableWidth(child: pages[_tab]),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
@@ -705,6 +721,8 @@ class _HomeShellState extends State<HomeShell> {
         destinations: [
           NavigationDestination(
               icon: const Icon(Icons.home_outlined), label: t('home')),
+          NavigationDestination(
+              icon: const Icon(Icons.auto_awesome_outlined), label: t('ask')),
           NavigationDestination(
               icon: const Icon(Icons.calendar_month_outlined),
               label: t('events')),
@@ -958,7 +976,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           if ((_status?['alerts'] as List?)?.isNotEmpty ?? false)
             GestureDetector(
-              onTap: () => widget.onNavigate(3),
+              onTap: () => widget.onNavigate(kTabLevadas),
               child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.symmetric(
@@ -988,7 +1006,7 @@ class _HomePageState extends State<HomePage> {
             ),
           if (_geo.isNotEmpty)
             GestureDetector(
-              onTap: () => widget.onNavigate(2),
+              onTap: () => widget.onNavigate(kTabMap),
               child: Container(
                 height: 190,
                 margin: const EdgeInsets.only(bottom: 16),
@@ -1134,7 +1152,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 20),
           _SectionHeader(
               title: t('coming_up'),
-              onMore: () => widget.onNavigate(1)),
+              onMore: () => widget.onNavigate(kTabEvents)),
           if (_events == null)
             const Center(
                 child: Padding(
@@ -1152,7 +1170,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 20),
           _SectionHeader(
               title: t('news'),
-              onMore: () => widget.onNavigate(4)),
+              onMore: () => widget.onNavigate(kTabNews)),
           if (_news != null)
             for (final n in _news!.take(3))
               Card(
@@ -1215,7 +1233,7 @@ class _HomePageState extends State<HomePage> {
           ],
           const SizedBox(height: 20),
           GestureDetector(
-            onTap: () => widget.onNavigate(3),
+            onTap: () => widget.onNavigate(kTabLevadas),
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -1247,7 +1265,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 10),
           GestureDetector(
-            onTap: () => widget.onNavigate(5),
+            onTap: () => widget.onNavigate(kTabRoots),
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -2867,14 +2885,21 @@ class _MapPageState extends State<MapPage> {
 class WebPage extends StatefulWidget {
   final String title;
   final String url;
-  const WebPage({super.key, required this.title, required this.url});
+  // Inside a bottom-bar tab the app's own bar is already on screen; a second
+  // one would stack under it.
+  final bool bare;
+  const WebPage(
+      {super.key, required this.title, required this.url, this.bare = false});
 
   @override
   State<WebPage> createState() => _WebPageState();
 }
 
 class _WebPageState extends State<WebPage> {
-  late final WebViewController _c;
+  // Built once. "Try again" used to call _load(), which assigned this
+  // late final a second time: LateInitializationError, and a spinner that never
+  // stopped on every web screen whose first load had failed.
+  late final WebViewController _c = _makeController();
   bool _loading = true;
   bool _failed = false;
 
@@ -2889,7 +2914,11 @@ class _WebPageState extends State<WebPage> {
       _loading = true;
       _failed = false;
     });
-    _c = WebViewController()
+    _c.loadRequest(Uri.parse(widget.url));
+  }
+
+  WebViewController _makeController() {
+    return WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       // Only onPageFinished was handled, so a navigation that died — no network,
       // captive wifi, a 5xx — left the spinner turning forever, because iOS
@@ -2909,15 +2938,18 @@ class _WebPageState extends State<WebPage> {
         onHttpError: (_) {
           if (mounted) setState(() => _loading = false);
         },
-      ))
-      ..loadRequest(Uri.parse(widget.url));
+      ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: _failed
+    final body = _body(context);
+    if (widget.bare) return body;
+    return Scaffold(appBar: AppBar(title: Text(widget.title)), body: body);
+  }
+
+  Widget _body(BuildContext context) {
+    return _failed
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -2943,7 +2975,27 @@ class _WebPageState extends State<WebPage> {
                   const Center(
                       child: CircularProgressIndicator(color: kGreen)),
               ],
-            ),
+            );
+  }
+}
+
+// Ask AI — in development. The answering lives on the site (/ativa/ask), where
+// it reads the same live data as everything else; the app shows that page in
+// the reader's language, without the site's back link (?app=1). One engine, so
+// the app and the site cannot answer the same question differently.
+class AskTab extends StatelessWidget {
+  const AskTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String>(
+      valueListenable: locale,
+      builder: (_, lang, _) => WebPage(
+        key: ValueKey('ask-$lang'),
+        title: t('ask'),
+        url: 'https://azenha.ai/ativa/ask?app=1&lang=$lang',
+        bare: true,
+      ),
     );
   }
 }
