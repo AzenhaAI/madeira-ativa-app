@@ -55,13 +55,16 @@ const kTabEvents = 2;
 const kTabMap = 3;
 const kTabLevadas = 4;
 const kTabNews = 5;
-const kTabRoots = 6;
+// Roots is no longer a tab: seven made every label small on a phone. It opens
+// as its own screen from the drawer, from News and from Home (openRoots).
+
 final themeModeN = ValueNotifier<ThemeMode>(ThemeMode.light);
 
 const _tr = {
   'en': {
     'home': 'Home',
     'ask': 'Ask AI',
+    'roots_link': 'Roots — 600 years of island history',
     'get_there': 'How to get there',
     'upper_end': 'Upper end',
     'lower_end': 'Lower end',
@@ -181,6 +184,7 @@ const _tr = {
   'pt': {
     'home': 'Início',
     'ask': 'Ask AI',
+    'roots_link': 'Raízes — 600 anos de história da ilha',
     'get_there': 'Como chegar',
     'upper_end': 'Extremo superior',
     'lower_end': 'Extremo inferior',
@@ -559,7 +563,6 @@ class _HomeShellState extends State<HomeShell> {
       MapPage(),
       LevadasPage(),
       NewsPage(),
-      RootsPage(),
     ];
     return Scaffold(
       appBar: AppBar(
@@ -640,6 +643,14 @@ class _HomeShellState extends State<HomeShell> {
               onTap: () => openUrl('https://t.me/madeira_ativa'),
             ),
             const Divider(),
+            ListTile(
+              leading: const Icon(Icons.menu_book_outlined, color: kGreen),
+              title: Text(t('roots')),
+              onTap: () {
+                Navigator.of(context).pop();
+                openRoots(context);
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.bar_chart, color: kGreen),
               title: Text(t('stats')),
@@ -769,9 +780,6 @@ class _HomeShellState extends State<HomeShell> {
               icon: const Icon(Icons.hiking), label: t('levadas')),
           NavigationDestination(
               icon: const Icon(Icons.article_outlined), label: t('news')),
-          NavigationDestination(
-              icon: const Icon(Icons.menu_book_outlined),
-              label: t('roots')),
         ],
       ),
     );
@@ -1306,7 +1314,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 10),
           GestureDetector(
-            onTap: () => widget.onNavigate(kTabRoots),
+            onTap: () => openRoots(context),
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -3015,6 +3023,16 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
+/// Roots — the island's history — as a screen of its own, with a way back.
+void openRoots(BuildContext context) {
+  Navigator.of(context).push(MaterialPageRoute(
+    builder: (_) => Scaffold(
+      appBar: AppBar(title: Text(t('roots'))),
+      body: const ReadableWidth(child: RootsPage()),
+    ),
+  ));
+}
+
 class WebPage extends StatefulWidget {
   final String title;
   final String url;
@@ -3212,6 +3230,28 @@ class _NewsPageState extends State<NewsPage> {
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
                         color: context.cTitle)),
+                const SizedBox(height: 8),
+                // Roots moved off the bottom bar; today's news is where the
+                // island's longer story sits best.
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => openRoots(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: context.cTerraTint,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(children: [
+                      const Icon(Icons.menu_book_outlined, color: kTerracotta, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: Text(t('roots_link'),
+                              style: TextStyle(fontWeight: FontWeight.w600, color: context.cBody))),
+                      const Icon(Icons.chevron_right, color: kTerracotta),
+                    ]),
+                  ),
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 6,
