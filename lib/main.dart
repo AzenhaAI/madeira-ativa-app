@@ -64,6 +64,13 @@ const _tr = {
   'en': {
     'home': 'Home',
     'ask': 'Ask AI',
+    'by_bus': 'Trails by bus',
+    'next_bus': 'Next',
+    'tomorrow_w': 'tomorrow',
+    'webcam': 'Live webcam',
+    'on_path': 'On the path',
+    'path_src': 'OpenStreetMap, where surveyed; mapped on',
+    'of_route': 'of the route',
     'roots_link': 'Roots — 600 years of island history',
     'get_there': 'How to get there',
     'upper_end': 'Upper end',
@@ -184,6 +191,13 @@ const _tr = {
   'pt': {
     'home': 'Início',
     'ask': 'Ask AI',
+    'by_bus': 'Percursos de autocarro',
+    'next_bus': 'Próximos',
+    'tomorrow_w': 'amanhã',
+    'webcam': 'Webcam em direto',
+    'on_path': 'No trilho',
+    'path_src': 'OpenStreetMap, onde levantado; mapeado em',
+    'of_route': 'do percurso',
     'roots_link': 'Raízes — 600 anos de história da ilha',
     'get_there': 'Como chegar',
     'upper_end': 'Extremo superior',
@@ -2274,6 +2288,12 @@ class Levada {
   final int? officialMinutes;
   // Each end of the route: height, nearest car park, bus lines passing it.
   final List<TrailEnd> ends;
+  // Railings, narrow ledges, tunnels, demanding ground — OpenStreetMap by
+  // length, with how much of the route is mapped (build_trail_exposure.py).
+  final Map<String, dynamic>? exposure;
+  // Live webcams near the trail (NetMadeira pages, linked, never embedded).
+  final List<({String name, String url})> webcams;
+  bool get byBus => ends.any((e) => e.lines.isNotEmpty || e.stop != null);
 
   bool get timeIsOfficial => officialMinutes != null;
 
@@ -2372,6 +2392,12 @@ class Levada {
         island = (j['island'] ?? 'Madeira').toString(),
         officialDifficulty = (j['official'] is Map) ? j['official']['difficulty']?.toString() : null,
         officialMinutes = (j['official'] is Map) ? (j['official']['duration_min'] as num?)?.toInt() : null,
+        exposure = j['exposure'] is Map ? Map<String, dynamic>.from(j['exposure']) : null,
+        webcams = (j['access'] is Map && j['access']['webcams'] is List)
+            ? (j['access']['webcams'] as List)
+                .map((w) => (name: (w['name'] ?? '').toString(), url: (w['url'] ?? '').toString()))
+                .toList()
+            : const [],
         ends = (j['access'] is Map && j['access']['ends'] is List)
             ? (j['access']['ends'] as List)
                 .map((e) => TrailEnd.fromJson(Map<String, dynamic>.from(e as Map)))
@@ -2391,7 +2417,7 @@ class TrailEnd {
   final int elev;
   final bool parkingKnown, linesKnown;
   final ({int dist, String name, bool paid, double lat, double lon})? parking;
-  final ({int dist, String stop, List<String> lines})? stop;
+  final ({int dist, String stop, List<String> lines, Map<String, List<List<String>>> departures})? stop;
   final List<({String line, String timetable, String name})> lines;
 
   TrailEnd.fromJson(Map<String, dynamic> j)
@@ -2414,6 +2440,12 @@ class TrailEnd {
                 dist: (j['bus']['dist'] as num).round(),
                 stop: (j['bus']['stop'] ?? '').toString().replaceAll(RegExp(r'\s*\([^)]*\)\s*$'), ''),
                 lines: ((j['bus']['lines'] as List?) ?? []).map((x) => x.toString()).toList(),
+                departures: {
+                  for (final e in ((j['bus']['departures'] as Map?) ?? {}).entries)
+                    e.key.toString(): (e.value as List)
+                        .map((x) => (x as List).map((y) => y.toString()).toList())
+                        .toList()
+                },
               )
             : null,
         lines = ((j['lines'] as List?) ?? [])
@@ -2551,6 +2583,7 @@ class _LevadasPageState extends State<LevadasPage> {
   String _query = '';
   bool _searching = false;
   bool _favOnly = false;
+  bool _busOnly = false;
   String _sort = 'name';
 
   String _favKey(Levada l) => 'levada:${l.code}';
@@ -2571,6 +2604,7 @@ class _LevadasPageState extends State<LevadasPage> {
       return skeletonList(context);
     }
     var shown = _levadas!;
+    if (_busOnly) shown = shown.where((l) => l.byBus).toList();
     if (_favOnly) {
       shown = shown.where((l) => isFav(_favKey(l))).toList();
     }
@@ -2633,6 +2667,15 @@ class _LevadasPageState extends State<LevadasPage> {
                         onPressed: () =>
                             setState(() => _favOnly = !_favOnly),
                       ),
+                    ),
+                    // Trails with a bus at one end — 15 of Madeira's 40.
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: t('by_bus'),
+                      icon: Icon(
+                          _busOnly ? Icons.directions_bus : Icons.directions_bus_outlined,
+                          color: _busOnly ? kTerracotta : context.cTitle),
+                      onPressed: () => setState(() => _busOnly = !_busOnly),
                     ),
                     IconButton(
                       visualDensity: VisualDensity.compact,
