@@ -197,6 +197,8 @@ class IslandNow {
   double? coastT, coastWind, summitT, seaT, waves;
   int? coastCode, summitCode;
   List<Map<String, dynamic>> shipsToday = [];
+  String? tide;
+  double? uv;
   Map<String, dynamic>? nextShip;
   String? sunriseLine;
   List<IpmaWarning> warnings = [];
@@ -235,9 +237,28 @@ Future<IslandNow> fetchIslandNow() async {
     () async {
       try {
         final d = await cachedJson('https://marine-api.open-meteo.com/v1/marine'
-            '?latitude=32.63&longitude=-16.92&current=wave_height,sea_surface_temperature');
+            '?latitude=32.63&longitude=-16.92&current=wave_height,sea_surface_temperature'
+            '&hourly=sea_level_height_msl&forecast_days=2&timezone=Atlantic%2FMadeira');
         n.seaT = (d['current']['sea_surface_temperature'] as num?)?.toDouble();
         n.waves = (d['current']['wave_height'] as num?)?.toDouble();
+        // Next high and low water: turning points of the hourly sea level.
+        final times = (d['hourly']['time'] as List).cast<String>();
+        final lv = (d['hourly']['sea_level_height_msl'] as List).map((x) => (x as num?)?.toDouble()).toList();
+        final hour = madeiraNow().toIso8601String().substring(0, 13);
+        String? hi, lo;
+        for (var i = 1; i < lv.length - 1; i++) {
+          final a = lv[i - 1], b = lv[i], c = lv[i + 1];
+          if (times[i].substring(0, 13).compareTo(hour) < 0 || a == null || b == null || c == null) continue;
+          if (hi == null && b >= a && b >= c) hi = times[i].substring(11, 16);
+          if (lo == null && b <= a && b <= c) lo = times[i].substring(11, 16);
+          if (hi != null && lo != null) break;
+        }
+        final pt = locale.value == 'pt';
+        final parts = [
+          if (hi != null) '${pt ? 'preia-mar' : 'high'} $hi',
+          if (lo != null) '${pt ? 'baixa-mar' : 'low'} $lo',
+        ];
+        if (parts.isNotEmpty) n.tide = parts.join(', ');
       } catch (_) {}
     }(),
     () async {
@@ -263,6 +284,18 @@ Future<IslandNow> fetchIslandNow() async {
     }(),
     () async {
       n.sunriseLine = await _sunrise();
+    }(),
+    () async {
+      try {
+        final d = await cachedJson('https://api.ipma.pt/open-data/forecast/meteorology/uv/uv.json');
+        final day = madeiraNow().toIso8601String().substring(0, 10);
+        for (final x in (d as List)) {
+          if (x['globalIdLocal'] == 2310300 && x['data'] == day) {
+            n.uv = double.tryParse(x['iUv'].toString());
+            break;
+          }
+        }
+      } catch (_) {}
     }(),
     () async {
       n.warnings = await fetchIpmaWarnings();
@@ -363,7 +396,14 @@ class _IslandNowCardState extends State<IslandNowCard> {
     if (n.seaT != null) {
       lines.add(line('🌊',
           '${pt ? 'Mar' : 'Sea'} ${n.seaT!.toStringAsFixed(1)}°'
-          '${n.waves != null ? '  ·  ${pt ? 'ondas' : 'waves'} ${n.waves!.toStringAsFixed(1)} m' : ''}'));
+          '${n.waves != null ? '  ·  ${pt ? 'ondas' : 'waves'} ${n.waves!.toStringAsFixed(1)} m' : ''}'
+          '${n.tide != null ? '  ·  ${pt ? 'maré' : 'tide'}: ${n.tide}' : ''}'));
+    }
+    if (n.uv != null) {
+      final v = n.uv!;
+      final band = v >= 11 ? (pt ? 'extremo' : 'extreme') : v >= 8 ? (pt ? 'muito alto' : 'very high')
+          : v >= 6 ? (pt ? 'alto' : 'high') : v >= 3 ? (pt ? 'moderado' : 'moderate') : (pt ? 'baixo' : 'low');
+      lines.add(line('☀️', 'UV ${v.round()} ($band) — Funchal'));
     }
     if (n.shipsToday.isNotEmpty || n.nextShip != null) {
       final parts = <String>[];
@@ -380,7 +420,10 @@ class _IslandNowCardState extends State<IslandNowCard> {
           onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
     }
     if (n.sunriseLine != null) {
-      lines.add(line('🌅', '${pt ? 'Nascer do sol no Pico do Arieiro' : 'Sunrise at Pico do Arieiro'} — ${n.sunriseLine}'));
+      // Tapping it opens the summit webcam: the forecast says what should
+      // happen, the camera shows what is.
+      lines.add(line('🌅', '${pt ? 'Nascer do sol no Pico do Arieiro' : 'Sunrise at Pico do Arieiro'} — ${n.sunriseLine}  📷',
+          onTap: () => openUrl('https://www.netmadeira.com/webcams-madeira/pico-do-arieiro')));
     }
     if (lines.isEmpty && n.warnings.isEmpty) return const SizedBox.shrink();
     return Container(
@@ -409,4 +452,54 @@ class _IslandNowCardState extends State<IslandNowCard> {
       ),
     );
   }
+}
+
+
+// ------------------------------------------------------------ buses, path
+
+/// Next departures from an urban stop: today's remaining, then tomorrow's.
+List<({bool today, String time, String line, String to})> nextBuses(
+    Map<String, List<List<String>>> deps, int n) {
+  final now = madeiraNow();
+  final date = now.toIso8601String().substring(0, 10);
+  final hm = now.toIso8601String().substring(11, 16);
+  final out = <({bool today, String time, String line, String to})>[];
+  for (final d in (deps.keys.toList()..sort())) {
+    if (d.compareTo(date) < 0) continue;
+    for (final x in deps[d]!) {
+      if (out.length >= n) return out;
+      if (d == date && x[0].compareTo(hm) < 0) continue;
+      out.add((today: d == date, time: x[0], line: x[1], to: x.length > 2 ? x[2] : ''));
+    }
+    if (out.length >= n) break;
+  }
+  return out;
+}
+
+/// Railing, narrow ledge, tunnels, demanding ground — same words as the site.
+List<String> pathFacts(Map<String, dynamic>? x) {
+  if (x == null || ((x['length_km'] as num?) ?? 0) == 0) return [];
+  final pt = locale.value == 'pt';
+  int v(String k) => (x[k] as num?)?.round() ?? 0;
+  final out = <String>[];
+  if (v('railing_pct') > 0 || v('no_railing_pct') > 0) {
+    final unknown = (100 - v('railing_pct') - v('no_railing_pct')).clamp(0, 100);
+    out.add(pt
+        ? 'Corrimão registado em ${v('railing_pct')}% do percurso, sem corrimão em ${v('no_railing_pct')}%, desconhecido em $unknown%'
+        : 'Railing recorded on ${v('railing_pct')}% of the route, none on ${v('no_railing_pct')}%, unknown on $unknown%');
+  } else {
+    out.add(pt ? 'Sem registo de corrimão em nenhum troço' : 'No railing recorded on any section');
+  }
+  if (v('narrow_pct') > 0) {
+    out.add(pt ? '${v('narrow_pct')}% do trilho com 0,5 m de largura ou menos' : '${v('narrow_pct')}% of the path 0.5 m wide or less');
+  }
+  if (v('tunnels') > 0) {
+    final n = v('tunnels');
+    out.add(pt ? '$n ${n > 1 ? 'túneis' : 'túnel'} (${v('tunnel_m')} m) — leve lanterna'
+        : '$n ${n > 1 ? 'tunnels' : 'tunnel'} (${v('tunnel_m')} m) — bring a torch');
+  }
+  if (v('demanding_pct') > 0) {
+    out.add(pt ? '${v('demanding_pct')}% em terreno de montanha exigente' : '${v('demanding_pct')}% demanding mountain terrain');
+  }
+  return out;
 }

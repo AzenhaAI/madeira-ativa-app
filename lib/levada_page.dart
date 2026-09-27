@@ -75,6 +75,7 @@ class _LevadaPageState extends State<LevadaPage> {
           ),
           const SizedBox(height: 18),
           _DetailGrid(l: l),
+          _OnPath(l: l),
           _TrailWarnings(l: l),
           if (l.ends.isNotEmpty) ...[
             const SizedBox(height: 18),
@@ -696,6 +697,15 @@ class _GetThere extends StatelessWidget {
       }
       if (e.stop != null) {
         rows.add(Text('🚏 ${e.stop!.stop}, ${e.stop!.dist} m (${e.stop!.lines.join(', ')})', style: soft));
+        // Funchal's urban timetable is open data: name the next departures.
+        final nb = nextBuses(e.stop!.departures, 4);
+        if (nb.isNotEmpty) {
+          rows.add(Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text('🕒 ${t('next_bus')}: ${nb.map((b) => '${b.today ? '' : '${t('tomorrow_w')} '}${b.time} ${b.line} → ${b.to}').join(' · ')}',
+                style: body.copyWith(fontSize: 13)),
+          ));
+        }
       }
       if (e.lines.isEmpty && e.stop == null && e.linesKnown) {
         rows.add(Text('🚌 ${t('no_route')}', style: soft));
@@ -713,11 +723,53 @@ class _GetThere extends StatelessWidget {
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.cTitle)),
         const SizedBox(height: 8),
         for (var i = 0; i < ends.length; i++) endBlock(i),
+        for (final c in l.webcams)
+          InkWell(
+            onTap: () => openUrl(c.url),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text('📷 ${t('webcam')}: ${c.name} ↗',
+                  style: body.copyWith(color: kGreen, fontWeight: FontWeight.w600)),
+            ),
+          ),
         InkWell(
           onTap: () => openUrl('https://siga.madeira.gov.pt/horarios'),
           child: Text('${t('all_timetables')} ↗', style: soft.copyWith(decoration: TextDecoration.underline)),
         ),
       ],
+    );
+  }
+}
+
+
+/// Railings, narrow ledges, tunnels, demanding ground — and how much of the
+/// route OpenStreetMap has mapped, so an unsurveyed stretch is never read as a
+/// stretch with no drop. A tester asked for exactly this.
+class _OnPath extends StatelessWidget {
+  final Levada l;
+  const _OnPath({required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    final facts = pathFacts(l.exposure);
+    if (facts.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(t('on_path'),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.cTitle)),
+          const SizedBox(height: 6),
+          for (final f in facts)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Text('• $f', style: TextStyle(fontSize: 14, color: context.cBody)),
+            ),
+          Text('${t('path_src')} ${l.exposure!['mapped_pct']}% ${t('of_route')}',
+              style: TextStyle(fontSize: 12, color: context.cSubtle)),
+        ],
+      ),
     );
   }
 }
