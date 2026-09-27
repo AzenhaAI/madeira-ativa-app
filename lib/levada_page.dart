@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart' show LatLng;
 
 import 'ask_review.dart';
+import 'island_now.dart';
 import 'main.dart';
 
 /// Detail screen for one PR trail: stats, elevation profile, link.
@@ -74,6 +75,11 @@ class _LevadaPageState extends State<LevadaPage> {
           ),
           const SizedBox(height: 18),
           _DetailGrid(l: l),
+          _TrailWarnings(l: l),
+          if (l.ends.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            _GetThere(l: l),
+          ],
           if (l.fee.isNotEmpty && l.fee != 'None') ...[
             const SizedBox(height: 10),
             OutlinedButton.icon(
@@ -257,7 +263,8 @@ class _DetailGrid extends StatelessWidget {
     final steep = l.steepestStep;
 
     final rows = <(String, String)>[
-      if (l.walkingTime != null) (t('on_foot'), '~${l.walkingTime}'),
+      if (l.walkingTime != null)
+        (t('on_foot'), l.timeIsOfficial ? l.walkingTime! : '~${l.walkingTime}'),
       (t('difficulty'), t(l.difficultyKey)),
       if (l.descent.isNotEmpty && l.descent != 'null')
         (t('descent'), '↓${l.descent} m'),
@@ -309,7 +316,7 @@ class _DetailGrid extends StatelessWidget {
         if (l.walkingTime != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(t('time_note'),
+            child: Text(t(l.timeIsOfficial ? 'time_official' : 'time_note'),
                 style: TextStyle(fontSize: 11, color: context.cSubtle)),
           ),
       ],
@@ -578,6 +585,138 @@ class _NearbyTrailsState extends State<_NearbyTrails> {
                   MaterialPageRoute(builder: (_) => LevadaPage(l: o))),
             ),
           ),
+      ],
+    );
+  }
+}
+
+
+/// IPMA warnings in force for the zone this trail walks in (mountains, a
+/// coast, or Porto Santo). Nothing is shown when there are none — never "all
+/// clear", since a failed request would look the same.
+class _TrailWarnings extends StatelessWidget {
+  final Levada l;
+  const _TrailWarnings({required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    final zone = trailZone(l);
+    return FutureBuilder<List<IpmaWarning>>(
+      future: fetchIpmaWarnings(),
+      builder: (context, snap) {
+        final here = (snap.data ?? []).where((w) => w.zone == zone).toList();
+        if (here.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(t('ipma_here'),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.cSubtle)),
+              const SizedBox(height: 6),
+              IpmaWarningList(warnings: here),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// How to reach each end: height, directions to the nearest car park (or the
+/// place itself — an end with no car park may be a summit no road reaches),
+/// and the bus lines that pass it, each opening its SIGA timetable. The ends
+/// are called upper and lower only when they differ by 150 m or more; the
+/// elevation model flattens sharp summits.
+class _GetThere extends StatelessWidget {
+  final Levada l;
+  const _GetThere({required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    final ends = l.ends;
+    final spread = ends.length == 2 ? ends[0].elev - ends[1].elev : 0;
+    String title(int i) => ends.length == 1
+        ? t('loop_end')
+        : spread >= 150
+            ? t(i == 0 ? 'upper_end' : 'lower_end')
+            : t('trail_end');
+    TextStyle body = TextStyle(fontSize: 14, color: context.cBody);
+    TextStyle soft = TextStyle(fontSize: 13, color: context.cSubtle);
+
+    Widget endBlock(int i) {
+      final e = ends[i];
+      final rows = <Widget>[
+        Text('${spread >= 150 ? (i == 0 ? '▲ ' : '▼ ') : '● '}${title(i)} · ${e.elev} m',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.cTitle)),
+      ];
+      if (e.parking != null) {
+        final pk = e.parking!;
+        rows.add(InkWell(
+          onTap: () => openUrl('https://www.google.com/maps/dir/?api=1&destination=${pk.lat},${pk.lon}'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Text('🚗 ${t('drive_park')}${pk.name.isNotEmpty ? ' ${pk.name}' : ''} — ${pk.dist} m ${t('from_path')}'
+                '${pk.paid ? ' · ${t('paid')}' : ''}',
+                style: body.copyWith(color: kGreen, fontWeight: FontWeight.w600)),
+          ),
+        ));
+      } else {
+        rows.add(InkWell(
+          onTap: () => openUrl('https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lon}'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Text.rich(TextSpan(children: [
+              TextSpan(text: '📍 ${t('end_on_map')}', style: body.copyWith(color: kGreen, fontWeight: FontWeight.w600)),
+              if (e.parkingKnown) TextSpan(text: '  (${t('no_park')})', style: soft),
+            ])),
+          ),
+        ));
+      }
+      if (e.lines.isNotEmpty) {
+        rows.add(Padding(
+          padding: const EdgeInsets.only(top: 3),
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              Text('🚌 ${t(e.lines.length > 1 ? 'bus_many' : 'bus_one')}', style: body),
+              for (final ln in e.lines)
+                ActionChip(
+                  visualDensity: VisualDensity.compact,
+                  label: Text(ln.line),
+                  tooltip: ln.name,
+                  onPressed: ln.timetable.isEmpty ? null : () => openUrl(ln.timetable),
+                ),
+              Text(t(e.lines.length > 1 ? 'pass_many' : 'pass_one'), style: soft),
+            ],
+          ),
+        ));
+      }
+      if (e.stop != null) {
+        rows.add(Text('🚏 ${e.stop!.stop}, ${e.stop!.dist} m (${e.stop!.lines.join(', ')})', style: soft));
+      }
+      if (e.lines.isEmpty && e.stop == null && e.linesKnown) {
+        rows.add(Text('🚌 ${t('no_route')}', style: soft));
+      }
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(t('get_there'),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.cTitle)),
+        const SizedBox(height: 8),
+        for (var i = 0; i < ends.length; i++) endBlock(i),
+        InkWell(
+          onTap: () => openUrl('https://siga.madeira.gov.pt/horarios'),
+          child: Text('${t('all_timetables')} ↗', style: soft.copyWith(decoration: TextDecoration.underline)),
+        ),
       ],
     );
   }
