@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 // "The island now": the coast and the summit, the sea, ships in Funchal, the
 // next good sunrise at Pico do Arieiro, and IPMA's weather warnings.
 //
@@ -196,6 +197,8 @@ class IpmaWarningList extends StatelessWidget {
 class IslandNow {
   double? coastT, coastWind, summitT, seaT, waves;
   int? coastCode, summitCode;
+  // The airport: wind, gusts and the crosswind on runway 05/23 in the gusts.
+  double? airWind, airGusts, airCross;
   List<Map<String, dynamic>> shipsToday = [];
   String? tide;
   double? uv;
@@ -224,14 +227,25 @@ Future<IslandNow> fetchIslandNow() async {
     () async {
       try {
         final d = await cachedJson('https://api.open-meteo.com/v1/forecast'
-            '?latitude=32.648,32.735&longitude=-16.908,-16.929&elevation=50,1818'
-            '&current=temperature_2m,weather_code,wind_speed_10m');
+            '?latitude=32.648,32.735,32.698&longitude=-16.908,-16.929,-16.774&elevation=50,1818,58'
+            '&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m');
         final pts = d as List;
         n.coastT = (pts[0]['current']['temperature_2m'] as num?)?.toDouble();
         n.coastWind = (pts[0]['current']['wind_speed_10m'] as num?)?.toDouble();
         n.coastCode = (pts[0]['current']['weather_code'] as num?)?.toInt();
         n.summitT = (pts[1]['current']['temperature_2m'] as num?)?.toDouble();
         n.summitCode = (pts[1]['current']['weather_code'] as num?)?.toInt();
+        if (pts.length > 2) {
+          final c = pts[2]['current'];
+          n.airWind = (c['wind_speed_10m'] as num?)?.toDouble();
+          n.airGusts = (c['wind_gusts_10m'] as num?)?.toDouble();
+          final dir = (c['wind_direction_10m'] as num?)?.toDouble();
+          if (n.airGusts != null && dir != null) {
+            // Runway 05/23 runs about 50°/230°; the usual airline limit at
+            // Funchal is 15 knots (28 km/h) across it, measured in the gusts.
+            n.airCross = n.airGusts! * math.sin((dir - 50) * math.pi / 180).abs();
+          }
+        }
       } catch (_) {}
     }(),
     () async {
@@ -270,10 +284,14 @@ Future<IslandNow> fetchIslandNow() async {
             .map((c) => Map<String, dynamic>.from(c as Map))
             .where((c) => c['superseded'] != true && (c['arrival'] ?? '') != '' && (c['departure'] ?? '') != '')
             .toList();
+        // One line per ship: APRAM lists a stay that spans midnight as two
+        // movements, which read as "SANTA MARIA MANUELA, SANTA MARIA MANUELA".
+        final seen = <String>{};
         n.shipsToday = calls
             .where((c) =>
                 (c['arrival'] as String).substring(0, 10).compareTo(today) <= 0 &&
                 (c['departure'] as String).substring(0, 10).compareTo(today) >= 0)
+            .where((c) => seen.add((c['ship'] as String).toUpperCase()))
             .toList();
         final next = calls.where((c) {
           final a = (c['arrival'] as String).substring(0, 10);
@@ -404,6 +422,18 @@ class _IslandNowCardState extends State<IslandNowCard> {
       final band = v >= 11 ? (pt ? 'extremo' : 'extreme') : v >= 8 ? (pt ? 'muito alto' : 'very high')
           : v >= 6 ? (pt ? 'alto' : 'high') : v >= 3 ? (pt ? 'moderado' : 'moderate') : (pt ? 'baixo' : 'low');
       lines.add(line('☀️', 'UV ${v.round()} ($band) — Funchal'));
+    }
+    if (n.airCross != null) {
+      final cross = n.airCross!.round();
+      final verdict = cross >= 28
+          ? (pt ? 'acima do limite habitual de 15 nós — desvios prováveis' : 'above the usual 15-knot limit — diversions likely')
+          : cross >= 20
+              ? (pt ? 'rajadas — atrasos possíveis' : 'gusty — delays possible')
+              : (pt ? 'calmo para aterrar' : 'calm for landings');
+      lines.add(line('✈',
+          '${pt ? 'Aeroporto: vento' : 'Airport: wind'} ${n.airWind?.round()} km/h, ${pt ? 'rajadas' : 'gusts'} ${n.airGusts?.round()}, '
+          '${pt ? 'cruzado' : 'crosswind'} $cross km/h — $verdict',
+          onTap: () => openUrl('https://www.flightradar24.com/airport/fnc')));
     }
     if (n.shipsToday.isNotEmpty || n.nextShip != null) {
       final parts = <String>[];
