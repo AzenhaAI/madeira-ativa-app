@@ -124,6 +124,14 @@ const _tr = {
     'cat_all': 'All', 'cat_trail': 'Trail', 'cat_road': 'Road',
     'cat_orient': 'Orient', 'cat_bike': 'Bike', 'cat_kids': 'Kids',
     'cat_pro': 'Pro', 'cat_swim': 'Swim', 'cat_other': 'Other', 'cat_fest': 'Fest',
+    // The Fest shelf's own categories, from the feed's `category`.
+    'cc_concert': 'Concert', 'cc_theatre': 'Theatre', 'cc_exhibition': 'Exhibition',
+    'cc_cinema': 'Cinema', 'cc_dance': 'Dance', 'cc_folklore': 'Folklore',
+    'cc_arraial': 'Arraial', 'cc_religious': 'Religious', 'cc_festival': 'Festival',
+    'cc_market': 'Market', 'cc_food': 'Food & wine', 'cc_family': 'Family',
+    'cc_workshop': 'Workshop', 'cc_talk': 'Talks & books', 'cc_show': 'Show',
+    'cc_sport': 'Sport', 'cc_culture': 'Culture',
+    'more_in_fest': 'more in Fest',
     'dist': 'dist', 'climb': 'climb', 'status': 'status',
     'weather': 'Weather here', 'weather_src': 'Forecast for this trail\u2019s own coordinates \u00b7 Open-Meteo', 'today': 'Today',
     'nearby': 'Walkable nearby', 'as_the_crow': 'away',
@@ -252,6 +260,13 @@ const _tr = {
     'cat_all': 'Todos', 'cat_trail': 'Trail', 'cat_road': 'Estrada',
     'cat_orient': 'Orient.', 'cat_bike': 'Bike', 'cat_kids': 'Crianças',
     'cat_pro': 'Pro', 'cat_swim': 'Natação', 'cat_other': 'Outros', 'cat_fest': 'Festas',
+    'cc_concert': 'Concerto', 'cc_theatre': 'Teatro', 'cc_exhibition': 'Exposição',
+    'cc_cinema': 'Cinema', 'cc_dance': 'Dança', 'cc_folklore': 'Folclore',
+    'cc_arraial': 'Arraial', 'cc_religious': 'Religioso', 'cc_festival': 'Festival',
+    'cc_market': 'Mercado', 'cc_food': 'Gastronomia', 'cc_family': 'Família',
+    'cc_workshop': 'Oficina', 'cc_talk': 'Conferências', 'cc_show': 'Espetáculo',
+    'cc_sport': 'Desporto', 'cc_culture': 'Cultura',
+    'more_in_fest': 'mais em Festas',
     'dist': 'distância', 'climb': 'subida', 'status': 'estado',
     'weather': 'Tempo aqui', 'weather_src': 'Previs\u00e3o para as coordenadas deste trilho \u00b7 Open-Meteo', 'today': 'Hoje',
     'nearby': 'Perto daqui', 'as_the_crow': 'de dist\u00e2ncia',
@@ -823,6 +838,12 @@ class AtivaEvent {
   final String time;
   final String price;
   final String organizer;
+  // The Fest shelf's own category ('concert', 'arraial', 'religious', …).
+  // Set on every cultural row since the feed started classifying them;
+  // empty on sport rows and on a cached feed from before.
+  final String category;
+
+  bool get isCulture => mode == 'festivals';
 
   AtivaEvent.fromJson(Map<String, dynamic> j)
       : name = j['name'] ?? '',
@@ -833,7 +854,8 @@ class AtivaEvent {
         url = j['url'] ?? '',
         time = j['time'] ?? '',
         price = j['price'] ?? '',
-        organizer = j['organizer'] ?? '';
+        organizer = j['organizer'] ?? '',
+        category = j['category'] ?? '';
 }
 
 Future<List<AtivaEvent>> fetchEvents() async {
@@ -954,6 +976,37 @@ const _typeIcons = {
   'orienteering': Icons.explore,
   'festival': Icons.celebration,
 };
+
+/// The Fest shelf's categories in display order, with the glyph each chip
+/// shows and the icon its rows get. The order is the feed's, which puts the
+/// evening-out kinds first and the catch-all last; it is fixed on purpose,
+/// so a chip stays where a reader last found it.
+const _cultureCats = <(String, String, IconData)>[
+  ('concert', '🎵', Icons.music_note),
+  ('theatre', '🎭', Icons.theater_comedy),
+  ('exhibition', '🖼', Icons.palette),
+  ('cinema', '🎬', Icons.movie),
+  ('dance', '💃', Icons.nightlife),
+  ('folklore', '🪗', Icons.groups),
+  ('arraial', '🎉', Icons.celebration),
+  ('religious', '⛪', Icons.church),
+  ('festival', '🎪', Icons.festival),
+  ('market', '🛍', Icons.storefront),
+  ('food', '🍷', Icons.restaurant),
+  ('family', '👶', Icons.family_restroom),
+  ('workshop', '🛠', Icons.handyman),
+  ('talk', '📚', Icons.menu_book),
+  ('show', '🎤', Icons.mic),
+  ('sport', '⚽', Icons.sports),
+  ('culture', '🏛', Icons.museum),
+];
+
+IconData cultureIcon(String category) {
+  for (final c in _cultureCats) {
+    if (c.$1 == category) return c.$3;
+  }
+  return Icons.celebration;
+}
 
 class HomePage extends StatefulWidget {
   final void Function(int) onNavigate;
@@ -1731,6 +1784,28 @@ class _EventsPageState extends State<EventsPage> {
   String _period = '3mo';
   int _beyondWindow = 0;
 
+  // Which of the Fest shelf's categories the reader asked for. Empty means
+  // all of them. Kept across launches: this is a preference, not a filter
+  // state, and asking again each time would be the onboarding quiz nobody
+  // wanted.
+  Set<String> _subCats = {};
+  // Looking past the chosen categories for a moment — the "+N more" row
+  // under a day, or the All chip in the Fest row — without unticking them.
+  // Cleared by the next tap on a category or on the main chip row.
+  bool _peek = false;
+  Set<String> get _subCatsInEffect => _peek ? const {} : _subCats;
+  // How often each category has been opened. Nobody ticks a preference box
+  // for 'arraial', but someone who opened three of them wants the next one
+  // on the first screen. Weighted into the All shelf's quota, below.
+  Map<String, int> _opened = {};
+  // Cultural rows the All shelf held back, per day, so each day can say so.
+  final Map<String, int> _hiddenByDay = {};
+
+  // Culture rows the All shelf shows per day when nothing is chosen: enough
+  // to say the island has an evening life, few enough that the week's races
+  // — the reason the app exists — are not buried under it.
+  static const _cultureQuota = 2;
+
   static const _periods = <(String, String, int)>[
     // "Today" and "Weekend" answer the question a resident asks at six in
     // the evening; the month-scale windows answer the one a visitor asks
@@ -1771,7 +1846,66 @@ class _EventsPageState extends State<EventsPage> {
   @override
   void initState() {
     super.initState();
+    _subCats = (prefs.getStringList('event_subcats') ?? []).toSet();
+    _opened = {
+      for (final s in prefs.getStringList('event_opened') ?? [])
+        if (s.contains('=')) s.split('=').first: int.tryParse(s.split('=').last) ?? 0,
+    };
     _load();
+  }
+
+  void _toggleSubCat(String slug) {
+    setState(() {
+      _peek = false;
+      _subCats.contains(slug) ? _subCats.remove(slug) : _subCats.add(slug);
+    });
+    prefs.setStringList('event_subcats', _subCats.toList());
+  }
+
+  void _noteOpened(AtivaEvent e) {
+    if (!e.isCulture || e.category.isEmpty) return;
+    _opened[e.category] = (_opened[e.category] ?? 0) + 1;
+    prefs.setStringList('event_opened',
+        [for (final k in _opened.keys) '$k=${_opened[k]}']);
+  }
+
+  /// How much this reader cares about a cultural row: chosen categories
+  /// first, then the ones they keep opening or starring, then the island's
+  /// big draws. Only the order within a day's quota; nothing is dropped
+  /// for scoring low.
+  int _interest(AtivaEvent e) {
+    var score = 0;
+    if (_subCats.contains(e.category)) score += 100;
+    score += 10 * (_opened[e.category] ?? 0).clamp(0, 5);
+    if (isFav(_favKey(e))) score += 50;
+    if (e.category == 'festival' || e.category == 'arraial') score += 5;
+    return score;
+  }
+
+  /// The All shelf: every sport row, and per day the cultural rows the
+  /// reader asked for plus a couple more. The rest are counted, not shown
+  /// — the day's row says how many wait under Fest.
+  List<AtivaEvent> _withQuota(List<AtivaEvent> events) {
+    _hiddenByDay.clear();
+    final byDay = <String, List<AtivaEvent>>{};
+    for (final e in events) {
+      byDay.putIfAbsent(e.date, () => []).add(e);
+    }
+    final out = <AtivaEvent>[];
+    for (final day in byDay.keys) {
+      final rows = byDay[day]!;
+      out.addAll(rows.where((e) => !e.isCulture));
+      final culture = rows.where((e) => e.isCulture).toList()
+        ..sort((a, b) => _interest(b).compareTo(_interest(a)));
+      final chosen = culture.where((e) => _subCats.contains(e.category)).toList();
+      final others = culture.where((e) => !_subCats.contains(e.category)).toList();
+      final extra = _subCats.isEmpty ? _cultureQuota : 0;
+      final kept = [...chosen, ...others.take(extra)];
+      out.addAll(kept);
+      final hidden = culture.length - kept.length;
+      if (hidden > 0) _hiddenByDay[day] = hidden;
+    }
+    return out;
   }
 
   Future<void> _load() async {
@@ -1819,6 +1953,11 @@ class _EventsPageState extends State<EventsPage> {
         _events!.where((e) => e.mode == 'trail' && !_isOrientacao(e)).toList(),
       'swim' => _events!
           .where((e) => e.mode == 'swim' || e.type == 'swimming_kids')
+          .toList(),
+      'festivals' => _events!
+          .where((e) => e.isCulture &&
+              (_subCatsInEffect.isEmpty ||
+                  _subCatsInEffect.contains(e.category)))
           .toList(),
       _ => _events!.where((e) => e.mode == _filter).toList(),
     };
@@ -1869,6 +2008,14 @@ class _EventsPageState extends State<EventsPage> {
               e.location.toLowerCase().contains(q))
           .toList();
     }
+    // A search or the star filter asks for a specific thing; the quota
+    // would hide exactly what was asked for.
+    if (_filter == 'all' && _query.isEmpty && !_favOnly) {
+      shown = _withQuota(shown);
+    } else {
+      _hiddenByDay.clear();
+    }
+    final hiddenTotal = _hiddenByDay.values.fold(0, (a, b) => a + b);
     final eventDays = _events!.map((e) => e.date).toSet();
     final today = DateTime.now();
     final days = List.generate(30, (i) => today.add(Duration(days: i)));
@@ -2100,13 +2247,84 @@ class _EventsPageState extends State<EventsPage> {
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: _filter == cat.$1 ? kGreenLight : context.cTitle),
-                    onSelected: (_) => setState(() => _filter = cat.$1),
+                    onSelected: (_) => setState(() {
+                      _filter = cat.$1;
+                      _peek = false;
+                    }),
                   ),
                 ),
             ],
             );
           }),
         ),
+        // Tapping Fest opens a second row: the shelf's own categories, as
+        // many as the reader likes. A strip rather than a wrap — seventeen
+        // chips wrapped would push the first event off the screen.
+        if (_filter == 'festivals')
+          SizedBox(
+            height: 44,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+              children: [
+                // "All" is lit when nothing is chosen, or while peeking past
+                // what is. Tapping it with categories chosen peeks rather
+                // than unticks: a preference should survive one look around.
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: FilterChip(
+                    showCheckmark: false,
+                    label: Text(t('cat_all'), maxLines: 1, softWrap: false),
+                    selected: _subCatsInEffect.isEmpty,
+                    selectedColor: kTerracotta,
+                    backgroundColor: context.cSurface,
+                    visualDensity: VisualDensity.compact,
+                    shape: StadiumBorder(
+                        side: BorderSide(
+                            color: _subCatsInEffect.isEmpty
+                                ? kTerracotta
+                                : context.cHairline)),
+                    labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _subCatsInEffect.isEmpty
+                            ? Colors.white
+                            : context.cTitle),
+                    onSelected: (_) => setState(() {
+                      if (_subCats.isEmpty) return;
+                      _peek = !_peek;
+                    }),
+                  ),
+                ),
+                for (final c in _cultureCats)
+                  if (_events!.any((e) => e.isCulture && e.category == c.$1))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: FilterChip(
+                        showCheckmark: false,
+                        avatar: Text(c.$2, style: const TextStyle(fontSize: 13)),
+                        label: Text(t('cc_${c.$1}'), maxLines: 1, softWrap: false),
+                        selected: _subCatsInEffect.contains(c.$1),
+                        selectedColor: kTerracotta,
+                        backgroundColor: context.cSurface,
+                        visualDensity: VisualDensity.compact,
+                        shape: StadiumBorder(
+                            side: BorderSide(
+                                color: _subCatsInEffect.contains(c.$1)
+                                    ? kTerracotta
+                                    : context.cHairline)),
+                        labelStyle: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _subCatsInEffect.contains(c.$1)
+                                ? Colors.white
+                                : context.cTitle),
+                        onSelected: (_) => _toggleSubCat(c.$1),
+                      ),
+                    ),
+              ],
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Text(
@@ -2116,6 +2334,7 @@ class _EventsPageState extends State<EventsPage> {
                   // on screen.
                   ? '${groupByRace(shown).length} ${t('upcoming')}'
                       '${_beyondWindow > 0 ? ' · +$_beyondWindow ${t('later')}' : ''}'
+                      '${hiddenTotal > 0 ? ' · +$hiddenTotal ${t('more_in_fest')}' : ''}'
                   : '${shown.length} ${t('on')} $_day',
               style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ),
@@ -2166,6 +2385,9 @@ class _EventsPageState extends State<EventsPage> {
                     final e = g.lead;
                     final showDate =
                         i == 0 || groups[i - 1].lead.date != e.date;
+                    final lastOfDay = i == groups.length - 1 ||
+                        groups[i + 1].lead.date != e.date;
+                    final hidden = lastOfDay ? (_hiddenByDay[e.date] ?? 0) : 0;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2179,7 +2401,9 @@ class _EventsPageState extends State<EventsPage> {
                                     color: kTerracotta)),
                           ),
                         _EventTile(
-                          icon: _typeIcons[e.type] ?? Icons.event,
+                          icon: e.isCulture
+                              ? cultureIcon(e.category)
+                              : _typeIcons[e.type] ?? Icons.event,
                           title: g.title,
                           // "19:00 · Free · MAMMA · Concert": the time and the
                           // price lead, because they are what decides whether
@@ -2190,11 +2414,47 @@ class _EventsPageState extends State<EventsPage> {
                             if (e.price.isNotEmpty) e.price,
                             if (g.distances.isNotEmpty) g.distances.join(', '),
                             tidyPlace(e.location),
-                            typeFor(e.mode, e.type),
+                            e.isCulture && e.category.isNotEmpty
+                                ? t('cc_${e.category}')
+                                : typeFor(e.mode, e.type),
                           ]),
-                          onTap: () => showEventActions(context, e),
+                          onTap: () {
+                            _noteOpened(e);
+                            showEventActions(context, e);
+                          },
                           favKey: _favKey(e),
                         ),
+                        if (hidden > 0)
+                          // What the quota held back that day, one tap from
+                          // the Fest shelf on that date.
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () => setState(() {
+                                _filter = 'festivals';
+                                _day = e.date;
+                                _peek = true;
+                              }),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                child: Row(children: [
+                                  Icon(Icons.celebration,
+                                      size: 14, color: kTerracotta),
+                                  const SizedBox(width: 6),
+                                  Text('+$hidden ${t('more_in_fest')}',
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: kTerracotta)),
+                                  const SizedBox(width: 2),
+                                  Icon(Icons.chevron_right,
+                                      size: 14, color: kTerracotta),
+                                ]),
+                              ),
+                            ),
+                          ),
                       ],
                     );
                   }
