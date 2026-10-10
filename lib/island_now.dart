@@ -569,27 +569,35 @@ List<({bool today, String time, String line, String to})> nextBuses(
 /// Railing, narrow ledge, tunnels, demanding ground — same words as the site.
 List<String> pathFacts(Map<String, dynamic>? x) {
   if (x == null || ((x['length_km'] as num?) ?? 0) == 0) return [];
-  final pt = locale.value == 'pt';
+  final pt = locale.value == 'pt', de = locale.value == 'de';
+  String l3(String en, String p, String d) => pt ? p : de ? d : en;
   int v(String k) => (x[k] as num?)?.round() ?? 0;
   final out = <String>[];
-  if (v('railing_pct') > 0 || v('no_railing_pct') > 0) {
+  // Under a third of the route mapped: too little to speak of railings at all
+  // ("no railing recorded" read as "there are none"), as on the site.
+  if (v('mapped_pct') < 30) {
+    out.add(l3('Railings: too little of the route is mapped to say', 'Corrimãos: percurso pouco mapeado para dizer',
+        'Geländer: zu wenig der Strecke kartiert, um es zu sagen'));
+  } else if (v('railing_pct') > 0 || v('no_railing_pct') > 0) {
     final unknown = (100 - v('railing_pct') - v('no_railing_pct')).clamp(0, 100);
-    out.add(pt
-        ? 'Corrimão registado em ${v('railing_pct')}% do percurso, sem corrimão em ${v('no_railing_pct')}%, desconhecido em $unknown%'
-        : 'Railing recorded on ${v('railing_pct')}% of the route, none on ${v('no_railing_pct')}%, unknown on $unknown%');
+    out.add(l3('Railing recorded on ${v('railing_pct')}% of the route, none on ${v('no_railing_pct')}%, unknown on $unknown%',
+        'Corrimão registado em ${v('railing_pct')}% do percurso, sem corrimão em ${v('no_railing_pct')}%, desconhecido em $unknown%',
+        'Geländer auf ${v('railing_pct')} % der Strecke erfasst, keines auf ${v('no_railing_pct')} %, unbekannt auf $unknown %'));
   } else {
-    out.add(_l('No railing recorded on any section', 'Sem registo de corrimão em nenhum troço'));
+    out.add(l3('No railing recorded on any section', 'Sem registo de corrimão em nenhum troço', 'Auf keinem Abschnitt ein Geländer erfasst'));
   }
   if (v('narrow_pct') > 0) {
-    out.add(pt ? '${v('narrow_pct')}% do trilho com 0,5 m de largura ou menos' : '${v('narrow_pct')}% of the path 0.5 m wide or less');
+    out.add(l3('${v('narrow_pct')}% of the path 0.5 m wide or less', '${v('narrow_pct')}% do trilho com 0,5 m de largura ou menos',
+        '${v('narrow_pct')} % des Weges 0,5 m breit oder schmaler'));
   }
   if (v('tunnels') > 0) {
     final n = v('tunnels');
-    out.add(pt ? '$n ${n > 1 ? 'túneis' : 'túnel'} (${v('tunnel_m')} m) — leve lanterna'
-        : '$n ${n > 1 ? 'tunnels' : 'tunnel'} (${v('tunnel_m')} m) — bring a torch');
+    out.add(l3('$n ${n > 1 ? 'tunnels' : 'tunnel'} (${v('tunnel_m')} m) — bring a torch',
+        '$n ${n > 1 ? 'túneis' : 'túnel'} (${v('tunnel_m')} m) — leve lanterna', '$n Tunnel (${v('tunnel_m')} m) — Stirnlampe mitnehmen'));
   }
   if (v('demanding_pct') > 0) {
-    out.add(pt ? '${v('demanding_pct')}% em terreno de montanha exigente' : '${v('demanding_pct')}% demanding mountain terrain');
+    out.add(l3('${v('demanding_pct')}% demanding mountain terrain', '${v('demanding_pct')}% em terreno de montanha exigente',
+        '${v('demanding_pct')} % anspruchsvolles Bergterrain'));
   }
   return out;
 }
