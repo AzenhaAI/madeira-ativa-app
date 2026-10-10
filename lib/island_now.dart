@@ -200,6 +200,7 @@ class IslandNow {
   // The airport: wind, gusts and the crosswind on runway 05/23 in the gusts.
   double? airWind, airGusts, airCross;
   List<Map<String, dynamic>> shipsToday = [];
+  List<Map<String, dynamic>> shipsTomorrow = [];
   String? tide;
   double? uv;
   Map<String, dynamic>? nextShip;
@@ -291,6 +292,13 @@ Future<IslandNow> fetchIslandNow() async {
             .where((c) =>
                 (c['arrival'] as String).substring(0, 10).compareTo(today) <= 0 &&
                 (c['departure'] as String).substring(0, 10).compareTo(today) >= 0)
+            .where((c) => seen.add((c['ship'] as String).toUpperCase()))
+            .toList();
+        final tmr = madeiraNow().add(const Duration(days: 1)).toIso8601String().substring(0, 10);
+        n.shipsTomorrow = calls
+            .where((c) =>
+                (c['arrival'] as String).substring(0, 10).compareTo(tmr) <= 0 &&
+                (c['departure'] as String).substring(0, 10).compareTo(tmr) >= 0)
             .where((c) => seen.add((c['ship'] as String).toUpperCase()))
             .toList();
         final next = calls.where((c) {
@@ -435,18 +443,32 @@ class _IslandNowCardState extends State<IslandNowCard> {
           '${pt ? 'cruzado' : 'crosswind'} $cross km/h — $verdict',
           onTap: () => openUrl('https://www.flightradar24.com/airport/fnc')));
     }
-    if (n.shipsToday.isNotEmpty || n.nextShip != null) {
+    if (n.shipsToday.isNotEmpty || n.shipsTomorrow.isNotEmpty) {
+      // APRAM's berth says what a ship is: cruise ships at Terminal Sul, the
+      // Porto Santo ferry and freight at Norte, cement carriers at Cimenteiro —
+      // "CEMENT TRADER" alone read like a cruise ship.
+      String kind(Map c) {
+        final b = (c['berth'] ?? '') as String;
+        if (b.contains('Sul')) return pt ? 'cruzeiro' : 'cruise';
+        if (b.contains('Cimenteiro')) return pt ? 'cimenteiro' : 'cement carrier';
+        if (b.contains('Norte')) return pt ? 'ferry / carga' : 'ferry / cargo';
+        return pt ? 'ao largo' : 'at anchor';
+      }
+      String one(Map c) {
+        final a = c['arrival'] as String, d = c['departure'] as String;
+        final same = a.substring(0, 10) == d.substring(0, 10);
+        return '${c['ship']} (${kind(c)}${same ? ', ${a.substring(11, 16)}–${d.substring(11, 16)}' : ''})';
+      }
       final parts = <String>[];
-      if (n.shipsToday.isNotEmpty) {
-        parts.add('${pt ? 'No Funchal hoje' : 'In Funchal today'}: ${n.shipsToday.map((c) => c['ship']).join(', ')}');
-      }
-      if (n.nextShip != null) {
-        final a = DateTime.parse('${(n.nextShip!['arrival'] as String).substring(0, 10)}T00:00:00Z');
-        const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        const ptd = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
-        parts.add('${pt ? 'seguinte' : 'next'}: ${n.nextShip!['ship']} · ${(pt ? ptd : en)[a.weekday - 1]} ${a.day}');
-      }
-      lines.add(line('🛳', parts.join(' · '),
+      if (n.shipsToday.isNotEmpty) parts.add('${pt ? 'Hoje' : 'Today'}: ${n.shipsToday.map(one).join(', ')}');
+      if (n.shipsTomorrow.isNotEmpty) parts.add('${pt ? 'Amanhã' : 'Tomorrow'}: ${n.shipsTomorrow.map(one).join(', ')}');
+      lines.add(line('🛳', parts.join('\n'),
+          onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
+    } else if (n.nextShip != null) {
+      final a = DateTime.parse('${(n.nextShip!['arrival'] as String).substring(0, 10)}T00:00:00Z');
+      const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const ptd = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
+      lines.add(line('🛳', '${pt ? 'Próximo navio' : 'Next ship'}: ${n.nextShip!['ship']} · ${(pt ? ptd : en)[a.weekday - 1]} ${a.day}',
           onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
     }
     if (n.sunriseLine != null) {
