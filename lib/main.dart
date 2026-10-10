@@ -95,6 +95,9 @@ const _tr = {
     'levadas': 'Levadas',
     'roots': 'Roots',
     'next_up': 'Next up',
+    'new_badge': 'NEW',
+    'bus_promo': 'Island bus timetables',
+    'bus_promo_sub': 'Which trails you can reach by bus, stops and next departures',
     'coming_up': 'Coming up',
     'news': 'News',
     'all_news': 'All news',
@@ -231,6 +234,9 @@ const _tr = {
     'levadas': 'Levadas',
     'roots': 'Raízes',
     'next_up': 'A seguir',
+    'new_badge': 'NOVO',
+    'bus_promo': 'Horários de autocarro',
+    'bus_promo_sub': 'Percursos com acesso de autocarro, paragens e próximas partidas',
     'coming_up': 'Próximos',
     'news': 'Notícias',
     'all_news': 'Todas as notícias',
@@ -1261,6 +1267,54 @@ class _HomePageState extends State<HomePage> {
                           color: kGreenLight)),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Bright launch banner for the bus timetables (new in 1.9.3).
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => WebPage(
+                    title: t('bus_one'),
+                    url: 'https://azenha.ai/ativa/bus?app=1&lang=${locale.value}'))),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2A65A),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: kTerracotta, borderRadius: BorderRadius.circular(20)),
+                  child: Text(t('new_badge'),
+                      style: const TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w700,
+                          color: Colors.white, letterSpacing: 0.6)),
+                ),
+                const SizedBox(width: 10),
+                const Icon(Icons.directions_bus, color: Color(0xFF3A1A08), size: 22),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(t('bus_promo'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A1A08))),
+                      Text(t('bus_promo_sub'),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF5A2A10))),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Color(0xFF3A1A08)),
+              ]),
             ),
           ),
           const SizedBox(height: 20),
