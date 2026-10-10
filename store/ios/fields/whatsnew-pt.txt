@@ -1,13 +1,9 @@
-A versão 1.8.0 é o primeiro lançamento da Madeira Ativa na App Store, e traz a aplicação completa.
+Agora também em alemão: toda a app — percursos, eventos, a ilha agora e o Pergunte à IA — fala Deutsch, além de português e inglês.
 
-Os 44 percursos PR oficiais das levadas, com distância, desnível, estado (aberto ou fechado) e taxas, perfil de altimetria por percurso e estatísticas de toda a rede.
+Autocarros da ilha: que percursos se alcançam de autocarro, as paragens em cada extremo, as próximas partidas e o mapa da rede.
 
-O calendário de eventos da ilha: trail, estrada, orientação, ciclismo, natação, triatlo, provas para crianças, automobilismo e festas, com filtros por categoria e período, lembretes, favoritos e uma lista de acompanhamento para datas ainda não confirmadas. Cada evento indica a levada histórica mais próxima.
+Um ecrã inicial mais rápido: primeiro a ilha agora — tempo no litoral e no cume, mar e marés, vento no aeroporto, navios no porto — depois o estado dos percursos e as webcams em direto.
 
-Um mapa com eventos e percursos em conjunto sobre base OpenStreetMap, mais vista 3D do terreno, sobrevoo aéreo e camada de popularidade.
+O Pergunte à IA responde na sua língua, com os factos usados por baixo.
 
-Raízes, com a história da ilha numa cronologia de seis épocas e um álbum de dezanove imagens, e um feed de notícias em seis línguas que identifica sempre o editor.
-
-Feito para iPhone: lembretes por notificações iOS, integração com o calendário, partilha pelo sistema, tema claro, escuro ou do sistema, cache offline e interface em português ou inglês.
-
-Gratuita, sem conta e sem nada para comprar.
+Em cada percurso: tempo e dificuldade oficiais, corrimãos, troços estreitos e túneis; e "Grátis" bem visível nos eventos gratuitos.

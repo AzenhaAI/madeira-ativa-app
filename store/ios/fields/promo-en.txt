@@ -1,1 +1,1 @@
-All 44 official PR levadas — distance, climb, open-or-closed status — plus every race, walk and festa on the island, on a map that works offline.
+New: German. Island buses to the trailhead, with stops and next departures. Ask AI answers from live data: weather, sea, IPMA warnings and trail status.

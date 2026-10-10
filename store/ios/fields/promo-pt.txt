@@ -1,1 +1,1 @@
-Os 44 percursos PR das levadas — distância, desnível e estado — e ainda as corridas, caminhadas e festas da ilha, num mapa que funciona offline.
+Novo: autocarros até ao percurso, com paragens e próximas partidas. Pergunte à IA com dados em direto: tempo, mar, avisos do IPMA. Agora também em alemão.

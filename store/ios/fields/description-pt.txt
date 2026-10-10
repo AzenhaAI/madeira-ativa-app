@@ -1,23 +1,32 @@
-As montanhas da Madeira estão atravessadas por levadas: canais estreitos abertos nas encostas a partir do século XVI para levar a água do norte húmido até aos terrenos agrícolas do sul. Os caminhos de manutenção ao lado delas tornaram-se a rede pedestre da ilha — e quase todas as corridas, caminhadas e festas da Madeira acontecem ainda hoje ao longo dela. A Madeira Ativa mostra as duas coisas ao mesmo tempo.
+As levadas são canais de rega abertos na rocha a partir do século XV para levar a água do norte húmido às terras de cultivo do sul. Os caminhos ao lado delas tornaram-se a rede de percursos pedestres da ilha — e é por eles que ainda hoje passam quase todas as provas, caminhadas e festas da Madeira. A Madeira Ativa junta as duas coisas: os percursos e a agenda de quem os percorre.
+
+A ILHA AGORA
+O ecrã inicial abre no dia de hoje: tempo no litoral e no Pico do Arieiro, temperatura do mar, ondulação e marés, UV, vento no aeroporto, navios no porto e a próxima manhã em que o nascer do sol no Pico do Arieiro fica acima das nuvens. Depois, quantos percursos estão abertos, webcams em direto e os próximos eventos.
 
 LEVADAS
-Os 44 percursos PR oficiais, cada um com distância, desnível acumulado, estado atual (aberto ou fechado) e eventuais taxas de acesso, para saber o que a caminhada exige antes de sair do carro. Cada percurso tem a sua própria página com perfil de altimetria, e há estatísticas de conjunto para toda a rede.
+Os 44 percursos pedestres recomendados (PR), cada um com distância, desnível, estado atual (aberto, parcial ou fechado) e taxa de acesso quando existe — para saber o que um percurso lhe pede antes de sair do carro. Cada percurso tem página própria: perfil altimétrico, tempo e dificuldade oficiais, corrimãos, troços estreitos e túneis, previsão do tempo para o próprio trilho, parques em cada extremo e os autocarros que param perto.
+
+DE AUTOCARRO
+Que percursos se alcançam de autocarro, as linhas que param perto de cada extremo, as próximas partidas onde há horários publicados e o mapa da rede de autocarros da ilha.
+
+PERGUNTE À IA (BETA)
+Pergunte sobre um percurso, onde ir hoje, o tempo ou o que se passa, e receba uma resposta curta escrita a partir dos dados em direto da app — com os factos usados por baixo, para poder confirmar.
 
 EVENTOS
-Trail, corridas de estrada, orientação, ciclismo, natação em águas abertas, triatlo, provas para crianças, automobilismo e festas de freguesia — mais de cem, com filtros por categoria e por período. Defina um lembrete para as provas em que pensa participar, guarde as restantes nos favoritos e adicione qualquer uma ao calendário. Uma lista de acompanhamento separada reúne os eventos com data anunciada mas ainda não confirmada.
-
-Cada evento está ligado à levada centenária mais próxima — na Madeira, desporto e património partilham os mesmos caminhos.
+Trail, estrada, orientação, ciclismo e BTT, natação em águas abertas, triatlo, provas para crianças e festas populares — mais de cem na agenda de cada vez, com filtros por categoria, período e dia. Lembrete na véspera, favoritos e adicionar ao calendário. A secção "A acompanhar" reúne os eventos com datas anunciadas mas ainda por confirmar, para que nada desapareça sem se dar por isso.
 
 MAPA
-Eventos e percursos numa única vista OpenStreetMap, com camadas comutáveis, geometria dos percursos desenhada e marcadores colocados a partir de um gazetteer incluído na aplicação. Uma vista 3D do terreno, um sobrevoo aéreo e uma camada de popularidade ajudam a perceber a inclinação de uma subida ou a encontrar a alternativa mais tranquila a um percurso muito procurado.
+Eventos e levadas sobre o OpenStreetMap, com camadas comutáveis. Uma vista 3D do terreno, um sobrevoo aéreo e um mapa de popularidade ajudam a perceber a forma de uma subida — ou a encontrar a alternativa mais sossegada a um percurso famoso.
 
 RAÍZES
-A história da ilha em histórias temáticas: uma cronologia de seis épocas, da floresta laurissilva desabitada ao açúcar, ao vinho, ao bordado e à chegada do turismo, com um álbum de dezanove imagens.
+A história da ilha em histórias temáticas, uma linha do tempo de seis épocas — da laurissilva desabitada ao açúcar, ao vinho, ao bordado e à chegada do turismo — e um álbum da Madeira antiga. Escrito para ler no início do trilho ou no autocarro a subir o vale.
 
 NOTÍCIAS E TV
-Notícias de órgãos madeirenses e internacionais independentes em português, inglês, alemão, polaco, ucraniano e russo, sempre com o nome do editor e ligação ao artigo original na fonte. E ainda a lista das próximas transmissões desportivas.
+Títulos da imprensa madeirense e internacional em seis línguas, cada um com o nome de quem publica e ligação ao artigo original. E as próximas transmissões desportivas, para os dias em que apetece mais ver do que correr.
 
 DIA A DIA
-Notificações para os eventos que segue e para percursos que abrem ou fecham. Favoritos e partilha pelo sistema. Cache offline, para que um percurso já aberto continue a funcionar onde não há rede. Tema claro, escuro ou do sistema. Interface em português ou inglês.
+Avisos meteorológicos oficiais do IPMA no ecrã inicial e em cada percurso afetado. Notificações para os eventos que segue e para percursos que abram ou fechem. Cache dos dados, para que um percurso já aberto continue a funcionar onde não há rede. Tema claro, escuro ou do sistema. Interface em português, inglês ou alemão.
 
-A Madeira Ativa é gratuita. Sem conta, sem publicidade e sem nada para comprar.
+A Madeira Ativa é gratuita: não pede conta, não tem publicidade, não tem nada para comprar e não usa a sua localização. É independente, sem ligação ao Governo Regional nem ao turismo oficial — confirme sempre os detalhes de inscrição e o estado do trilho com quem organiza.
+
+Feita na ilha, para quem cá vive e para quem cá vem passar os dias ao ar livre.

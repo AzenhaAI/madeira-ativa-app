@@ -1,25 +1,32 @@
-Madeira's mountains are laced with levadas: narrow irrigation channels cut into the cliffs from the sixteenth century onward to carry water from the wet north down to the terraced farmland of the south. The maintenance paths beside them became the island's footpath network — and almost every race, walk and village festival on Madeira still happens somewhere along it. Madeira Ativa shows you both at once.
+Madeira's mountains are laced with levadas: narrow irrigation channels cut into the cliffs from the fifteenth century onward to carry water from the wet north to the farmland of the south. The paths beside them became the island's footpath network — and almost every race, walk and village festa on Madeira still happens somewhere along it. Madeira Ativa shows you both at once.
+
+THE ISLAND NOW
+The home screen opens on today: weather on the coast and at Pico do Arieiro, sea temperature, waves and tides, UV, wind at the airport, ships in port, and the next morning when sunrise at Pico do Arieiro will be above the clouds. Then how many trails are open, live webcams and what's coming up.
 
 LEVADAS
-All 44 official PR routes, each with distance, total climb, current open or closed status and any access fee, so you know what a walk asks of you before you leave the car park. Every route has its own page with a drawn elevation profile, and aggregate statistics cover the network as a whole.
+All 44 official PR routes, each with distance, climb, current open, partly open or closed status and any access fee, so you know what a walk asks of you before you leave the car park. Every route has its own page: elevation profile, official walking time and difficulty, railings, narrow sections and tunnels, a forecast for the trail itself, car parks at each end and the buses that stop nearby.
+
+BY BUS
+Which trails you can reach by bus, the lines that stop near each end, the next departures where timetables are published, and a map of the island's bus network.
+
+ASK AI (BETA)
+Ask about a trail, where to go today, the weather or what's on, and get a short answer written from the app's live data — with the facts it used shown underneath, so you can check it.
 
 EVENTS
-Trail running, road races, orienteering, cycling, open-water swimming, triathlon, children's races, motorsport and village festas — over a hundred of them, filterable by category and by period. Set a reminder for the ones you intend to enter, keep the undecided ones in favourites, and add any of them to your calendar. A separate watchlist holds events whose dates are announced but not yet confirmed, so nothing quietly disappears while organisers make up their minds.
-
-Every event is tied to the nearest centuries-old levada, because on Madeira sport and heritage share the same paths.
+Trail running, road races, orienteering, cycling, open-water swimming, triathlon, children's races and village festas — over a hundred at a time, filterable by category, period and day. Set a reminder for the evening before, keep favourites, add any of them to your calendar. A watchlist holds events whose dates are announced but not yet confirmed, so nothing quietly disappears.
 
 MAP
-Events and trails on one OpenStreetMap view, with switchable layers, trail geometry drawn as polylines, and pins placed from a gazetteer built into the app. A 3D terrain view, an aerial flyover and a popularity layer are there when you want to read the shape of a climb before you commit to it, or find the quieter alternative to a famous walk.
+Events and trails on one OpenStreetMap view with switchable layers. A 3D terrain view, an aerial flyover and a popularity layer help you read the shape of a climb before you commit to it, or find the quieter alternative to a famous walk.
 
 ROOTS
-The island's history as themed stories rather than a textbook: a six-era timeline running from the uninhabited laurel forest through sugar, wine, embroidery and the arrival of tourism, with a nineteen-picture album. Written to be read at a trailhead or on the bus up the valley.
+The island's history as themed stories: a six-era timeline from the uninhabited laurel forest through sugar, wine, embroidery and the arrival of tourism, with an album of old Madeira. Written to be read at a trailhead or on the bus up the valley.
 
 NEWS AND TV
-Headlines from independent Madeiran and international outlets in English, Portuguese, German, Polish, Ukrainian and Russian, each crediting its publisher and linking to the full article at the source. Plus a list of upcoming sports broadcasts, for the days you would rather watch than run.
+Headlines from Madeiran and international outlets in six languages, each crediting its publisher and linking to the original article. Plus upcoming sports broadcasts, for the days you would rather watch than run.
 
 EVERYDAY DETAILS
-Notifications for events you follow and for trails that open or close. Favourites and the system share sheet. An offline cache, so a route you have already opened still works where the signal stops. Light, dark or system theme. Interface in English or Portuguese.
+Official IPMA weather warnings on the home screen and on every trail they affect. Notifications for events you follow and for trails that open or close. An offline cache, so a route you have already opened still works where the signal stops. Light, dark or system theme. Interface in English, Portuguese or German.
 
-Madeira Ativa is free. There is no account to create, no advertising, and nothing to buy. Event, trail, history and news content comes from the same public data feed that supplies the website.
+Madeira Ativa is free: no account, no advertising, nothing to buy, and it does not use your location. It is independent and not affiliated with the Regional Government or the tourism board — always confirm entry details and trail status with the organisers.
 
 Made on the island, for the people who live here and the ones who came to be outside.
