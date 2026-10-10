@@ -350,6 +350,11 @@ const _tr = {
   'de': trDe,
 };
 
+/// "Free" in the reader's language; any other price as the source wrote it.
+String priceLabel(String p) => RegExp(r'^(free|grátis|gratuito|entrada livre)$', caseSensitive: false).hasMatch(p.trim())
+    ? (locale.value == 'pt' ? 'Grátis' : locale.value == 'de' ? 'Gratis' : 'Free')
+    : p;
+
 String t(String k) => (_tr[locale.value] ?? _tr['en']!)[k] ?? _tr['en']![k] ?? k;
 
 /// Event `type` arrives as a raw feed key — 'road_run', 'swimming_kids',
@@ -1381,7 +1386,7 @@ void showEventActions(BuildContext context, AtivaEvent e) {
                 dotJoin([
                   fmtDate(e.date),
                   if (e.time.isNotEmpty) e.time,
-                  if (e.price.isNotEmpty) e.price,
+                  if (e.price.isNotEmpty) priceLabel(e.price),
                   tidyPlace(e.location),
                   typeFor(e.mode, e.type),
                 ]),
@@ -2355,7 +2360,7 @@ class _EventsPageState extends State<EventsPage> {
                           // which read exactly as before.
                           subtitle: dotJoin([
                             if (e.time.isNotEmpty) e.time,
-                            if (e.price.isNotEmpty) e.price,
+                            if (e.price.isNotEmpty) priceLabel(e.price),
                             if (g.distances.isNotEmpty) g.distances.join(', '),
                             tidyPlace(e.location),
                             e.isCulture && e.category.isNotEmpty
