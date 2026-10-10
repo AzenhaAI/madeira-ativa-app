@@ -95,6 +95,10 @@ const _tr = {
     'levadas': 'Levadas',
     'roots': 'Roots',
     'next_up': 'Next up',
+    'lv_open': 'open',
+    'lv_partly': 'partly',
+    'lv_closed': 'closed',
+    'webcams_live': 'Live views of the island',
     'new_badge': 'NEW',
     'bus_promo': 'Island bus timetables',
     'bus_promo_sub': 'Which trails you can reach by bus, stops and next departures',
@@ -234,6 +238,10 @@ const _tr = {
     'levadas': 'Levadas',
     'roots': 'Raízes',
     'next_up': 'A seguir',
+    'lv_open': 'abertas',
+    'lv_partly': 'parciais',
+    'lv_closed': 'encerradas',
+    'webcams_live': 'Vistas em direto da ilha',
     'new_badge': 'NOVO',
     'bus_promo': 'Horários de autocarro',
     'bus_promo_sub': 'Percursos com acesso de autocarro, paragens e próximas partidas',
@@ -1026,7 +1034,6 @@ class _HomePageState extends State<HomePage> {
   List<AtivaEvent>? _events;
   List<NewsItem>? _news;
   List<Broadcast> _tv = [];
-  List<TrailGeo> _geo = [];
   Map<String, dynamic>? _status;
 
   @override
@@ -1047,10 +1054,6 @@ class _HomePageState extends State<HomePage> {
       if (mounted) setState(() => _tv = tv);
     } catch (_) {}
     try {
-      final g = await fetchTrailGeo();
-      if (mounted) setState(() => _geo = g);
-    } catch (_) {}
-    try {
       final s = await fetchTrailStatus();
       if (mounted) setState(() => _status = s);
     } catch (_) {}
@@ -1068,25 +1071,20 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Sport first, the way the site's home mixes it: a Saturday with six village
+  // festas would otherwise push every race off the list.
   List<AtivaEvent> _mixed() {
     if (_events == null) return [];
-    final seen = <String>{};
-    final mix = <AtivaEvent>[];
-    for (final e in _events!) {
-      if (seen.add(e.type)) mix.add(e);
-      if (mix.length == 5) return mix;
-    }
-    for (final e in _events!) {
-      if (!mix.contains(e)) mix.add(e);
-      if (mix.length == 5) break;
-    }
-    return mix;
+    final sport = _events!.where((e) => e.mode != 'festivals').take(4).toList();
+    final fest = _events!.where((e) => e.mode == 'festivals').take(6 - sport.length);
+    return [...sport, ...fest]..sort((x, y) => x.date.compareTo(y.date));
   }
 
   @override
   Widget build(BuildContext context) {
-    final hero = _events?.isNotEmpty == true ? _events!.first : null;
-    final mix = _mixed().skip(1).take(3).toList();
+    final mix = _mixed();
+    final counts = (_status?['counts'] as Map?) ?? const {};
+
 
     return RefreshIndicator(
       color: kGreen,
@@ -1094,182 +1092,6 @@ class _HomePageState extends State<HomePage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if ((_status?['alerts'] as List?)?.isNotEmpty ?? false)
-            GestureDetector(
-              onTap: () => widget.onNavigate(kTabLevadas),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: context.cTerraTint,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(children: [
-                  Icon(Icons.warning_amber_rounded,
-                      color: context.cTerraText, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                        // alerts holds closed AND partial together, so this
-                        // read "14 closed" when eight were closed and six
-                        // partly open. counts is what the list is built from.
-                        '${_status!['counts']?['closed'] ?? 0} ${t('closed_now')} · ${(_status!['counts']?['partial'] ?? 0)} ${t('partial')}',
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: context.cTerraText)),
-                  ),
-                  Icon(Icons.chevron_right, color: context.cTerraText),
-                ]),
-              ),
-            ),
-          if (_geo.isNotEmpty)
-            GestureDetector(
-              onTap: () => widget.onNavigate(kTabMap),
-              child: Container(
-                height: 190,
-                margin: const EdgeInsets.only(bottom: 16),
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: context.cHairline, width: 0.5),
-                ),
-                child: Stack(children: [
-                  // The trail lines arrive from our own JSON well before the
-                  // base tiles arrive from OpenStreetMap, so for a moment — or,
-                  // on a slow connection, for the evening — this card was
-                  // coloured lines on a plain grey slab, and a tester asked
-                  // whether a map was meant to be there. Paint the sea colour
-                  // beneath, so the wait reads as a map still loading rather
-                  // than as a map that never came.
-                  Container(color: const Color(0xFFAAD3DF)),
-                  IgnorePointer(
-                    child: FlutterMap(
-                      options: const MapOptions(
-                        initialCenter: LatLng(32.745, -16.96),
-                        initialZoom: 9.1,
-                        backgroundColor: Colors.transparent,
-                        interactionOptions: InteractionOptions(
-                            flags: InteractiveFlag.none),
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'ai.azenha.ativa',
-                        ),
-                        PolylineLayer(polylines: [
-                          for (final t in _geo)
-                            for (final line in t.lines)
-                              Polyline(
-                                points: line,
-                                strokeWidth: 2.2,
-                                color: t.status == 'open'
-                                    ? kGreen
-                                    : (t.status == 'closed'
-                                        ? const Color(0xFFE23B2E)
-                                        : const Color(0xFFE8920E)),
-                              ),
-                        ]),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    left: 10,
-                    bottom: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: kGreenDark.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                          '${t('levadas_teaser')} · ${_geo.length} PR',
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white)),
-                    ),
-                  ),
-                ]),
-              ),
-            ),
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 16),
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: context.cTerraTint,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(width: 3, color: kTerracotta),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(t('pessoa'),
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  height: 1.4,
-                                  fontStyle: FontStyle.italic,
-                                  color: context.cTitle)),
-                          const SizedBox(height: 4),
-                          Text(t('pessoa_by'),
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: kTerracotta)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () => hero != null ? openUrl(hero.url) : null,
-            child: Container(
-              // Was a fixed 120pt with the text bottom-aligned, which left ~50pt
-              // of empty green above it — reads as a broken image slot rather
-              // than a design. Let the card hug its two lines instead.
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: kGreen,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                      hero == null
-                          ? t('next_up')
-                          : '${t('next_up')} · ${fmtDate(hero.date)} · ${hero.location}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 12, color: Color(0xFF9FE1CB))),
-                  Text(hero?.name ?? t('loading'),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: kGreenLight)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
           // Bright launch banner for the bus timetables (new in 1.9.3).
           GestureDetector(
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -1322,6 +1144,25 @@ class _HomePageState extends State<HomePage> {
           // and IPMA warnings — the same facts and rules as the site's strip.
           // Keyed by language so a switch rebuilds its wording.
           IslandNowCard(key: ValueKey('now-${locale.value}')),
+          // Levadas by status, as on the site's home; a tap opens the list.
+          if (counts.isNotEmpty)
+            _HomeRow(
+              icon: Icons.hiking,
+              label: 'Levadas',
+              value: '${counts['open'] ?? 0} ${t('lv_open')}',
+              extra: ' · ${counts['partial'] ?? 0} ${t('lv_partly')} · ${counts['closed'] ?? 0} ${t('lv_closed')}',
+              onTap: () => widget.onNavigate(kTabLevadas),
+            ),
+          _HomeRow(
+            icon: Icons.videocam_outlined,
+            label: 'Webcams',
+            value: t('webcams_live'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => WebPage(
+                    title: 'Webcams',
+                    url: 'https://azenha.ai/ativa/webcams?app=1&lang=${locale.value}'))),
+          ),
+          const SizedBox(height: 12),
           _SectionHeader(
               title: t('coming_up'),
               onMore: () => widget.onNavigate(kTabEvents)),
@@ -1689,6 +1530,47 @@ class ReadableWidth extends StatelessWidget {
           child: child,
         ),
       );
+}
+
+class _HomeRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String extra;
+  final VoidCallback onTap;
+  const _HomeRow({required this.icon, required this.label, required this.value, this.extra = '', required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.cSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.cHairline, width: 0.5),
+        ),
+        child: Row(children: [
+          Icon(icon, color: context.cTitle, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(label.toUpperCase(),
+                  style: TextStyle(fontSize: 11, letterSpacing: 0.6, color: context.cSubtle)),
+              Text.rich(TextSpan(children: [
+                TextSpan(text: value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                if (extra.isNotEmpty)
+                  TextSpan(text: extra, style: TextStyle(fontSize: 13, color: context.cSubtle)),
+              ])),
+            ]),
+          ),
+          Icon(Icons.chevron_right, color: context.cTitle),
+        ]),
+      ),
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
