@@ -16,6 +16,7 @@ import 'notify.dart';
 import 'roots_page.dart';
 import 'store.dart';
 import 'stories_data.dart';
+import 'strings_de.dart';
 
 const kGreen = Color(0xFF0F6E56);
 const kGreenDark = Color(0xFF085041);
@@ -294,7 +295,7 @@ const _tr = {
     'website': 'Site',
     'telegram': 'Bot do Telegram',
     'tg_channel': 'Canal do resumo semanal',
-    'language': 'English',
+    'language': 'Deutsch',
     'roots_sub': 'A memória da ilha, um lugar de cada vez',
     'view_all': 'Ver tudo',
     'roots_h1': 'Como a Madeira aprendeu a mover-se',
@@ -346,9 +347,10 @@ const _tr = {
     'time_dist': 'Tempo mediano',
     'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:',
   },
+  'de': trDe,
 };
 
-String t(String k) => _tr[locale.value]![k] ?? k;
+String t(String k) => (_tr[locale.value] ?? _tr['en']!)[k] ?? _tr['en']![k] ?? k;
 
 /// Event `type` arrives as a raw feed key — 'road_run', 'swimming_kids',
 /// 'motorsport'. Those are pipeline identifiers, not labels, and they were
@@ -422,6 +424,7 @@ String dotJoin(Iterable<String> parts) =>
 const _wdName = {
   'en': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
   'pt': ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+  'de': ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
 };
 const _moName = {
   'en': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -429,6 +432,8 @@ const _moName = {
   // Portuguese abbreviates months in lower case: 15 ago, 3 set.
   'pt': ['jan', 'fev', 'mar', 'abr', 'mai', 'jun',
          'jul', 'ago', 'set', 'out', 'nov', 'dez'],
+  'de': ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
+         'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
 };
 
 List<String> _wdFor() => _wdName[locale.value] ?? _wdName['en']!;
@@ -507,7 +512,7 @@ void main() async {
   // an island where Portuguese is the first language, that is most of the
   // audience being asked to re-state the obvious daily.
   final lang = prefs.getString('locale');
-  if (lang == 'pt' || lang == 'en') locale.value = lang!;
+  if (lang == 'pt' || lang == 'en' || lang == 'de') locale.value = lang!;
   runApp(const AtivaApp());
 }
 
@@ -639,6 +644,8 @@ class _HomeShellState extends State<HomeShell> {
                 _LangTab(label: 'EN', code: 'en', active: lang),
                 Text('·', style: TextStyle(color: context.cHairline)),
                 _LangTab(label: 'PT', code: 'pt', active: lang),
+                Text('·', style: TextStyle(color: context.cHairline)),
+                _LangTab(label: 'DE', code: 'de', active: lang),
               ],
             ),
           ),
@@ -761,7 +768,8 @@ class _HomeShellState extends State<HomeShell> {
               leading: const Icon(Icons.translate, color: kTerracotta),
               title: Text(t('language')),
               onTap: () {
-                setLocale(locale.value == 'en' ? 'pt' : 'en');
+                // EN → PT → DE → EN; the row's label names the next one.
+                setLocale(locale.value == 'en' ? 'pt' : locale.value == 'pt' ? 'de' : 'en');
                 Navigator.pop(context);
               },
             ),
@@ -3422,7 +3430,7 @@ class _NewsPageState extends State<NewsPage> {
   @override
   void initState() {
     super.initState();
-    _lang = locale.value == 'pt' ? 'pt' : 'en';
+    _lang = kNewsLangs.contains(locale.value) ? locale.value : 'en';
     _load();
   }
 
@@ -3778,7 +3786,7 @@ class _LangTab extends StatelessWidget {
       child: Semantics(
         selected: on,
         button: !on,
-        label: code == 'en' ? 'English' : 'Português',
+        label: code == 'en' ? 'English' : code == 'de' ? 'Deutsch' : 'Português',
         child: Container(
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           alignment: Alignment.center,

@@ -17,6 +17,45 @@ import 'package:flutter/material.dart';
 import 'main.dart';
 import 'store.dart';
 
+// The card's own words in the reader's language: Portuguese inline, German
+// from this table (keyed by the English); anything missing stays English.
+String _l(String en, String pt) =>
+    locale.value == 'pt' ? pt : locale.value == 'de' ? (_deIsl[en] ?? en) : en;
+
+const _deIsl = <String, String>{
+  'Airport: wind': 'Flughafen: Wind',
+  'Best morning': 'Bester Morgen',
+  'IPMA WARNINGS': 'IPMA-WARNUNGEN',
+  'Next ship': 'Nächstes Schiff',
+  'No clear sunrise forecast in the next days.': 'In den nächsten Tagen kein klarer Sonnenaufgang vorhergesagt.',
+  'No railing recorded on any section': 'Auf keinem Abschnitt ein Geländer erfasst',
+  'Sea': 'Meer',
+  'Sunrise at Pico do Arieiro': 'Sonnenaufgang am Pico do Arieiro',
+  'The island now': 'Die Insel jetzt',
+  'Today': 'Heute',
+  'Tomorrow': 'Morgen',
+  'above the usual 15-knot limit — diversions likely': 'über der üblichen 15-Knoten-Grenze — Landungen unsicher',
+  'at anchor': 'vor Anker',
+  'calm for landings': 'ruhig für Landungen',
+  'cement carrier': 'Zementfrachter',
+  'clear': 'klar',
+  'crosswind': 'Seitenwind',
+  'cruise': 'Kreuzfahrtschiff',
+  'extreme': 'extrem',
+  'ferry / cargo': 'Fähre / Fracht',
+  'from': 'ab',
+  'gusts': 'Böen',
+  'gusty — delays possible': 'böig — Verspätungen möglich',
+  'high': 'hoch',
+  'low': 'niedrig',
+  'moderate': 'mäßig',
+  'sea of clouds': 'Wolkenmeer',
+  'tide': 'Gezeiten',
+  'until': 'bis',
+  'very high': 'sehr hoch',
+  'waves': 'Wellen',
+};
+
 // ------------------------------------------------------------------ time
 
 /// Madeira keeps Lisbon's clock: UTC in winter, UTC+1 from the last Sunday of
@@ -132,8 +171,8 @@ String _when(IpmaWarning w) {
   String day(DateTime d) => (d.year == now.year && d.month == now.month && d.day == now.day)
       ? ''
       : '${(pt ? ptd : en)[d.weekday - 1]} ';
-  if (w.start.isAfter(now)) return '${pt ? 'a partir de' : 'from'} ${day(w.start)}${_hhmm(w.start)}';
-  return '${pt ? 'até' : 'until'} ${day(w.end)}${_hhmm(w.end)}';
+  if (w.start.isAfter(now)) return '${_l('from', 'a partir de')} ${day(w.start)}${_hhmm(w.start)}';
+  return '${_l('until', 'até')} ${day(w.end)}${_hhmm(w.end)}';
 }
 
 /// One line per level + type + time window; zones listed together.
@@ -268,10 +307,9 @@ Future<IslandNow> fetchIslandNow() async {
           if (lo == null && b <= a && b <= c) lo = times[i].substring(11, 16);
           if (hi != null && lo != null) break;
         }
-        final pt = locale.value == 'pt';
         final parts = [
-          if (hi != null) '${pt ? 'preia-mar' : 'high'} $hi',
-          if (lo != null) '${pt ? 'baixa-mar' : 'low'} $lo',
+          if (hi != null) '${_l('high', 'preia-mar')} $hi',
+          if (lo != null) '${_l('low', 'baixa-mar')} $lo',
         ];
         if (parts.isNotEmpty) n.tide = parts.join(', ');
       } catch (_) {}
@@ -364,14 +402,14 @@ Future<String?> _sunrise() async {
         final date = DateTime.parse('${sr.substring(0, 10)}T00:00:00Z');
         const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const ptd = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
-        final kind = sea ? (pt ? 'mar de nuvens' : 'sea of clouds') : (pt ? 'limpo' : 'clear');
+        final kind = sea ? (_l('sea of clouds', 'mar de nuvens')) : (_l('clear', 'limpo'));
         bestLabel = '${(pt ? ptd : en)[date.weekday - 1]} ${date.day}, ${sr.substring(11, 16)} — $kind';
       }
     }
     if (counted == 0) return null;
     return bestLabel == null
-        ? (pt ? 'Sem nascer do sol limpo previsto nos próximos dias.' : 'No clear sunrise forecast in the next days.')
-        : '${pt ? 'Melhor manhã' : 'Best morning'}: $bestLabel';
+        ? (_l('No clear sunrise forecast in the next days.', 'Sem nascer do sol limpo previsto nos próximos dias.'))
+        : '${_l('Best morning', 'Melhor manhã')}: $bestLabel';
   } catch (_) {
     return null;
   }
@@ -421,26 +459,26 @@ class _IslandNowCardState extends State<IslandNowCard> {
     }
     if (n.seaT != null) {
       lines.add(line('🌊',
-          '${pt ? 'Mar' : 'Sea'} ${n.seaT!.toStringAsFixed(1)}°'
-          '${n.waves != null ? '  ·  ${pt ? 'ondas' : 'waves'} ${n.waves!.toStringAsFixed(1)} m' : ''}'
-          '${n.tide != null ? '  ·  ${pt ? 'maré' : 'tide'}: ${n.tide}' : ''}'));
+          '${_l('Sea', 'Mar')} ${n.seaT!.toStringAsFixed(1)}°'
+          '${n.waves != null ? '  ·  ${_l('waves', 'ondas')} ${n.waves!.toStringAsFixed(1)} m' : ''}'
+          '${n.tide != null ? '  ·  ${_l('tide', 'maré')}: ${n.tide}' : ''}'));
     }
     if (n.uv != null) {
       final v = n.uv!;
-      final band = v >= 11 ? (pt ? 'extremo' : 'extreme') : v >= 8 ? (pt ? 'muito alto' : 'very high')
-          : v >= 6 ? (pt ? 'alto' : 'high') : v >= 3 ? (pt ? 'moderado' : 'moderate') : (pt ? 'baixo' : 'low');
+      final band = v >= 11 ? (_l('extreme', 'extremo')) : v >= 8 ? (_l('very high', 'muito alto'))
+          : v >= 6 ? (_l('high', 'alto')) : v >= 3 ? (_l('moderate', 'moderado')) : (_l('low', 'baixo'));
       lines.add(line('☀️', 'UV ${v.round()} ($band) — Funchal'));
     }
     if (n.airCross != null) {
       final cross = n.airCross!.round();
       final verdict = cross >= 28
-          ? (pt ? 'acima do limite habitual de 15 nós — desvios prováveis' : 'above the usual 15-knot limit — diversions likely')
+          ? (_l('above the usual 15-knot limit — diversions likely', 'acima do limite habitual de 15 nós — desvios prováveis'))
           : cross >= 20
-              ? (pt ? 'rajadas — atrasos possíveis' : 'gusty — delays possible')
-              : (pt ? 'calmo para aterrar' : 'calm for landings');
+              ? (_l('gusty — delays possible', 'rajadas — atrasos possíveis'))
+              : (_l('calm for landings', 'calmo para aterrar'));
       lines.add(line('✈',
-          '${pt ? 'Aeroporto: vento' : 'Airport: wind'} ${n.airWind?.round()} km/h, ${pt ? 'rajadas' : 'gusts'} ${n.airGusts?.round()}, '
-          '${pt ? 'cruzado' : 'crosswind'} $cross km/h — $verdict',
+          '${_l('Airport: wind', 'Aeroporto: vento')} ${n.airWind?.round()} km/h, ${_l('gusts', 'rajadas')} ${n.airGusts?.round()}, '
+          '${_l('crosswind', 'cruzado')} $cross km/h — $verdict',
           onTap: () => openUrl('https://www.flightradar24.com/airport/fnc')));
     }
     if (n.shipsToday.isNotEmpty || n.shipsTomorrow.isNotEmpty) {
@@ -449,10 +487,10 @@ class _IslandNowCardState extends State<IslandNowCard> {
       // "CEMENT TRADER" alone read like a cruise ship.
       String kind(Map c) {
         final b = (c['berth'] ?? '') as String;
-        if (b.contains('Sul')) return pt ? 'cruzeiro' : 'cruise';
-        if (b.contains('Cimenteiro')) return pt ? 'cimenteiro' : 'cement carrier';
-        if (b.contains('Norte')) return pt ? 'ferry / carga' : 'ferry / cargo';
-        return pt ? 'ao largo' : 'at anchor';
+        if (b.contains('Sul')) return _l('cruise', 'cruzeiro');
+        if (b.contains('Cimenteiro')) return _l('cement carrier', 'cimenteiro');
+        if (b.contains('Norte')) return _l('ferry / cargo', 'ferry / carga');
+        return _l('at anchor', 'ao largo');
       }
       String one(Map c) {
         final a = c['arrival'] as String, d = c['departure'] as String;
@@ -460,21 +498,21 @@ class _IslandNowCardState extends State<IslandNowCard> {
         return '${c['ship']} (${kind(c)}${same ? ', ${a.substring(11, 16)}–${d.substring(11, 16)}' : ''})';
       }
       final parts = <String>[];
-      if (n.shipsToday.isNotEmpty) parts.add('${pt ? 'Hoje' : 'Today'}: ${n.shipsToday.map(one).join(', ')}');
-      if (n.shipsTomorrow.isNotEmpty) parts.add('${pt ? 'Amanhã' : 'Tomorrow'}: ${n.shipsTomorrow.map(one).join(', ')}');
+      if (n.shipsToday.isNotEmpty) parts.add('${_l('Today', 'Hoje')}: ${n.shipsToday.map(one).join(', ')}');
+      if (n.shipsTomorrow.isNotEmpty) parts.add('${_l('Tomorrow', 'Amanhã')}: ${n.shipsTomorrow.map(one).join(', ')}');
       lines.add(line('🛳', parts.join('\n'),
           onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
     } else if (n.nextShip != null) {
       final a = DateTime.parse('${(n.nextShip!['arrival'] as String).substring(0, 10)}T00:00:00Z');
       const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const ptd = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
-      lines.add(line('🛳', '${pt ? 'Próximo navio' : 'Next ship'}: ${n.nextShip!['ship']} · ${(pt ? ptd : en)[a.weekday - 1]} ${a.day}',
+      lines.add(line('🛳', '${_l('Next ship', 'Próximo navio')}: ${n.nextShip!['ship']} · ${(pt ? ptd : en)[a.weekday - 1]} ${a.day}',
           onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
     }
     if (n.sunriseLine != null) {
       // Tapping it opens the summit webcam: the forecast says what should
       // happen, the camera shows what is.
-      lines.add(line('🌅', '${pt ? 'Nascer do sol no Pico do Arieiro' : 'Sunrise at Pico do Arieiro'} — ${n.sunriseLine}  📷',
+      lines.add(line('🌅', '${_l('Sunrise at Pico do Arieiro', 'Nascer do sol no Pico do Arieiro')} — ${n.sunriseLine}  📷',
           onTap: () => openUrl('https://www.netmadeira.com/webcams-madeira/pico-do-arieiro')));
     }
     if (lines.isEmpty && n.warnings.isEmpty) return const SizedBox.shrink();
@@ -489,13 +527,13 @@ class _IslandNowCardState extends State<IslandNowCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(pt ? 'A ilha agora' : 'The island now',
+          Text(_l('The island now', 'A ilha agora'),
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.cTitle)),
           const SizedBox(height: 6),
           ...lines,
           if (n.warnings.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(pt ? 'AVISOS IPMA' : 'IPMA WARNINGS',
+            Text(_l('IPMA WARNINGS', 'AVISOS IPMA'),
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: .6, color: context.cSubtle)),
             const SizedBox(height: 4),
             IpmaWarningList(warnings: n.warnings),
@@ -540,7 +578,7 @@ List<String> pathFacts(Map<String, dynamic>? x) {
         ? 'Corrimão registado em ${v('railing_pct')}% do percurso, sem corrimão em ${v('no_railing_pct')}%, desconhecido em $unknown%'
         : 'Railing recorded on ${v('railing_pct')}% of the route, none on ${v('no_railing_pct')}%, unknown on $unknown%');
   } else {
-    out.add(pt ? 'Sem registo de corrimão em nenhum troço' : 'No railing recorded on any section');
+    out.add(_l('No railing recorded on any section', 'Sem registo de corrimão em nenhum troço'));
   }
   if (v('narrow_pct') > 0) {
     out.add(pt ? '${v('narrow_pct')}% do trilho com 0,5 m de largura ou menos' : '${v('narrow_pct')}% of the path 0.5 m wide or less');
