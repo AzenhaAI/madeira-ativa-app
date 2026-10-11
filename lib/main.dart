@@ -581,10 +581,15 @@ class AtivaApp extends StatelessWidget {
         // both the tabs and the linked screen on the stack, or Back closes the
         // app instead of returning home.
         onGenerateRoute: (s) => (s.name == null || s.name == '/') ? homeRoute() : deepLinkRoute(s),
-        onGenerateInitialRoutes: (name) => [
-          homeRoute(),
-          if (deepLinkRoute(RouteSettings(name: name)) case final r?) r,
-        ],
+        onGenerateInitialRoutes: (name) {
+          // A tab link on a cold start just selects the tab.
+          final page = Uri.tryParse(name)?.pathSegments.firstOrNull;
+          if (_tabLinks[page] case final i?) {
+            homeTab.value = i;
+            return [homeRoute()];
+          }
+          return [homeRoute(), if (deepLinkRoute(RouteSettings(name: name)) case final r?) r];
+        },
         onUnknownRoute: (_) => homeRoute(),
       ),
     );
@@ -601,8 +606,31 @@ Route<dynamic> homeRoute() => MaterialPageRoute(
     settings: const RouteSettings(name: '/'),
     builder: (_) => ListenableBuilder(listenable: locale, builder: (_, __) => HomeShell()));
 
+/// The selected bottom tab, so a link can switch it (madeiraativa://open/events).
+final homeTab = ValueNotifier<int>(0);
+const _tabLinks = {'events': 2, 'map': 3, 'levadas': 4, 'news': 5};
+
+/// A link to a tab: switch the tab and close this empty route, and anything
+/// else above the tabs, at once. (The
+/// Navigator has to push something for a named route; returning null would
+/// push a second set of tabs through onUnknownRoute.)
+Route<dynamic> _tabSwitch(int i) => PageRouteBuilder(
+    opaque: false,
+    transitionDuration: Duration.zero,
+    pageBuilder: (ctx, _, __) {
+      // After the frame: switching the tab rebuilds HomeShell, which may not
+      // happen while this route is being built.
+      // Everything above the tabs closes too, or the switch happens out of sight.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        homeTab.value = i;
+        Navigator.of(ctx).popUntil((r) => r.isFirst);
+      });
+      return const SizedBox.shrink();
+    });
+
 Route<dynamic>? deepLinkRoute(RouteSettings s) {
   final page = Uri.tryParse(s.name ?? '')?.pathSegments.firstOrNull;
+  if (_tabLinks[page] case final i?) return _tabSwitch(i);
   String? url;
   String title = 'Madeira Ativa';
   switch (page) {
@@ -631,9 +659,24 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _tab = 0;
+  int _tab = homeTab.value;
 
-  void _goTo(int i) => setState(() => _tab = i);
+  void _goTo(int i) => homeTab.value = i;
+  void _follow() {
+    if (mounted && _tab != homeTab.value) setState(() => _tab = homeTab.value);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    homeTab.addListener(_follow);
+  }
+
+  @override
+  void dispose() {
+    homeTab.removeListener(_follow);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
