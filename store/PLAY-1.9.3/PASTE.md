@@ -6,13 +6,13 @@ Screenshots: `phone-en/`, `phone-pt/`, `phone-de/` (1080×2160, Phone). Optional
 
 ## Release notes (paste as one block)
 ```
-<en-US>
+<en-GB>
 Now in German, alongside English and Portuguese.
 • Island buses: which trails you can reach by bus, the stops and the next departures
 • Faster home screen: the island now — weather, sea, tides, airport wind, ships in port
 • Ask AI answers in your language, with the facts underneath
 • On every trail: official time and difficulty, railings, narrow sections and tunnels
-</en-US>
+</en-GB>
 <pt-PT>
 Agora também em alemão, além de português e inglês.
 • Autocarros da ilha: que percursos se alcançam de autocarro, paragens e próximas partidas
@@ -31,7 +31,7 @@ Jetzt auf Deutsch, neben Englisch und Portugiesisch.
 
 ---
 
-## English (United States) — en-US, default
+## English (United Kingdom) — en-GB, default
 
 ### App name (13/30)
 ```
