@@ -707,6 +707,22 @@ class _GetThere extends StatelessWidget {
           ));
         }
       }
+      if (e.lines.isNotEmpty || e.stop != null) {
+        // The island bus planner with this end as the destination; the reader
+        // fills in where they start from.
+        rows.add(InkWell(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => WebPage(
+                  title: t('bus_one'),
+                  url: 'https://azenha.ai/ativa/bus?app=1&lang=${locale.value}'
+                      '&to=${e.lat.toStringAsFixed(5)},${e.lon.toStringAsFixed(5)}'
+                      '&toName=${Uri.encodeComponent('${l.code} · ${title(i)}')}'))),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text('🗺 ${t('plan_bus')} →', style: body.copyWith(color: kGreen, fontWeight: FontWeight.w600)),
+          ),
+        ));
+      }
       if (e.lines.isEmpty && e.stop == null && e.linesKnown) {
         rows.add(Text('🚌 ${t('no_route')}', style: soft));
       }

@@ -88,6 +88,7 @@ const _tr = {
     'pass_one': 'passes here',
     'pass_many': 'pass here',
     'no_route': 'No bus route mapped near this end',
+    'plan_bus': 'Plan the trip here by bus',
     'all_timetables': 'All bus timetables (SIGA)',
     'time_official': 'Official time and difficulty from Visit Madeira, as on the trailhead board.',
     'ipma_here': 'IPMA warnings for this trail\'s zone',
@@ -231,6 +232,7 @@ const _tr = {
     'pass_one': 'passa aqui',
     'pass_many': 'passam aqui',
     'no_route': 'Sem linha de autocarro mapeada perto deste extremo',
+    'plan_bus': 'Planear a viagem de autocarro até aqui',
     'all_timetables': 'Todos os horários (SIGA)',
     'time_official': 'Duração e dificuldade oficiais da Visit Madeira, como no painel do início do percurso.',
     'ipma_here': 'Avisos IPMA para a zona deste percurso',
@@ -574,30 +576,30 @@ class AtivaApp extends StatelessWidget {
           bottomSheetTheme:
               const BottomSheetThemeData(backgroundColor: kDarkCard),
         ),
-        // Deliberately not const. Dart canonicalises const instances, so a
-        // const HomeShell() hands MaterialApp the identical object on every
-        // rebuild — and Flutter short-circuits an element update when the new
-        // widget is identical to the old one, skipping the entire subtree. The
-        // ListenableBuilder above did fire on a locale change, MaterialApp did
-        // rebuild, and nothing under it ever heard about it: the language
-        // switched in memory and not one string on screen changed. A fresh
-        // instance each build costs nothing and keeps State, so the selected
-        // tab and scroll position survive the switch.
-        home: HomeShell(),
-        // Deep links (madeiraativa://open/<page>): the App Store event card
-        // and shared links open a screen directly, over the home tabs.
-        onGenerateRoute: deepLinkRoute,
-        // A cold start from a link must still have the tabs underneath, or Back
-        // closes the app instead of returning home.
+        // The tabs are the '/' route rather than `home`: Flutter refuses `home`
+        // next to onGenerateInitialRoutes, and a cold start from a link needs
+        // both the tabs and the linked screen on the stack, or Back closes the
+        // app instead of returning home.
+        onGenerateRoute: (s) => (s.name == null || s.name == '/') ? homeRoute() : deepLinkRoute(s),
         onGenerateInitialRoutes: (name) => [
-          MaterialPageRoute(settings: const RouteSettings(name: '/'), builder: (_) => HomeShell()),
+          homeRoute(),
           if (deepLinkRoute(RouteSettings(name: name)) case final r?) r,
         ],
-        onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => HomeShell()),
+        onUnknownRoute: (_) => homeRoute(),
       ),
     );
   }
 }
+
+/// The home tabs as a route. A route's page is built once and does not follow
+/// MaterialApp's rebuilds, so it listens to the locale itself — and builds a
+/// fresh, non-const HomeShell each time: Dart canonicalises const instances,
+/// Flutter skips updating an element whose widget is identical, and a const
+/// HomeShell once left every string unchanged after a language switch. State
+/// is kept, so the selected tab and scroll position survive the switch.
+Route<dynamic> homeRoute() => MaterialPageRoute(
+    settings: const RouteSettings(name: '/'),
+    builder: (_) => ListenableBuilder(listenable: locale, builder: (_, __) => HomeShell()));
 
 Route<dynamic>? deepLinkRoute(RouteSettings s) {
   final page = Uri.tryParse(s.name ?? '')?.pathSegments.firstOrNull;
@@ -605,7 +607,10 @@ Route<dynamic>? deepLinkRoute(RouteSettings s) {
   String title = 'Madeira Ativa';
   switch (page) {
     case 'bus':
-      url = 'https://azenha.ai/ativa/bus?app=1&lang=${locale.value}';
+      // from / to (a place or "lat,lon") ride along: Apple Maps' directions
+      // requests and the trail pages' "by bus" button arrive this way.
+      final q = Uri.tryParse(s.name ?? '')?.query ?? '';
+      url = 'https://azenha.ai/ativa/bus?app=1&lang=${locale.value}${q.isEmpty ? '' : '&$q'}';
       title = t('bus_one');
     case 'ask':
       url = 'https://azenha.ai/ativa/ask?app=1&lang=${locale.value}';

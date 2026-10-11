@@ -103,6 +103,7 @@ const trDe = <String, String>{
   'next_up': 'Als Nächstes',
   'no_park': 'kein kartierter Parkplatz in der Nähe',
   'no_route': 'Keine Buslinie in der Nähe dieses Endes kartiert',
+  'plan_bus': 'Busfahrt hierher planen',
   'nothing_found': 'Hier nichts — probier einen anderen Zeitraum oder Filter.',
   'of_route': 'der Strecke',
   'of_trail': 'des Wegs',
