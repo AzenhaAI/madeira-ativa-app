@@ -587,6 +587,12 @@ class AtivaApp extends StatelessWidget {
         // Deep links (madeiraativa://open/<page>): the App Store event card
         // and shared links open a screen directly, over the home tabs.
         onGenerateRoute: deepLinkRoute,
+        // A cold start from a link must still have the tabs underneath, or Back
+        // closes the app instead of returning home.
+        onGenerateInitialRoutes: (name) => [
+          MaterialPageRoute(settings: const RouteSettings(name: '/'), builder: (_) => HomeShell()),
+          if (deepLinkRoute(RouteSettings(name: name)) case final r?) r,
+        ],
         onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => HomeShell()),
       ),
     );
