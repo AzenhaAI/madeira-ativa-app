@@ -178,3 +178,26 @@ Madeira Ativa ist kostenlos: kein Konto, keine Werbung, nichts zu kaufen, und de
 
 Gemacht auf der Insel, für die Menschen, die hier leben, und für alle, die zum Draußensein gekommen sind.
 ```
+
+---
+
+## Promotion (Grow users)
+
+### Feature graphic (Main store listing → Graphics, per language)
+`promo/feature-graphic-1024x500-en.png`, `-pt.png`, `-de.png`
+
+### Promo video (Main store listing → Video, per language)
+Upload `promo/promo-video-1920x1080-en.mp4` to YouTube (public or unlisted, ads off), paste the YouTube URL.
+
+### Promotional content (Grow users → Promotional content → Create)
+- Type: **Major update**
+- Image: `promo/promotional-content-1920x1080.png`
+- Deep link: `madeiraativa://open/bus`
+- Start 14 Oct 2026 09:00, end 28 Oct 2026 20:00 (Lisbon), all countries
+- Texts:
+
+| | Title | Description |
+|---|---|---|
+| en-GB | Island buses to the trails | Which trails you can reach by bus, the stops and the next departures. Now in German too. |
+| pt-PT | Autocarros até aos percursos | Que percursos se alcançam de autocarro, as paragens e as próximas partidas. Agora também em alemão. |
+| de-DE | Mit dem Bus zu den Wegen | Welche Wege du mit dem Bus erreichst, die Haltestellen und die nächsten Abfahrten. Jetzt auch auf Deutsch. |
