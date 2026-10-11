@@ -1,6 +1,6 @@
-# Google Play — Madeira Ativa 1.9.3 (42)
+# Google Play — Madeira Ativa 1.9.3 (43)
 
-Upload order: Test and release → Production (or Internal testing first) → Create new release → upload `madeira-ativa-v1.9.3+42.aab` (signing key SHA1 94:EA:47:3F…, checked) → paste the release notes below → Save → Review release. Then Grow users → Store presence → Main store listing: texts and screenshots per language.
+Upload order: Test and release → Production (or Internal testing first) → Create new release → upload `madeira-ativa-v1.9.3+43.aab` (signing key SHA1 94:EA:47:3F…, checked) → paste the release notes below → Save → Review release. Then Grow users → Store presence → Main store listing: texts and screenshots per language.
 
 Screenshots: `phone-en/`, `phone-pt/`, `phone-de/` (1080×2160, Phone). Optional `tablet-*` (2048×2732, 10-inch tablet). Feature graphic and icon unchanged.
 
