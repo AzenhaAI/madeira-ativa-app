@@ -27,6 +27,15 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- madeiraativa://open/bus and friends: store event cards and links
+                 open a screen directly. Flutter hands the path to the Navigator. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="madeiraativa"/>
+            </intent-filter>
         </activity>
         <!-- flutter_local_notifications scheduled + boot receivers -->
         <receiver android:exported="false"

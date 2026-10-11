@@ -584,9 +584,32 @@ class AtivaApp extends StatelessWidget {
         // instance each build costs nothing and keeps State, so the selected
         // tab and scroll position survive the switch.
         home: HomeShell(),
+        // Deep links (madeiraativa://open/<page>): the App Store event card
+        // and shared links open a screen directly, over the home tabs.
+        onGenerateRoute: deepLinkRoute,
+        onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => HomeShell()),
       ),
     );
   }
+}
+
+Route<dynamic>? deepLinkRoute(RouteSettings s) {
+  final page = Uri.tryParse(s.name ?? '')?.pathSegments.firstOrNull;
+  String? url;
+  String title = 'Madeira Ativa';
+  switch (page) {
+    case 'bus':
+      url = 'https://azenha.ai/ativa/bus?app=1&lang=${locale.value}';
+      title = t('bus_one');
+    case 'ask':
+      url = 'https://azenha.ai/ativa/ask?app=1&lang=${locale.value}';
+      title = 'Ask AI';
+    case 'webcams':
+      url = 'https://azenha.ai/ativa/webcams?app=1&lang=${locale.value}';
+      title = t('webcams_live');
+  }
+  if (url == null) return null;
+  return MaterialPageRoute(settings: s, builder: (_) => WebPage(title: title, url: url!));
 }
 
 class HomeShell extends StatefulWidget {
