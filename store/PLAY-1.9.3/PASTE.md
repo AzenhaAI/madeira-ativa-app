@@ -33,9 +33,9 @@ Jetzt auf Deutsch, neben Englisch und Portugiesisch.
 
 ## English (United Kingdom) — en-GB, default
 
-### App name (13/30)
+### App name (30/30)
 ```
-Madeira Ativa
+Madeira Ativa: Trails & Events
 ```
 
 ### Short description (65/80)
@@ -83,9 +83,9 @@ Made on the island, for the people who live here and the ones who came to be out
 
 ## Português (Portugal) — pt-PT
 
-### App name (13/30)
+### App name (24/30)
 ```
-Madeira Ativa
+Madeira Ativa: Percursos
 ```
 
 ### Short description (62/80)
@@ -133,9 +133,9 @@ Feita na ilha, para quem cá vive e para quem cá vem passar os dias ao ar livre
 
 ## Deutsch — de-DE (add via Manage translations → Add language)
 
-### App name (13/30)
+### App name (28/30)
 ```
-Madeira Ativa
+Madeira Ativa: Wege & Events
 ```
 
 ### Short description (59/80)
