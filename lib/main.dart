@@ -3407,6 +3407,16 @@ class _WebPageState extends State<WebPage> {
       // never reports a finish for a load that failed. These screens are the
       // ones a reviewer on flaky hotel wifi is most likely to open.
       ..setNavigationDelegate(NavigationDelegate(
+        // Our own pages stay in the app; a link out (a SIGA timetable, a
+        // webcam, an organiser's site) opens in the browser. Loaded inside
+        // this screen, it replaced the page with no way back to it.
+        onNavigationRequest: (req) {
+          final host = Uri.tryParse(req.url)?.host ?? '';
+          final ours = host == 'azenha.ai' || host.endsWith('.azenha.ai') || host.isEmpty;
+          if (!req.isMainFrame || ours || !req.url.startsWith('http')) return NavigationDecision.navigate;
+          openUrl(req.url);
+          return NavigationDecision.prevent;
+        },
         onPageFinished: (_) {
           if (mounted) setState(() => _loading = false);
         },
