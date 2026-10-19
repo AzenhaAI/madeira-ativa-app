@@ -19,6 +19,7 @@ import 'stories_data.dart';
 import 'strings_de.dart';
 import 'strings_ru.dart';
 import 'interests.dart';
+import 'home_face.dart';
 
 const kGreen = Color(0xFF0F6E56);
 const kGreenDark = Color(0xFF085041);
@@ -1398,6 +1399,14 @@ class _HomePageState extends State<HomePage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // The photo band: a greeting by the hour, and the day in one line.
+          ValueListenableBuilder<IslandNow?>(
+            valueListenable: islandNow,
+            builder: (_, n, __) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: HeroBand(now: n, levadasOpen: counts['open'] as int?),
+            ),
+          ),
           PromoBanner(
             title: t('bus_promo'),
             subtitle: t('bus_promo_sub'),

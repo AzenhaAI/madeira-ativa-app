@@ -14,6 +14,7 @@ import 'dart:math' as math;
 //   - Sunrise: a morning is called best only if it is actually good.
 import 'package:flutter/material.dart';
 
+import 'home_face.dart';
 import 'main.dart';
 import 'store.dart';
 
@@ -32,6 +33,9 @@ const _deIsl = <String, String>{
   'Sea': 'Meer',
   'Sunrise at Pico do Arieiro': 'Sonnenaufgang am Pico do Arieiro',
   'The island now': 'Die Insel jetzt',
+  'Tide': 'Gezeiten',
+  'ship': 'Schiff',
+  'ships': 'Schiffe',
   'Today': 'Heute',
   'Tomorrow': 'Morgen',
   'above the usual 15-knot limit — diversions likely': 'über der üblichen 15-Knoten-Grenze — Landungen unsicher',
@@ -67,6 +71,9 @@ const _ruIsl = <String, String>{
   'Sea': 'Море',
   'Sunrise at Pico do Arieiro': 'Рассвет на Pico do Arieiro',
   'The island now': 'Остров сейчас',
+  'Tide': 'Прилив',
+  'ship': 'судно',
+  'ships': 'судна',
   'Today': 'Сегодня',
   'Tomorrow': 'Завтра',
   'above the usual 15-knot limit — diversions likely': 'выше обычного предела 15 узлов — возможны уходы на запасной',
@@ -281,6 +288,11 @@ class IpmaWarningList extends StatelessWidget {
 class IslandNow {
   double? coastT, coastWind, summitT, seaT, waves;
   int? coastCode, summitCode;
+  // The north coast (Porto Moniz), for the silhouette's fourth point.
+  double? northT;
+  int? northCode;
+  // Today's sunrise and sunset on the coast, local ISO strings.
+  String? sunrise, sunset;
   // The airport: wind, gusts and the crosswind on runway 05/23 in the gusts.
   double? airWind, airGusts, airCross;
   List<Map<String, dynamic>> shipsToday = [];
@@ -312,14 +324,23 @@ Future<IslandNow> fetchIslandNow() async {
     () async {
       try {
         final d = await cachedJson('https://api.open-meteo.com/v1/forecast'
-            '?latitude=32.648,32.735,32.698&longitude=-16.908,-16.929,-16.774&elevation=50,1818,58'
-            '&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m');
+            '?latitude=32.648,32.735,32.698,32.867&longitude=-16.908,-16.929,-16.774,-17.169&elevation=50,1818,58,20'
+            '&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m'
+            '&daily=sunrise,sunset&forecast_days=1&timezone=Atlantic%2FMadeira');
         final pts = d as List;
         n.coastT = (pts[0]['current']['temperature_2m'] as num?)?.toDouble();
         n.coastWind = (pts[0]['current']['wind_speed_10m'] as num?)?.toDouble();
         n.coastCode = (pts[0]['current']['weather_code'] as num?)?.toInt();
         n.summitT = (pts[1]['current']['temperature_2m'] as num?)?.toDouble();
         n.summitCode = (pts[1]['current']['weather_code'] as num?)?.toInt();
+        try {
+          n.sunrise = (pts[0]['daily']['sunrise'] as List).first as String;
+          n.sunset = (pts[0]['daily']['sunset'] as List).first as String;
+        } catch (_) {}
+        if (pts.length > 3) {
+          n.northT = (pts[3]['current']['temperature_2m'] as num?)?.toDouble();
+          n.northCode = (pts[3]['current']['weather_code'] as num?)?.toInt();
+        }
         if (pts.length > 2) {
           final c = pts[2]['current'];
           n.airWind = (c['wind_speed_10m'] as num?)?.toDouble();
@@ -467,6 +488,9 @@ class IslandNowCard extends StatefulWidget {
   State<IslandNowCard> createState() => _IslandNowCardState();
 }
 
+/// The latest facts, for the Home hero band above the card.
+final islandNow = ValueNotifier<IslandNow?>(null);
+
 class _IslandNowCardState extends State<IslandNowCard> {
   IslandNow? _n;
 
@@ -474,6 +498,7 @@ class _IslandNowCardState extends State<IslandNowCard> {
   void initState() {
     super.initState();
     fetchIslandNow().then((n) {
+      islandNow.value = n;
       if (mounted) setState(() => _n = n);
     });
   }
@@ -484,36 +509,46 @@ class _IslandNowCardState extends State<IslandNowCard> {
     if (n == null) return const SizedBox.shrink();
     final pt = locale.value == 'pt';
     final lines = <Widget>[];
+    // With the coast answered, the silhouette and the strip carry the
+    // weather; the text lines keep only what the drawing has no place for.
+    final face = n.coastT != null;
     Widget line(String icon, String text, {VoidCallback? onTap}) => InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 3),
+            padding: const EdgeInsets.symmetric(vertical: 2),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              SizedBox(width: 26, child: Text(icon, style: const TextStyle(fontSize: 15))),
+              SizedBox(width: 24, child: Text(icon, style: const TextStyle(fontSize: 14))),
               Expanded(
                   child: Text(text,
-                      style: TextStyle(fontSize: 14, color: context.cBody))),
+                      style: TextStyle(fontSize: 13, color: context.cBody))),
             ]),
           ),
         );
-    if (n.coastT != null) {
+    if (face) {
+      lines.add(IslandSilhouette(now: n));
+      lines.add(Divider(height: 10, color: context.cHairline));
+      lines.add(GoodDayStrip(now: n));
+      lines.add(Divider(height: 10, color: context.cHairline));
+      if (n.tide != null) lines.add(line('🌊', '${_l('Tide', 'Maré')}: ${n.tide}'));
+    }
+    if (!face && n.coastT != null) {
       lines.add(line(weatherEmoji(n.coastCode ?? 0),
           'Funchal ${n.coastT!.round()}°  ·  ${n.coastWind?.round() ?? '–'} $_kmh'
           '${n.summitT != null ? '     ⛰ Pico do Arieiro ${n.summitT!.round()}°' : ''}'));
     }
-    if (n.seaT != null) {
+    if (!face && n.seaT != null) {
       lines.add(line('🌊',
           '${_l('Sea', 'Mar')} ${locale.value == 'en' ? n.seaT!.toStringAsFixed(1) : n.seaT!.toStringAsFixed(1).replaceAll('.', ',')}°'
           '${n.waves != null ? '  ·  ${_l('waves', 'ondas')} ${locale.value == 'en' ? n.waves!.toStringAsFixed(1) : n.waves!.toStringAsFixed(1).replaceAll('.', ',')} $_m' : ''}'
           '${n.tide != null ? '  ·  ${_l('tide', 'maré')}: ${n.tide}' : ''}'));
     }
-    if (n.uv != null) {
+    if (!face && n.uv != null) {
       final v = n.uv!;
       final band = v >= 11 ? (_l('extreme', 'extremo')) : v >= 8 ? (_l('very high', 'muito alto'))
           : v >= 6 ? (_l('high', 'alto')) : v >= 3 ? (_l('moderate', 'moderado')) : (_l('low', 'baixo'));
       lines.add(line('☀️', 'UV ${v.round()} ($band) — Funchal'));
     }
-    if (n.airCross != null) {
+    if (!face && n.airCross != null) {
       final cross = n.airCross!.round();
       final verdict = cross >= 28
           ? (_l('above the usual 15-knot limit — diversions likely', 'acima do limite habitual de 15 nós — desvios prováveis'))
@@ -543,8 +578,12 @@ class _IslandNowCardState extends State<IslandNowCard> {
       }
       final parts = <String>[];
       if (n.shipsToday.isNotEmpty) parts.add('${_l('Today', 'Hoje')}: ${n.shipsToday.map(one).join(', ')}');
-      if (n.shipsTomorrow.isNotEmpty) parts.add('${_l('Tomorrow', 'Amanhã')}: ${n.shipsTomorrow.map(one).join(', ')}');
-      lines.add(line('🛳', parts.join('\n'),
+      if (n.shipsTomorrow.isNotEmpty) {
+        parts.add(face
+            ? '${_l('Tomorrow', 'Amanhã')}: ${n.shipsTomorrow.length} ${n.shipsTomorrow.length == 1 ? _l('ship', 'navio') : _l('ships', 'navios')}'
+            : '${_l('Tomorrow', 'Amanhã')}: ${n.shipsTomorrow.map(one).join(', ')}');
+      }
+      lines.add(line('🛳', parts.join(face ? ' · ' : '\n'),
           onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
     } else if (n.nextShip != null) {
       final a = DateTime.parse('${(n.nextShip!['arrival'] as String).substring(0, 10)}T00:00:00Z');
@@ -569,8 +608,14 @@ class _IslandNowCardState extends State<IslandNowCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_l('The island now', 'A ilha agora'),
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.cTitle)),
+          Row(children: [
+            Expanded(
+                child: Text(_l('The island now', 'A ilha agora'),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.cTitle))),
+            if (face)
+              Text('${madeiraNow().hour.toString().padLeft(2, '0')}:${madeiraNow().minute.toString().padLeft(2, '0')}',
+                  style: TextStyle(fontSize: 12, color: context.cSubtle)),
+          ]),
           const SizedBox(height: 6),
           ...lines,
           if (n.warnings.isNotEmpty) ...[
