@@ -68,7 +68,7 @@ class _LevadaPageState extends State<LevadaPage> {
                   // mandatory and online-only, and the trailhead has no signal.
                   GestureDetector(
                     onTap: () => openUrl('https://simplifica.madeira.gov.pt/'),
-                    child: _S(l.fee, t('fee')),
+                    child: _S(feeLabel(l.fee), t('fee')),
                   ),
               ],
             ),
@@ -216,7 +216,7 @@ class _RacesHereState extends State<_RacesHere> {
                                   color: context.cTitle)),
                           const SizedBox(height: 3),
                           Text(
-                            '${t('covers')} ${race['coverage_pct']}% ${t('of_trail')}'
+                            '${t('covers')} ${pct(race['coverage_pct'])} ${t('of_trail')}'
                             '${race['editions'] != null ? ' · ${race['editions']} ${t('editions')}' : ''}'
                             '${race['finishers'] != null ? ' · ${race['finishers']} ${t('finishers_total')}' : ''}',
                             style: TextStyle(
@@ -226,7 +226,7 @@ class _RacesHereState extends State<_RacesHere> {
                             const SizedBox(height: 4),
                             Text(
                               '${t('course_record')} '
-                              '${(race['best']['distance_km'] as num).round()} km — '
+                              '${(race['best']['distance_km'] as num).round()} $uKm — '
                               '${race['best']['time']} · ${race['best']['holder']}',
                               style: TextStyle(
                                   fontSize: 12, color: context.cSubtle),
@@ -446,7 +446,7 @@ class _WeatherHereState extends State<_WeatherHere> {
                     color: context.cTitle)),
             if (elev != null) ...[
               const SizedBox(width: 8),
-              Text('· $elev m',
+              Text('· $elev $uM',
                   style: TextStyle(fontSize: 13, color: context.cSubtle)),
             ],
           ],
@@ -657,7 +657,7 @@ class _GetThere extends StatelessWidget {
           onTap: () => openUrl('https://www.google.com/maps/dir/?api=1&destination=${pk.lat},${pk.lon}'),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 3),
-            child: Text('🚗 ${t('drive_park')}${pk.name.isNotEmpty ? ' ${pk.name}' : ''} — ${pk.dist} m ${t('from_path')}'
+            child: Text('🚗 ${t('drive_park')}${pk.name.isNotEmpty ? ' ${pk.name}' : ''} — ${pk.dist} $uM ${t('from_path')}'
                 '${pk.paid ? ' · ${t('paid')}' : ''}',
                 style: body.copyWith(color: kGreen, fontWeight: FontWeight.w600)),
           ),
@@ -696,7 +696,7 @@ class _GetThere extends StatelessWidget {
         ));
       }
       if (e.stop != null) {
-        rows.add(Text('🚏 ${e.stop!.stop}, ${e.stop!.dist} m (${e.stop!.lines.join(', ')})', style: soft));
+        rows.add(Text('🚏 ${e.stop!.stop}, ${e.stop!.dist} $uM (${e.stop!.lines.join(', ')})', style: soft));
         // Funchal's urban timetable is open data: name the next departures.
         final nb = nextBuses(e.stop!.departures, 4);
         if (nb.isNotEmpty) {
@@ -782,7 +782,7 @@ class _OnPath extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 3),
               child: Text('• $f', style: TextStyle(fontSize: 14, color: context.cBody)),
             ),
-          Text('${t('path_src')} ${l.exposure!['mapped_pct']}% ${t('of_route')}',
+          Text('${t('path_src')} ${pct(l.exposure!['mapped_pct'])} ${t('of_route')}',
               style: TextStyle(fontSize: 12, color: context.cSubtle)),
         ],
       ),
