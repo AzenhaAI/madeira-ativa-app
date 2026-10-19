@@ -82,6 +82,7 @@ const trRu = <String, String>{
   'home': 'Главная',
   'intl_trend': 'Иностранные бегуны по годам',
   'ipma_here': 'Предупреждения IPMA для зоны этой тропы',
+  'language_row': 'Язык',
   'language': 'English',
   'later': 'позже',
   'levadas': 'Левады',

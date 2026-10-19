@@ -82,6 +82,7 @@ const trDe = <String, String>{
   'home': 'Start',
   'intl_trend': 'Internationale Läufer pro Jahr',
   'ipma_here': 'IPMA-Warnungen für die Zone dieses Wegs',
+  'language_row': 'Sprache',
   'language': 'Русский',  // the menu row names the next language: DE → RU
   'later': 'später',
   'levadas': 'Levadas',

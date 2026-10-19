@@ -165,6 +165,7 @@ const _tr = {
     'telegram': 'Telegram bot',
     'tg_channel': 'Weekly digest channel',
     'language': 'Português',
+    'language_row': 'Language',
     'roots_sub': "The island's memory, one place at a time",
     'view_all': 'View all',
     'roots_h1': 'How Madeira learned to move',
@@ -343,6 +344,7 @@ const _tr = {
     'telegram': 'Bot do Telegram',
     'tg_channel': 'Canal do resumo semanal',
     'language': 'Deutsch',
+    'language_row': 'Idioma',
     'roots_sub': 'A memória da ilha, um lugar de cada vez',
     'view_all': 'Ver tudo',
     'roots_h1': 'Como a Madeira aprendeu a mover-se',
@@ -880,18 +882,40 @@ class _HomeShellState extends State<HomeShell> {
       endDrawer: Drawer(
         child: ListView(
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: kGreen),
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Text('Madeira Ativa',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: kGreenLight)),
-              ),
+            // A short band, not Material's 160-point header: the menu is
+            // long, and the name needs one line.
+            Container(
+              color: kGreen,
+              padding: EdgeInsets.fromLTRB(16, MediaQuery.paddingOf(context).top + 10, 16, 12),
+              child: const Text('Madeira Ativa',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: kGreenLight)),
+            ),
+            // Settings first: the language is what a visitor looks for.
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.translate, color: kTerracotta),
+              title: Text(t('language_row')),
+              // Only the current language is named; the next ones, Russian
+              // among them, come up as you tap. EN → PT → DE → RU → EN.
+              trailing: Text(locale.value.toUpperCase(),
+                  style: const TextStyle(fontWeight: FontWeight.w700, color: kTerracotta)),
+              onTap: () {
+                setLocale(locale.value == 'en' ? 'pt' : locale.value == 'pt' ? 'de' : locale.value == 'de' ? 'ru' : 'en');
+                Navigator.pop(context);
+              },
             ),
             ListTile(
+              dense: true,
+              leading: const Icon(Icons.tune, color: kGreen),
+              title: Text(t('interests')),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InterestsPage()));
+              },
+            ),
+            const Divider(),
+            ListTile(
+              dense: true,
               leading: const Icon(Icons.public, color: kGreen),
               title: Text(t('website')),
               // /ativa is the canonical address; /ative redirects to it and
@@ -902,6 +926,7 @@ class _HomeShellState extends State<HomeShell> {
               onTap: () => openUrl('https://azenha.ai/ativa/'),
             ),
             ListTile(
+              dense: true,
               leading: const Icon(Icons.send, color: kGreen),
               title: Text(t('telegram')),
               onTap: () => openUrl('https://t.me/madeira_ebot'),
@@ -910,12 +935,14 @@ class _HomeShellState extends State<HomeShell> {
             // carries one post a week without being asked. Different needs, so
             // the app offers both rather than choosing for the reader.
             ListTile(
+              dense: true,
               leading: const Icon(Icons.campaign, color: kGreen),
               title: Text(t('tg_channel')),
               onTap: () => openUrl('https://t.me/madeira_ativa'),
             ),
             const Divider(),
             ListTile(
+              dense: true,
               leading: const Icon(Icons.menu_book_outlined, color: kGreen),
               title: Text(t('roots')),
               onTap: () {
@@ -924,12 +951,14 @@ class _HomeShellState extends State<HomeShell> {
               },
             ),
             ListTile(
+              dense: true,
               leading: const Icon(Icons.bar_chart, color: kGreen),
               title: Text(t('stats')),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const StatsPage())),
             ),
             ListTile(
+              dense: true,
               leading: const Icon(Icons.flight, color: kGreen),
               title: Text(locale.value == 'ru' ? '3D-облёт' : '3D flyover'),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -938,6 +967,7 @@ class _HomeShellState extends State<HomeShell> {
                       url: 'https://azenha.ai/ativa/mapfly?app=1'))),
             ),
             ListTile(
+              dense: true,
               leading: const Icon(Icons.terrain, color: kGreen),
               title: Text(locale.value == 'ru' ? 'Вид с воздуха' : 'Aerial view'),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -947,6 +977,7 @@ class _HomeShellState extends State<HomeShell> {
             ),
             const Divider(),
             ListTile(
+              dense: true,
               leading: const Icon(Icons.privacy_tip_outlined, color: kGreen),
               title: Text(t('privacy')),
               onTap: () => openUrl('https://azenha.ai/ativa/privacy'),
@@ -961,6 +992,7 @@ class _HomeShellState extends State<HomeShell> {
             // this row briefly pointed at the app's own website instead, which
             // made it a button promising one place and going to another.
             ListTile(
+              dense: true,
               leading: const Icon(Icons.auto_awesome_outlined, color: kGreen),
               title: const Text('Azenha.ai'),
               // Who made the app, said plainly — the old line was a slogan
@@ -975,6 +1007,7 @@ class _HomeShellState extends State<HomeShell> {
             // No quota on this one: a person pressed it. The system prompt
             // (see ask_review.dart) is the scarce one.
             ListTile(
+              dense: true,
               leading: const Icon(Icons.star_outline, color: kGreen),
               title: Text(t('rate_app')),
               onTap: () {
@@ -983,6 +1016,7 @@ class _HomeShellState extends State<HomeShell> {
               },
             ),
             ListTile(
+              dense: true,
               leading: const Icon(Icons.mail_outline, color: kGreen),
               title: Text(t('contact')),
               subtitle: const Text('agent@azenha.ai'),
@@ -990,25 +1024,6 @@ class _HomeShellState extends State<HomeShell> {
                   'mailto:agent@azenha.ai?subject=Madeira%20Ativa'),
             ),
             const Divider(),
-            ListTile(
-              leading: const Icon(Icons.tune, color: kGreen),
-              title: Text(t('interests')),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InterestsPage()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.translate, color: kTerracotta),
-              title: Text(t('language')),
-              onTap: () {
-                // EN → PT → DE → RU → EN; the row's label names the next one.
-                // Russian is reached only here: the header keeps its three
-                // buttons, and any of them brings you back from Russian.
-                setLocale(locale.value == 'en' ? 'pt' : locale.value == 'pt' ? 'de' : locale.value == 'de' ? 'ru' : 'en');
-                Navigator.pop(context);
-              },
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               child: Row(
