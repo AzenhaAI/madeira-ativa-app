@@ -86,6 +86,9 @@ const _tr = {
     'end_on_map': 'This end on the map',
     'no_park': 'no mapped car park nearby',
     'bus_one': 'Bus',
+    'buses': 'Buses',
+    'games': 'Games on trail data',
+    'games_sub': 'Guess the Levada · Levada Run · Levada Tunnels',
     'bus_many': 'Buses',
     'pass_one': 'passes here',
     'pass_many': 'pass here',
@@ -258,6 +261,9 @@ const _tr = {
     'end_on_map': 'Este extremo no mapa',
     'no_park': 'sem parque mapeado perto',
     'bus_one': 'Autocarro',
+    'buses': 'Autocarros',
+    'games': 'Jogos com dados das veredas',
+    'games_sub': 'Adivinha a Levada · Levada Run · Levada Tunnels',
     'bus_many': 'Autocarros',
     'pass_one': 'passa aqui',
     'pass_many': 'passam aqui',
@@ -2557,49 +2563,13 @@ class _EventsPageState extends State<EventsPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: LayoutBuilder(builder: (context, box) {
-            // Nine categories with an emoji each need three rows on a 360dp
-            // phone, and the row then eats a third of the screen before a
-            // single event is visible. It gets worse with the system font
-            // enlarged — which is exactly the reader who can least afford the
-            // space. So measure what these labels actually need on this
-            // screen, at this font size, and keep the emoji only while they
-            // still fit in two rows.
-            final scaler = MediaQuery.textScalerOf(context);
-            const labelStyle = TextStyle(fontSize: 13, fontWeight: FontWeight.w600);
-            const spacing = 6.0;
-            const chipChrome = 34.0;  // FilterChip's padding around its label
-            const emojiCost = 30.0;   // the avatar slot plus its gap
-
-            double labelWidth(String text) {
-              final painter = TextPainter(
-                text: TextSpan(text: text, style: labelStyle),
-                textDirection: TextDirection.ltr,
-                textScaler: scaler,
-              )..layout();
-              return painter.width;
-            }
-
-            int rowsNeeded({required bool withEmoji}) {
-              var rows = 1;
-              var used = 0.0;
-              for (final cat in _modeCats) {
-                final width = labelWidth(t(cat.$3)) +
-                    chipChrome +
-                    (withEmoji && cat.$2.isNotEmpty ? emojiCost : 0);
-                if (used > 0 && used + spacing + width > box.maxWidth) {
-                  rows++;
-                  used = width;
-                } else {
-                  used += (used > 0 ? spacing : 0) + width;
-                }
-              }
-              return rows;
-            }
-
-            final showEmoji = rowsNeeded(withEmoji: true) <= 2;
+            // No emoji on the chips: the family colour and the divider say
+            // what is sport and what is culture, and the card icon says
+            // what kind. Chips stay short, so two rows hold all ten even
+            // with the system font enlarged.
 
             return Wrap(
-            spacing: spacing,
+            spacing: 6,
             runSpacing: 6,
             children: [
               for (final cat in _modeCats) ...[
@@ -2611,13 +2581,6 @@ class _EventsPageState extends State<EventsPage> {
                 Builder(
                   builder: (context) => FilterChip(
                     showCheckmark: false,
-                    // The emoji belongs in the avatar slot, not inside the label
-                    // string: a glyph from the emoji font inside the label made
-                    // the label measure short and clip mid-word — 'Trail' came
-                    // out as 'Tra'.
-                    avatar: (!showEmoji || cat.$2.isEmpty)
-                        ? null
-                        : Text(cat.$2, style: const TextStyle(fontSize: 14)),
                     label: Text(t(cat.$3), maxLines: 1, softWrap: false),
                     selected: _filter == cat.$1,
                     selectedColor: _chipFill(context, cat.$1),
@@ -2644,6 +2607,12 @@ class _EventsPageState extends State<EventsPage> {
         if (_filter == 'festivals')
           SizedBox(
             height: 44,
+            child: ShaderMask(
+            shaderCallback: (r) => const LinearGradient(
+                    colors: [Colors.black, Colors.black, Colors.transparent],
+                    stops: [0, 0.94, 1])
+                .createShader(r),
+            blendMode: BlendMode.dstIn,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
@@ -2683,7 +2652,6 @@ class _EventsPageState extends State<EventsPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 3),
                       child: FilterChip(
                         showCheckmark: false,
-                        avatar: Text(c.$2, style: const TextStyle(fontSize: 13)),
                         label: Text(t('cc_${c.$1}'), maxLines: 1, softWrap: false),
                         selected: _subCatsInEffect.contains(c.$1),
                         selectedColor: kTerracotta,
@@ -2704,6 +2672,7 @@ class _EventsPageState extends State<EventsPage> {
                       ),
                     ),
               ],
+            ),
             ),
           ),
         Padding(
@@ -3374,6 +3343,45 @@ class _LevadasPageState extends State<LevadasPage> {
                     onChanged: (v) => setState(() => _query = v),
                   ),
                 ),
+              // The games built on this same trail data — a shelf of its
+              // own above the numbers, as the bus banner on Home and Roots
+              // on News.
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => WebPage(
+                        title: t('games'),
+                        url: 'https://azenha.ai/games/?app=1&lang=${locale.value}'))),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                  decoration: BoxDecoration(
+                    color: context.dark ? kGreenTintDark : kGreenLight,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: context.dark ? const Color(0xFF2E5A4B) : const Color(0xFFB9D9CC)),
+                  ),
+                  child: Row(children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(color: kGreen, borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.sports_esports_outlined, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(t('games'),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.cTitle)),
+                          const SizedBox(height: 2),
+                          Text(t('games_sub'), style: TextStyle(fontSize: 12, color: context.cSubtle)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: kGreen),
+                  ]),
+                ),
+              ),
               Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -3473,6 +3481,8 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   List<Levada>? _levadas;
   List<(AtivaEvent, LatLng)> _events = [];
+  /// Bus stops that serve a trailhead: (stop name, point, the trail).
+  List<(String, LatLng, String)> _busStops = [];
   String _layer = 'events';
 
   @override
@@ -3490,6 +3500,21 @@ class _MapPageState extends State<MapPage> {
         if (p != null) geo.add((e, p));
       }
       if (mounted) setState(() => _events = geo);
+    }).catchError((_) {});
+    // The planner's network: for each trailhead the nearest stop. One
+    // marker per stop, named after the first trail it serves.
+    cachedJson('https://azenha.ai/ativa/bus/network.json').then((d) {
+      final stops = d['stops'] as List;
+      final seen = <int>{};
+      final out = <(String, LatLng, String)>[];
+      for (final sp in d['spots'] as List) {
+        if (sp[3] != 'trail' || sp.length < 7 || (sp[6] as List).isEmpty) continue;
+        final idx = (sp[6] as List).first[0] as int;
+        if (!seen.add(idx)) continue;
+        final st = stops[idx] as List;
+        out.add((st[1] as String, LatLng((st[2] as num).toDouble(), (st[3] as num).toDouble()), sp[0] as String));
+      }
+      if (mounted) setState(() => _busStops = out);
     }).catchError((_) {});
   }
 
@@ -3586,7 +3611,33 @@ class _MapPageState extends State<MapPage> {
               userAgentPackageName: 'ai.azenha.ativa',
             ),
             MarkerLayer(
-              markers: showEvents
+              markers: _layer == 'buses'
+                  ? [
+                      for (final (name, p, trail) in _busStops)
+                        Marker(
+                          point: p,
+                          width: 34,
+                          height: 34,
+                          child: GestureDetector(
+                            // Tap: plan a ride to this stop. The planner reads
+                            // "lat,lon" and resolves it to the stop itself.
+                            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => WebPage(
+                                    title: '$name · $trail',
+                                    url: 'https://azenha.ai/ativa/bus?app=1&lang=${locale.value}'
+                                        '&to=${p.latitude.toStringAsFixed(5)},${p.longitude.toStringAsFixed(5)}'))),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: kGreenDark,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(Icons.directions_bus, size: 17, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                    ]
+                  : showEvents
                   ? [
                       for (final (e, p) in _events)
                         Marker(
@@ -3703,6 +3754,11 @@ class _MapPageState extends State<MapPage> {
                     value: 'levadas',
                     icon: const Icon(Icons.hiking, size: 16),
                     label: Text(t('levadas'),
+                        style: const TextStyle(fontSize: 12))),
+                ButtonSegment(
+                    value: 'buses',
+                    icon: const Icon(Icons.directions_bus, size: 16),
+                    label: Text(t('buses'),
                         style: const TextStyle(fontSize: 12))),
               ],
               selected: {_layer},
@@ -3958,22 +4014,46 @@ class _NewsPageState extends State<NewsPage> {
                 const SizedBox(height: 8),
                 // Roots moved off the bottom bar; today's news is where the
                 // island's longer story sits best.
+                // A shelf of its own, not a one-line link: the story deserves
+                // a title, a line of what is inside, and room to breathe.
                 InkWell(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   onTap: () => openRoots(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
                     decoration: BoxDecoration(
-                      color: context.cTerraTint,
-                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                          colors: [context.cTerraTint, context.dark ? kDarkCard : const Color(0xFFFCF4EC)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.dark ? const Color(0xFF5A3324) : const Color(0xFFF0CDBB)),
                     ),
                     child: Row(children: [
-                      const Icon(Icons.menu_book_outlined, color: kTerracotta, size: 20),
-                      const SizedBox(width: 10),
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                            color: context.dark ? kTerraBright : kTerracotta,
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Icon(Icons.menu_book_outlined,
+                            color: context.dark ? kDarkBg : Colors.white, size: 24),
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
-                          child: Text(t('roots_link'),
-                              style: TextStyle(fontWeight: FontWeight.w600, color: context.cBody))),
-                      const Icon(Icons.chevron_right, color: kTerracotta),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(t('roots'),
+                                style: TextStyle(
+                                    fontSize: 17, fontWeight: FontWeight.w700, color: context.cTitle)),
+                            const SizedBox(height: 2),
+                            Text(t('roots_sub'),
+                                style: TextStyle(fontSize: 13, color: context.cSubtle)),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: context.dark ? kTerraBright : kTerracotta),
                     ]),
                   ),
                 ),
