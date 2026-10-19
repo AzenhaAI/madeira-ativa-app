@@ -77,7 +77,7 @@ const _ruIsl = <String, String>{
   'crosswind': 'боковой ветер',
   'cruise': 'круизный лайнер',
   'extreme': 'экстремальный',
-  'ferry / cargo': 'паром / грузовое',
+  'ferry / cargo': 'паром / грузовое судно',
   'from': 'с',
   'gusts': 'порывы',
   'gusty — delays possible': 'порывисто — возможны задержки',
@@ -85,7 +85,7 @@ const _ruIsl = <String, String>{
   'low': 'низкий',
   'moderate': 'умеренный',
   'sea of clouds': 'море облаков',
-  'tide': 'прилив',
+  'tide': 'вода',
   'until': 'до',
   'very high': 'очень высокий',
   'waves': 'волны',
@@ -198,14 +198,24 @@ String trailZone(Levada l) {
 String _hhmm(DateTime d) =>
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
+// Short weekday names in the reader's language (Monday first).
+const _wdIsl = {
+  'en': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  'pt': ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'],
+  'de': ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+  'ru': ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+};
+String _wd(int weekday) => (_wdIsl[locale.value] ?? _wdIsl['en']!)[weekday - 1];
+// km/h and m, in Cyrillic for Russian.
+String get _kmh => locale.value == 'ru' ? 'км/ч' : 'km/h';
+String get _m => locale.value == 'ru' ? 'м' : 'm';
+
 String _when(IpmaWarning w) {
   final pt = locale.value == 'pt';
   final now = madeiraNow();
-  const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const ptd = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
   String day(DateTime d) => (d.year == now.year && d.month == now.month && d.day == now.day)
       ? ''
-      : '${(pt ? ptd : en)[d.weekday - 1]} ';
+      : '${_wd(d.weekday)} ';
   if (w.start.isAfter(now)) return '${_l('from', 'a partir de')} ${day(w.start)}${_hhmm(w.start)}';
   return '${_l('until', 'até')} ${day(w.end)}${_hhmm(w.end)}';
 }
@@ -435,10 +445,8 @@ Future<String?> _sunrise() async {
       if (score > bestScore) {
         bestScore = score.toDouble();
         final date = DateTime.parse('${sr.substring(0, 10)}T00:00:00Z');
-        const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        const ptd = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
         final kind = sea ? (_l('sea of clouds', 'mar de nuvens')) : (_l('clear', 'limpo'));
-        bestLabel = '${(pt ? ptd : en)[date.weekday - 1]} ${date.day}, ${sr.substring(11, 16)} — $kind';
+        bestLabel = '${_wd(date.weekday)} ${date.day}, ${sr.substring(11, 16)} — $kind';
       }
     }
     if (counted == 0) return null;
@@ -489,13 +497,13 @@ class _IslandNowCardState extends State<IslandNowCard> {
         );
     if (n.coastT != null) {
       lines.add(line(weatherEmoji(n.coastCode ?? 0),
-          'Funchal ${n.coastT!.round()}°  ·  ${n.coastWind?.round() ?? '–'} km/h'
+          'Funchal ${n.coastT!.round()}°  ·  ${n.coastWind?.round() ?? '–'} $_kmh'
           '${n.summitT != null ? '     ⛰ Pico do Arieiro ${n.summitT!.round()}°' : ''}'));
     }
     if (n.seaT != null) {
       lines.add(line('🌊',
           '${_l('Sea', 'Mar')} ${n.seaT!.toStringAsFixed(1)}°'
-          '${n.waves != null ? '  ·  ${_l('waves', 'ondas')} ${n.waves!.toStringAsFixed(1)} m' : ''}'
+          '${n.waves != null ? '  ·  ${_l('waves', 'ondas')} ${locale.value == 'ru' ? n.waves!.toStringAsFixed(1).replaceAll('.', ',') : n.waves!.toStringAsFixed(1)} $_m' : ''}'
           '${n.tide != null ? '  ·  ${_l('tide', 'maré')}: ${n.tide}' : ''}'));
     }
     if (n.uv != null) {
@@ -512,8 +520,8 @@ class _IslandNowCardState extends State<IslandNowCard> {
               ? (_l('gusty — delays possible', 'rajadas — atrasos possíveis'))
               : (_l('calm for landings', 'calmo para aterrar'));
       lines.add(line('✈',
-          '${_l('Airport: wind', 'Aeroporto: vento')} ${n.airWind?.round()} km/h, ${_l('gusts', 'rajadas')} ${n.airGusts?.round()}, '
-          '${_l('crosswind', 'cruzado')} $cross km/h — $verdict',
+          '${_l('Airport: wind', 'Aeroporto: vento')} ${n.airWind?.round()} $_kmh, ${_l('gusts', 'rajadas')} ${n.airGusts?.round()}, '
+          '${_l('crosswind', 'cruzado')} $cross $_kmh — $verdict',
           onTap: () => openUrl('https://www.flightradar24.com/airport/fnc')));
     }
     if (n.shipsToday.isNotEmpty || n.shipsTomorrow.isNotEmpty) {
@@ -539,9 +547,7 @@ class _IslandNowCardState extends State<IslandNowCard> {
           onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
     } else if (n.nextShip != null) {
       final a = DateTime.parse('${(n.nextShip!['arrival'] as String).substring(0, 10)}T00:00:00Z');
-      const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const ptd = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
-      lines.add(line('🛳', '${_l('Next ship', 'Próximo navio')}: ${n.nextShip!['ship']} · ${(pt ? ptd : en)[a.weekday - 1]} ${a.day}',
+      lines.add(line('🛳', '${_l('Next ship', 'Próximo navio')}: ${n.nextShip!['ship']} · ${_wd(a.weekday)} ${a.day}',
           onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
     }
     if (n.sunriseLine != null) {
@@ -601,38 +607,46 @@ List<({bool today, String time, String line, String to})> nextBuses(
   return out;
 }
 
+/// 1 тоннель, 2 тоннеля, 5 тоннелей.
+String _ruN(int n, String one, String few, String many) {
+  final a = n.abs() % 100, b = a % 10;
+  return (a > 10 && a < 20) ? many : b == 1 ? one : (b >= 2 && b <= 4) ? few : many;
+}
+
 /// Railing, narrow ledge, tunnels, demanding ground — same words as the site.
 List<String> pathFacts(Map<String, dynamic>? x) {
   if (x == null || ((x['length_km'] as num?) ?? 0) == 0) return [];
-  final pt = locale.value == 'pt', de = locale.value == 'de';
-  String l3(String en, String p, String d) => pt ? p : de ? d : en;
+  final pt = locale.value == 'pt', de = locale.value == 'de', ru = locale.value == 'ru';
+  String l3(String en, String p, String d, [String? r]) => pt ? p : de ? d : (ru && r != null) ? r : en;
   int v(String k) => (x[k] as num?)?.round() ?? 0;
   final out = <String>[];
   // Under a third of the route mapped: too little to speak of railings at all
   // ("no railing recorded" read as "there are none"), as on the site.
   if (v('mapped_pct') < 30) {
     out.add(l3('Railings: too little of the route is mapped to say', 'Corrimãos: percurso pouco mapeado para dizer',
-        'Geländer: zu wenig der Strecke kartiert, um es zu sagen'));
+        'Geländer: zu wenig der Strecke kartiert, um es zu sagen', 'Перила: маршрут нанесён на карту слишком мало, чтобы судить'));
   } else if (v('railing_pct') > 0 || v('no_railing_pct') > 0) {
     final unknown = (100 - v('railing_pct') - v('no_railing_pct')).clamp(0, 100);
     out.add(l3('Railing recorded on ${v('railing_pct')}% of the route, none on ${v('no_railing_pct')}%, unknown on $unknown%',
         'Corrimão registado em ${v('railing_pct')}% do percurso, sem corrimão em ${v('no_railing_pct')}%, desconhecido em $unknown%',
-        'Geländer auf ${v('railing_pct')} % der Strecke erfasst, keines auf ${v('no_railing_pct')} %, unbekannt auf $unknown %'));
+        'Geländer auf ${v('railing_pct')} % der Strecke erfasst, keines auf ${v('no_railing_pct')} %, unbekannt auf $unknown %',
+        'Перила отмечены на ${v('railing_pct')}% маршрута, их нет на ${v('no_railing_pct')}%, неизвестно на $unknown%'));
   } else {
-    out.add(l3('No railing recorded on any section', 'Sem registo de corrimão em nenhum troço', 'Auf keinem Abschnitt ein Geländer erfasst'));
+    out.add(l3('No railing recorded on any section', 'Sem registo de corrimão em nenhum troço', 'Auf keinem Abschnitt ein Geländer erfasst', 'Перила не отмечены ни на одном участке'));
   }
   if (v('narrow_pct') > 0) {
     out.add(l3('${v('narrow_pct')}% of the path 0.5 m wide or less', '${v('narrow_pct')}% do trilho com 0,5 m de largura ou menos',
-        '${v('narrow_pct')} % des Weges 0,5 m breit oder schmaler'));
+        '${v('narrow_pct')} % des Weges 0,5 m breit oder schmaler', '${v('narrow_pct')}% тропы шириной 0,5 м и уже'));
   }
   if (v('tunnels') > 0) {
     final n = v('tunnels');
     out.add(l3('$n ${n > 1 ? 'tunnels' : 'tunnel'} (${v('tunnel_m')} m) — bring a torch',
-        '$n ${n > 1 ? 'túneis' : 'túnel'} (${v('tunnel_m')} m) — leve lanterna', '$n Tunnel (${v('tunnel_m')} m) — Stirnlampe mitnehmen'));
+        '$n ${n > 1 ? 'túneis' : 'túnel'} (${v('tunnel_m')} m) — leve lanterna', '$n Tunnel (${v('tunnel_m')} m) — Stirnlampe mitnehmen',
+        '$n ${_ruN(n, 'тоннель', 'тоннеля', 'тоннелей')} (${v('tunnel_m')} м) — возьмите фонарик'));
   }
   if (v('demanding_pct') > 0) {
     out.add(l3('${v('demanding_pct')}% demanding mountain terrain', '${v('demanding_pct')}% em terreno de montanha exigente',
-        '${v('demanding_pct')} % anspruchsvolles Bergterrain'));
+        '${v('demanding_pct')} % anspruchsvolles Bergterrain', '${v('demanding_pct')}% сложного горного рельефа'));
   }
   return out;
 }
