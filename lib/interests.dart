@@ -54,8 +54,17 @@ bool hasInterests() =>
 
 String eventKey(AtivaEvent e) => 'event:${e.name}|${e.date}';
 
+/// The site's heuristic, mirrored by the Events tab: orienteering lives
+/// under mode 'trail' and is told apart by type, name or source.
 bool _isOrienteering(AtivaEvent e) =>
     e.type == 'orienteering' || e.name.startsWith('Orientação') || e.url.contains('aoram.pt');
+
+/// The kind this event counts as, in the vocabulary of the chips.
+String _kindOf(AtivaEvent e) {
+  if (_isOrienteering(e)) return 'orienteering';
+  if (e.type == 'swimming_kids') return 'swim';
+  return e.mode;
+}
 
 /// Does this event belong to a kind the reader follows?
 bool matchesInterests(AtivaEvent e) {
@@ -64,8 +73,7 @@ bool matchesInterests(AtivaEvent e) {
     final subs = (prefs.getStringList('event_subcats') ?? []).toSet();
     return subs.contains(e.category);
   }
-  if (kinds.contains('orienteering') && _isOrienteering(e)) return true;
-  return kinds.contains(e.mode);
+  return kinds.contains(_kindOf(e));
 }
 
 /// Why this event is shown first — one short reason, in the reader's
@@ -76,8 +84,8 @@ String whyFor(AtivaEvent e) {
   if (r != null && r.daysLeft >= 0 && r.daysLeft <= 7 && r.status == 'open') return t('why_reg_closing');
   if (matchesInterests(e)) {
     if (e.isCulture) return '${t('why_follow')} ${t('cc_${e.category}')}';
-    final kind = _isOrienteering(e) && interests.value.contains('orienteering') ? 'orient' : e.mode;
-    return '${t('why_follow')} ${t('cat_$kind')}';
+    final kind = _kindOf(e);
+    return '${t('why_follow')} ${t(kind == 'orienteering' ? 'cat_orient' : kind == 'cycling' ? 'cat_bike' : 'cat_$kind')}';
   }
   if (!_seen.contains(eventKey(e)) && _seen.isNotEmpty) return t('why_new');
   return '';

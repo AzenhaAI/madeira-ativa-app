@@ -2256,13 +2256,10 @@ class _EventsPageState extends State<EventsPage> {
       shown = shown.where((e) => isFav(_favKey(e))).toList();
     }
     if (_forYou) {
-      // Followed kinds, starred, closing registrations and what is new, in
-      // that order of weight; the date breaks ties.
-      shown = shown.where((e) => interestScore(e) > 0).toList()
-        ..sort((a, b) {
-          final d = interestScore(b) - interestScore(a);
-          return d != 0 ? d : a.date.compareTo(b.date);
-        });
+      // Only what matters to this reader (followed kinds, starred, closing
+      // registrations, new since the last visit); the calendar order stays,
+      // and each row says why it is there.
+      shown = shown.where((e) => interestScore(e) > 0).toList();
     }
     if (_query.isNotEmpty) {
       final q = _query.toLowerCase();
