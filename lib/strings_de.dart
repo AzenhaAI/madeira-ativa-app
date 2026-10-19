@@ -79,7 +79,7 @@ const trDe = <String, String>{
   'home': 'Start',
   'intl_trend': 'Internationale Läufer pro Jahr',
   'ipma_here': 'IPMA-Warnungen für die Zone dieses Wegs',
-  'language': 'English',
+  'language': 'Русский',  // the menu row names the next language: DE → RU
   'later': 'später',
   'levadas': 'Levadas',
   'levadas_hook': '44 offizielle PR-Routen mit Status und Höhenmetern',

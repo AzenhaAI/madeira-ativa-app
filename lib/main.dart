@@ -17,6 +17,7 @@ import 'roots_page.dart';
 import 'store.dart';
 import 'stories_data.dart';
 import 'strings_de.dart';
+import 'strings_ru.dart';
 
 const kGreen = Color(0xFF0F6E56);
 const kGreenDark = Color(0xFF085041);
@@ -350,11 +351,12 @@ const _tr = {
     'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:',
   },
   'de': trDe,
+  'ru': trRu,
 };
 
 /// "Free" in the reader's language; any other price as the source wrote it.
 String priceLabel(String p) => RegExp(r'^(free|grátis|gratuito|entrada livre)$', caseSensitive: false).hasMatch(p.trim())
-    ? (locale.value == 'pt' ? 'Grátis' : locale.value == 'de' ? 'Gratis' : 'Free')
+    ? (locale.value == 'pt' ? 'Grátis' : locale.value == 'de' ? 'Gratis' : locale.value == 'ru' ? 'Бесплатно' : 'Free')
     : p;
 
 String t(String k) => (_tr[locale.value] ?? _tr['en']!)[k] ?? _tr['en']![k] ?? k;
@@ -432,6 +434,7 @@ const _wdName = {
   'en': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
   'pt': ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
   'de': ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+  'ru': ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
 };
 const _moName = {
   'en': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -441,6 +444,9 @@ const _moName = {
          'jul', 'ago', 'set', 'out', 'nov', 'dez'],
   'de': ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
          'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+  // Russian dates read "15 авг": the genitive short forms.
+  'ru': ['янв', 'фев', 'мар', 'апр', 'мая', 'июн',
+         'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
 };
 
 List<String> _wdFor() => _wdName[locale.value] ?? _wdName['en']!;
@@ -519,7 +525,7 @@ void main() async {
   // an island where Portuguese is the first language, that is most of the
   // audience being asked to re-state the obvious daily.
   final lang = prefs.getString('locale');
-  if (lang == 'pt' || lang == 'en' || lang == 'de') locale.value = lang!;
+  if (lang == 'pt' || lang == 'en' || lang == 'de' || lang == 'ru') locale.value = lang!;
   runApp(const AtivaApp());
 }
 
@@ -850,8 +856,10 @@ class _HomeShellState extends State<HomeShell> {
               leading: const Icon(Icons.translate, color: kTerracotta),
               title: Text(t('language')),
               onTap: () {
-                // EN → PT → DE → EN; the row's label names the next one.
-                setLocale(locale.value == 'en' ? 'pt' : locale.value == 'pt' ? 'de' : 'en');
+                // EN → PT → DE → RU → EN; the row's label names the next one.
+                // Russian is reached only here: the header keeps its three
+                // buttons, and any of them brings you back from Russian.
+                setLocale(locale.value == 'en' ? 'pt' : locale.value == 'pt' ? 'de' : locale.value == 'de' ? 'ru' : 'en');
                 Navigator.pop(context);
               },
             ),
