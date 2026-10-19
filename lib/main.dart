@@ -368,6 +368,18 @@ String get uM => locale.value == 'ru' ? 'м' : 'm';
 /// A decimal written by the data with a point ("6.1"), with the reader's mark.
 String dec(String x) => locale.value == 'en' ? x : x.replaceAll('.', ',');
 
+/// "95%", in German "95 %".
+String pct(Object? n) => locale.value == 'de' ? '$n %' : '$n%';
+
+/// A fee as the data writes it ("3.00 EUR", "4.5 EUR") -> "3 €", "4,50 €".
+String feeLabel(String f) {
+  final m = RegExp(r'^(\d+(?:\.\d+)?)\s*(?:EUR|€)$').firstMatch(f.trim());
+  if (m == null) return f;
+  final v = double.parse(m.group(1)!);
+  final s = v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+  return '${dec(s)} €';
+}
+
 /// Watchlist rows arrive as "Expected in October 2026" from the pipeline.
 String expectedLabel(String s) {
   final m = RegExp(r'^Expected in (\w+) (\d{4})$').firstMatch(s);
@@ -3128,7 +3140,7 @@ class _LevadasPageState extends State<LevadasPage> {
                     fontSize: 14, fontWeight: FontWeight.w600)),
             subtitle: Text(
                 '${dec(l.distance)} $uKm · ↑${l.ascent} $uM · ${t(open ? 'open' : part ? 'partial' : 'closed')}'
-                '${l.fee.isNotEmpty && l.fee != 'None' ? ' · ${t('fee')} ${l.fee}' : ''}',
+                '${l.fee.isNotEmpty && l.fee != 'None' ? ' · ${t('fee')} ${feeLabel(l.fee)}' : ''}',
                 style: TextStyle(
                     fontSize: 12,
                     color: open
@@ -3224,7 +3236,7 @@ class _MapPageState extends State<MapPage> {
             if (l.fee.isNotEmpty && l.fee != 'None')
               Padding(
                 padding: const EdgeInsets.only(top: 6),
-                child: Text('${t('fee')}: ${l.fee}',
+                child: Text('${t('fee')}: ${feeLabel(l.fee)}',
                     style:
                         const TextStyle(fontSize: 13, color: kTerracotta)),
               ),
