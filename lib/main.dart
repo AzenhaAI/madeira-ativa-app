@@ -243,7 +243,7 @@ const _tr = {
     'countries': 'Countries',
     'intl_trend': 'International runners by year',
     'time_dist': 'Median finish time',
-    'stats': 'Trail stats','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next','p_today':'Today','p_weekend':'Weekend','organized_by':'Organised by',
+    'stats': 'Trail stats','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next day','p_today':'Today','p_weekend':'Weekend','organized_by':'Organised by',
   },
   'pt': {
     'home': 'Início',
@@ -289,7 +289,7 @@ const _tr = {
     'webcams_live': 'Vistas em direto da ilha',
     'new_badge': 'NOVO',
     'reco_promo': 'Recomendações',
-    'reco_promo_sub': 'Siga trail, estrada ou cultura: esses eventos vêm primeiro, com alertas de inscrições',
+    'reco_promo_sub': 'Siga trail, estrada ou cultura: esses eventos primeiro, com alertas de inscrições',
     'studio_promo': 'Estúdio Azenha.ai',
     'studio_promo_sub': 'O estúdio por trás da app: mais ferramentas e dados sobre a Madeira',
     'bus_promo': 'Horários de autocarro',
@@ -422,7 +422,7 @@ const _tr = {
     'countries': 'Países',
     'intl_trend': 'Corredores estrangeiros por ano',
     'time_dist': 'Tempo mediano',
-    'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:',
+    'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo dia','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:',
   },
   'de': trDe,
   'ru': trRu,
@@ -1419,7 +1419,7 @@ class _HomePageState extends State<HomePage> {
             valueListenable: islandNow,
             builder: (_, n, __) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: HeroBand(now: n, levadasOpen: counts['open'] as int?),
+              child: HeroBand(now: n, levadasOpen: int.tryParse('${counts['open'] ?? ''}')),
             ),
           ),
           PromoBanner(
@@ -2117,6 +2117,16 @@ class _EventsPageState extends State<EventsPage> {
     ('festivals', '🎪', 'cat_fest'),
   ];
 
+  /// Sport on the left, culture on the right: the divider travels with
+  /// the Fest chip, so a wrap in a longer language never strands it.
+  Widget _withDivider(BuildContext context, bool on, Widget chip) => on
+      ? Row(mainAxisSize: MainAxisSize.min, children: [
+          SizedBox(height: 32, child: VerticalDivider(width: 8, thickness: 1, color: context.cHairline)),
+          const SizedBox(width: 4),
+          chip,
+        ])
+      : chip;
+
   // Three families on one row: "All" (dark green, filled), the sports
   // (green outline, light green when chosen) and "Fest" (the culture
   // colour, terracotta, as its own sub-chips and the "+N more in Fest"
@@ -2578,13 +2588,8 @@ class _EventsPageState extends State<EventsPage> {
             runSpacing: 6,
             children: [
               for (final cat in _modeCats) ...[
-                if (cat.$1 == 'festivals')
-                  // Sport on the left, culture on the right.
-                  SizedBox(
-                      height: 32,
-                      child: VerticalDivider(width: 8, thickness: 1, color: context.cHairline)),
                 Builder(
-                  builder: (context) => FilterChip(
+                  builder: (context) => _withDivider(context, cat.$1 == 'festivals', FilterChip(
                     showCheckmark: false,
                     label: Text(t(cat.$3), maxLines: 1, softWrap: false),
                     selected: _filter == cat.$1,
@@ -2599,7 +2604,7 @@ class _EventsPageState extends State<EventsPage> {
                       _filter = cat.$1;
                       _peek = false;
                     }),
-                  ),
+                  )),
                 ),
               ],
             ],

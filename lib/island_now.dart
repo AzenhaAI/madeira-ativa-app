@@ -414,7 +414,9 @@ Future<IslandNow> fetchIslandNow() async {
       } catch (_) {}
     }(),
     () async {
-      n.sunriseLine = await _sunrise();
+      try {
+        n.sunriseLine = await _sunrise();
+      } catch (_) {}
     }(),
     () async {
       try {
@@ -429,7 +431,9 @@ Future<IslandNow> fetchIslandNow() async {
       } catch (_) {}
     }(),
     () async {
-      n.warnings = await fetchIpmaWarnings();
+      try {
+        n.warnings = await fetchIpmaWarnings();
+      } catch (_) {}
     }(),
   ];
   await Future.wait(jobs);
@@ -492,7 +496,7 @@ class IslandNowCard extends StatefulWidget {
 final islandNow = ValueNotifier<IslandNow?>(null);
 
 class _IslandNowCardState extends State<IslandNowCard> {
-  IslandNow? _n;
+  IslandNow? _n = islandNow.value;
 
   @override
   void initState() {
@@ -500,7 +504,7 @@ class _IslandNowCardState extends State<IslandNowCard> {
     fetchIslandNow().then((n) {
       islandNow.value = n;
       if (mounted) setState(() => _n = n);
-    });
+    }).catchError((_) {});
   }
 
   @override

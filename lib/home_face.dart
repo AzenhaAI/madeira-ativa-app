@@ -117,7 +117,7 @@ class HeroBand extends StatelessWidget {
       if (n?.coastT != null) '${n!.coastT!.round()}° ${_w('in Funchal', 'no Funchal')}',
       if (dayPart(n) == DayPart.morning && n?.sunrise != null) '${_w('sunrise', 'nascer do sol')} ${n!.sunrise!.substring(11, 16)}',
       if (dayPart(n) == DayPart.evening && n?.sunset != null) '${_w('sunset', 'pôr do sol')} ${n!.sunset!.substring(11, 16)}',
-      if (levadasOpen != null && dayPart(n) != DayPart.evening) '$levadasOpen ${_w('levadas open', 'levadas abertas')}',
+      if (levadasOpen != null) '$levadasOpen ${_w('levadas open', 'levadas abertas')}',
     ];
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -363,7 +363,7 @@ class _IslandPainter extends CustomPainter {
     final kmh = locale.value == 'ru' ? 'км/ч' : 'km/h';
     if (n.coastT != null) {
       dot(f, kGreen);
-      label(Offset(f.dx, f.dy + 66), '${n.coastT!.round()}°',
+      label(Offset(f.dx, f.dy + 80), '${n.coastT!.round()}°',
           'Funchal${n.coastWind != null ? ' · ${n.coastWind!.round()} $kmh' : ''}',
           align: TextAlign.center);
     }
