@@ -372,20 +372,20 @@ String t(String k) => (_tr[locale.value] ?? _tr['en']!)[k] ?? _tr['en']![k] ?? k
 /// "Estrada" — the same category named twice, differently, one of them in the
 /// wrong language. The words here match the chips deliberately.
 const _typeNames = {
-  'trail': {'en': 'Trail', 'pt': 'Trail'},
-  'running': {'en': 'Running', 'pt': 'Corrida'},
-  'road_run': {'en': 'Road run', 'pt': 'Estrada'},
-  'orienteering': {'en': 'Orienteering', 'pt': 'Orientação'},
-  'cycling': {'en': 'Cycling', 'pt': 'Ciclismo'},
-  'cycling_pro': {'en': 'Cycling pro', 'pt': 'Ciclismo pro'},
-  'cycling_kids': {'en': 'Cycling kids', 'pt': 'Ciclismo infantil'},
-  'motorsport': {'en': 'Motorsport', 'pt': 'Automobilismo'},
-  'swimming': {'en': 'Swimming', 'pt': 'Natação'},
-  'swimrun': {'en': 'Swimrun', 'pt': 'Swimrun'},
-  'triathlon': {'en': 'Triathlon', 'pt': 'Triatlo'},
-  'triathlon_pro': {'en': 'Triathlon pro', 'pt': 'Triatlo pro'},
-  'children': {'en': 'Children', 'pt': 'Crianças'},
-  'festival': {'en': 'Festival', 'pt': 'Festa'},
+  'trail': {'en': 'Trail', 'pt': 'Trail', 'ru': 'Трейл'},
+  'running': {'en': 'Running', 'pt': 'Corrida', 'ru': 'Бег'},
+  'road_run': {'en': 'Road run', 'pt': 'Estrada', 'ru': 'Шоссе'},
+  'orienteering': {'en': 'Orienteering', 'pt': 'Orientação', 'ru': 'Ориентирование'},
+  'cycling': {'en': 'Cycling', 'pt': 'Ciclismo', 'ru': 'Велоспорт'},
+  'cycling_pro': {'en': 'Cycling pro', 'pt': 'Ciclismo pro', 'ru': 'Велоспорт pro'},
+  'cycling_kids': {'en': 'Cycling kids', 'pt': 'Ciclismo infantil', 'ru': 'Велоспорт, дети'},
+  'motorsport': {'en': 'Motorsport', 'pt': 'Automobilismo', 'ru': 'Автоспорт'},
+  'swimming': {'en': 'Swimming', 'pt': 'Natação', 'ru': 'Плавание'},
+  'swimrun': {'en': 'Swimrun', 'pt': 'Swimrun', 'ru': 'Swimrun'},
+  'triathlon': {'en': 'Triathlon', 'pt': 'Triatlo', 'ru': 'Триатлон'},
+  'triathlon_pro': {'en': 'Triathlon pro', 'pt': 'Triatlo pro', 'ru': 'Триатлон pro'},
+  'children': {'en': 'Children', 'pt': 'Crianças', 'ru': 'Дети'},
+  'festival': {'en': 'Festival', 'pt': 'Festa', 'ru': 'Праздник'},
 };
 
 /// The subtype, unless it merely restates the filter the row already sits
@@ -799,7 +799,7 @@ class _HomeShellState extends State<HomeShell> {
             ),
             ListTile(
               leading: const Icon(Icons.flight, color: kGreen),
-              title: const Text('3D flyover'),
+              title: Text(locale.value == 'ru' ? '3D-облёт' : '3D flyover'),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const WebPage(
                       title: '3D flyover',
@@ -807,7 +807,7 @@ class _HomeShellState extends State<HomeShell> {
             ),
             ListTile(
               leading: const Icon(Icons.terrain, color: kGreen),
-              title: const Text('Aerial view'),
+              title: Text(locale.value == 'ru' ? 'Вид с воздуха' : 'Aerial view'),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const WebPage(
                       title: 'Aerial',
@@ -831,7 +831,7 @@ class _HomeShellState extends State<HomeShell> {
             ListTile(
               leading: const Icon(Icons.auto_awesome_outlined, color: kGreen),
               title: const Text('azenha.ai'),
-              subtitle: const Text('Where data finds its form'),
+              subtitle: Text(locale.value == 'ru' ? 'Где данные обретают форму' : 'Where data finds its form'),
               onTap: () => openUrl('https://azenha.ai/'),
             ),
             // No quota on this one: a person pressed it. The system prompt
@@ -880,18 +880,24 @@ class _HomeShellState extends State<HomeShell> {
                   ButtonSegment(
                       value: ThemeMode.system,
                       icon: const Icon(Icons.brightness_auto, size: 18),
-                      label: Text(t('theme_system'),
-                          style: const TextStyle(fontSize: 11))),
+                      label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(t('theme_system'), maxLines: 1, softWrap: false,
+                              style: const TextStyle(fontSize: 11)))),
                   ButtonSegment(
                       value: ThemeMode.light,
                       icon: const Icon(Icons.light_mode, size: 18),
-                      label: Text(t('theme_light'),
-                          style: const TextStyle(fontSize: 11))),
+                      label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(t('theme_light'), maxLines: 1, softWrap: false,
+                              style: const TextStyle(fontSize: 11)))),
                   ButtonSegment(
                       value: ThemeMode.dark,
                       icon: const Icon(Icons.dark_mode, size: 18),
-                      label: Text(t('theme_dark'),
-                          style: const TextStyle(fontSize: 11))),
+                      label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(t('theme_dark'), maxLines: 1, softWrap: false,
+                              style: const TextStyle(fontSize: 11)))),
                 ],
                 selected: {themeModeN.value},
                 showSelectedIcon: false,
@@ -1246,14 +1252,14 @@ class _HomePageState extends State<HomePage> {
           if (counts.isNotEmpty)
             _HomeRow(
               icon: Icons.hiking,
-              label: 'Levadas',
+              label: locale.value == 'ru' ? 'Левады' : 'Levadas',
               value: '${counts['open'] ?? 0} ${t('lv_open')}',
               extra: ' · ${counts['partial'] ?? 0} ${t('lv_partly')} · ${counts['closed'] ?? 0} ${t('lv_closed')}',
               onTap: () => widget.onNavigate(kTabLevadas),
             ),
           _HomeRow(
             icon: Icons.videocam_outlined,
-            label: 'Webcams',
+            label: locale.value == 'ru' ? 'Веб-камеры' : 'Webcams',
             value: t('webcams_live'),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => WebPage(
@@ -2602,7 +2608,7 @@ class Levada {
   String? get walkingTime {
     if (officialMinutes != null) {
       final h = officialMinutes! ~/ 60, m = officialMinutes! % 60;
-      return h > 0 ? (m > 0 ? '${h}h ${m.toString().padLeft(2, '0')}m' : '${h}h') : '${m}m';
+      return _hm(h, m);
     }
     final km = double.tryParse(distance);
     if (km == null) return null;
@@ -2611,8 +2617,13 @@ class Levada {
     final minutes = (km * 12 + climb / 100 * 10 + drop / 300 * 10).round();
     final h = minutes ~/ 60;
     final m = minutes % 60;
-    return h > 0 ? '${h}h ${m.toString().padLeft(2, '0')}m' : '${m}m';
+    return _hm(h, m);
   }
+
+  /// "1h 30m", in Russian "1 ч 30 мин".
+  static String _hm(int h, int m) => locale.value == 'ru'
+      ? (h > 0 ? (m > 0 ? '$h ч ${m.toString().padLeft(2, '0')} мин' : '$h ч') : '$m мин')
+      : (h > 0 ? (m > 0 ? '${h}h ${m.toString().padLeft(2, '0')}m' : '${h}h') : '${m}m');
 
   /// Highest and lowest point walked, straight off the elevation profile.
   ({double min, double max})? get altitudeRange {
@@ -3938,15 +3949,15 @@ Future<Map<String, dynamic>?> fetchTrailWeather(LatLng at) async {
 /// screen. Fog in particular is the word that matters here: on the Paul da
 /// Serra it is the difference between a walk and a whiteout.
 (String, String) weatherFace(int code) {
-  final pt = locale.value == 'pt';
-  if (code == 0) return ('☀️', pt ? 'Céu limpo' : 'Clear');
-  if (code <= 2) return ('🌤️', pt ? 'Pouco nublado' : 'Mostly clear');
-  if (code == 3) return ('☁️', pt ? 'Encoberto' : 'Overcast');
-  if (code == 45 || code == 48) return ('🌫️', pt ? 'Nevoeiro' : 'Fog');
-  if (code >= 51 && code <= 57) return ('🌦️', pt ? 'Chuvisco' : 'Drizzle');
-  if (code >= 61 && code <= 67) return ('🌧️', pt ? 'Chuva' : 'Rain');
-  if (code >= 71 && code <= 77) return ('🌨️', pt ? 'Neve' : 'Snow');
-  if (code >= 80 && code <= 82) return ('🌧️', pt ? 'Aguaceiros' : 'Showers');
-  if (code >= 95) return ('⛈️', pt ? 'Trovoada' : 'Thunderstorm');
-  return ('🌥️', pt ? 'Nublado' : 'Cloudy');
+  final pt = locale.value == 'pt', ru = locale.value == 'ru';
+  if (code == 0) return ('☀️', pt ? 'Céu limpo' : ru ? 'Ясно' : 'Clear');
+  if (code <= 2) return ('🌤️', pt ? 'Pouco nublado' : ru ? 'Малооблачно' : 'Mostly clear');
+  if (code == 3) return ('☁️', pt ? 'Encoberto' : ru ? 'Пасмурно' : 'Overcast');
+  if (code == 45 || code == 48) return ('🌫️', pt ? 'Nevoeiro' : ru ? 'Туман' : 'Fog');
+  if (code >= 51 && code <= 57) return ('🌦️', pt ? 'Chuvisco' : ru ? 'Морось' : 'Drizzle');
+  if (code >= 61 && code <= 67) return ('🌧️', pt ? 'Chuva' : ru ? 'Дождь' : 'Rain');
+  if (code >= 71 && code <= 77) return ('🌨️', pt ? 'Neve' : ru ? 'Снег' : 'Snow');
+  if (code >= 80 && code <= 82) return ('🌧️', pt ? 'Aguaceiros' : ru ? 'Ливни' : 'Showers');
+  if (code >= 95) return ('⛈️', pt ? 'Trovoada' : ru ? 'Гроза' : 'Thunderstorm');
+  return ('🌥️', pt ? 'Nublado' : ru ? 'Облачно' : 'Cloudy');
 }
