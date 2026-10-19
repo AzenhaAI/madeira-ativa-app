@@ -59,8 +59,8 @@ class _LevadaPageState extends State<LevadaPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _S('${l.distance} km', t('dist')),
-                _S('↑${l.ascent} m', t('climb')),
+                _S('${dec(l.distance)} $uKm', t('dist')),
+                _S('↑${l.ascent} $uM', t('climb')),
                 _S(t(open ? 'open' : (part ? 'partial' : 'closed')), t('status'),
                     warn: !open),
                 if (l.fee.isNotEmpty && l.fee != 'None')
@@ -114,7 +114,7 @@ class _LevadaPageState extends State<LevadaPage> {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                  '${l.profile.reduce((a, b) => a < b ? a : b).round()}–${l.profile.reduce((a, b) => a > b ? a : b).round()} m',
+                  '${l.profile.reduce((a, b) => a < b ? a : b).round()}–${l.profile.reduce((a, b) => a > b ? a : b).round()} $uM',
                   style: TextStyle(fontSize: 11, color: context.cSubtle)),
             ),
           ],
@@ -268,11 +268,11 @@ class _DetailGrid extends StatelessWidget {
         (t('on_foot'), l.timeIsOfficial ? l.walkingTime! : '~${l.walkingTime}'),
       (t('difficulty'), t(l.difficultyKey)),
       if (l.descent.isNotEmpty && l.descent != 'null')
-        (t('descent'), '↓${l.descent} m'),
+        (t('descent'), '↓${l.descent} $uM'),
       if (range != null)
-        (t('altitude'), '${range.min.round()}–${range.max.round()} m'),
+        (t('altitude'), '${range.min.round()}–${range.max.round()} $uM'),
       if (steep != null && steep > 0)
-        (t('steepest'), '${steep.round()} m'),
+        (t('steepest'), '${steep.round()} $uM'),
       (t('route_type'), t(l.roundtrip ? 'roundtrip' : 'one_way')),
     ];
 
@@ -575,8 +575,8 @@ class _NearbyTrailsState extends State<_NearbyTrails> {
                   style: const TextStyle(
                       fontSize: 14, fontWeight: FontWeight.w600)),
               subtitle: Text(
-                  '${km.toStringAsFixed(1)} km ${t('as_the_crow')}'
-                  '${o.distance.isEmpty ? '' : ' · ${o.distance} km'}',
+                  '${dec(km.toStringAsFixed(1))} $uKm ${t('as_the_crow')}'
+                  '${o.distance.isEmpty ? '' : ' · ${dec(o.distance)} $uKm'}',
                   style: TextStyle(fontSize: 12, color: context.cSubtle)),
               trailing: Icon(
                   o.isOpen ? Icons.check_circle_outline : Icons.error_outline,
@@ -648,7 +648,7 @@ class _GetThere extends StatelessWidget {
     Widget endBlock(int i) {
       final e = ends[i];
       final rows = <Widget>[
-        Text('${spread >= 150 ? (i == 0 ? '▲ ' : '▼ ') : '● '}${title(i)} · ${e.elev} m',
+        Text('${spread >= 150 ? (i == 0 ? '▲ ' : '▼ ') : '● '}${title(i)} · ${e.elev} $uM',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.cTitle)),
       ];
       if (e.parking != null) {

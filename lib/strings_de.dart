@@ -129,7 +129,7 @@ const trDe = <String, String>{
   'partial': 'teilweise offen',
   'pass_many': 'halten hier',
   'pass_one': 'hält hier',
-  'path_src': 'OpenStreetMap, wo vermessen; kartiert am',
+  'path_src': 'OpenStreetMap, wo vermessen; kartiert auf',
   'pay_link': 'Buchen & bezahlen auf SIMplifica',
   'pessoa': 'Tudo vale a pena se a alma não é pequena.',
   'pessoa_by': '— Fernando Pessoa',
