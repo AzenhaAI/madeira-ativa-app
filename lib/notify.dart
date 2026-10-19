@@ -29,6 +29,9 @@ Future<void> initNotify() async {
   _ready = true;
 }
 
+/// Asks for permission when a reader turns alerts on; false if refused.
+Future<bool> ensureNotificationPermission() => _ensurePermission();
+
 Future<bool> _ensurePermission() async {
   final ios = _plugin.resolvePlatformSpecificImplementation<
       IOSFlutterLocalNotificationsPlugin>();
@@ -52,7 +55,7 @@ bool hasReminder(String key) => reminders.value.contains(key);
 /// local time. Returns false if permission was denied or the date already
 /// passed. [key] uniquely identifies the event.
 Future<bool> setReminder(
-    String key, String title, String dateIso) async {
+    String key, String title, String dateIso, {String? body}) async {
   if (!_ready) return false;
   if (!await _ensurePermission()) return false;
   final parts = dateIso.split('-');
@@ -75,7 +78,7 @@ Future<bool> setReminder(
   await _plugin.zonedSchedule(
     id: _idFor(key),
     title: 'Madeira Ativa',
-    body: 'Tomorrow: $title',
+    body: body ?? 'Tomorrow: $title',
     scheduledDate: when,
     notificationDetails: details,
     androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -86,8 +89,54 @@ Future<bool> setReminder(
   return true;
 }
 
+/// The registration milestones of an event the reader follows: the morning
+/// registration opens, three days before it closes, and the day before. Each
+/// text is given by the caller in the reader's language; the milestones that
+/// have passed are skipped. Ids derive from the reminder key, so cancelling
+/// the reminder cancels these too.
+Future<void> scheduleRegistrationAlerts(String key,
+    {String? opensIso, String? closesIso, String? opensText, String? closesIn3Text, String? closesTomorrowText}) async {
+  if (!_ready) return;
+  final now = tz.TZDateTime.now(tz.local);
+  const details = NotificationDetails(
+    android: AndroidNotificationDetails('registration', 'Registration windows',
+        channelDescription: 'When registration for a race you follow opens or is about to close',
+        importance: Importance.high),
+    iOS: DarwinNotificationDetails(),
+  );
+  tz.TZDateTime? at(String? iso, int hour, int daysBefore) {
+    final d = DateTime.tryParse(iso ?? '');
+    if (d == null) return null;
+    final t = tz.TZDateTime(tz.local, d.year, d.month, d.day, hour).subtract(Duration(days: daysBefore));
+    return t.isAfter(now) ? t : null;
+  }
+  final plan = [
+    (':ropen', at(opensIso, 10, 0), opensText),
+    (':r3', at(closesIso, 18, 3), closesIn3Text),
+    (':r1', at(closesIso, 18, 1), closesTomorrowText),
+  ];
+  for (final (suffix, fireAt, text) in plan) {
+    final id = _idFor(key + suffix);
+    if (fireAt == null || text == null) {
+      await _plugin.cancel(id: id);
+      continue;
+    }
+    await _plugin.zonedSchedule(
+      id: id,
+      title: 'Madeira Ativa',
+      body: text,
+      scheduledDate: fireAt,
+      notificationDetails: details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+}
+
 Future<void> cancelReminder(String key) async {
   await _plugin.cancel(id: _idFor(key));
+  for (final suffix in [':ropen', ':r3', ':r1']) {
+    await _plugin.cancel(id: _idFor(key + suffix));
+  }
   final s = {...reminders.value}..remove(key);
   reminders.value = s;
   await prefs.setStringList('reminders', s.toList());

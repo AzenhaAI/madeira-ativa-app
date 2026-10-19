@@ -18,6 +18,7 @@ import 'store.dart';
 import 'stories_data.dart';
 import 'strings_de.dart';
 import 'strings_ru.dart';
+import 'interests.dart';
 
 const kGreen = Color(0xFF0F6E56);
 const kGreenDark = Color(0xFF085041);
@@ -182,8 +183,35 @@ const _tr = {
     'add_calendar': 'Add to calendar',
     'share': 'Share',
     'open_site': 'Open site', 'open_calendar': 'Open the organiser\'s calendar', 'open_calendar_hint': 'No page for this race yet — a season calendar',
+    'interests': 'Interests & alerts',
+    'interests_sub': 'What you follow puts those events first and, if you want, tells you when registration opens or is about to close. Nothing leaves your phone.',
+    'interests_sport': 'Sport',
+    'interests_culture': 'Culture',
+    'interests_culture_sub': 'Pick the kinds of cultural events on the Events tab, under Fest.',
+    'alerts_reg': 'Registration alerts',
+    'alerts_reg_sub': 'For starred events and the kinds you follow: when registration opens, 3 days before it closes, and the day before.',
+    'alerts_note': 'Alerts are set from the events known when the app was last opened; a race listed later is picked up on the next open. Registration dates come from the race platforms that publish them.',
+    'why_starred': 'Starred',
+    'why_reg_closing': 'Registration closing soon',
+    'why_follow': 'You follow',
+    'why_new': 'New since your last visit',
+    'for_you': 'For you',
     'remind': 'Remind me',
     'remind_set': 'Reminder set — the day before at 18:00',
+    'remind_set_reg': 'Reminder set — the day before, and when registration opens or is about to close',
+    'reg_until': 'Registration open until {d}',
+    'reg_until_short': 'Reg. until {d}',
+    'reg_closes_in': 'Registration closes in {n} days',
+    'reg_closes_today': 'Registration closes today',
+    'reg_opens': 'Registration opens {d}',
+    'reg_full': 'Sold out',
+    'reg_closed': 'Registration closed',
+    'reg_btn': 'Register',
+    'reg_page': 'Registration page',
+    'ntf_tomorrow': 'Tomorrow: {name}',
+    'ntf_reg_opens': 'Registration opens today: {name}',
+    'ntf_reg_closes': 'Registration closes in 3 days: {name}',
+    'ntf_reg_closes_tmrw': 'Registration closes tomorrow: {name}',
     'remind_off': 'Reminder removed',
     'theme': 'Theme',
     'theme_system': 'System',
@@ -325,8 +353,35 @@ const _tr = {
     'add_calendar': 'Adicionar ao calendário',
     'share': 'Partilhar',
     'open_site': 'Abrir site', 'open_calendar': 'Abrir calendário do organizador', 'open_calendar_hint': 'Sem página própria — calendário da época',
+    'interests': 'Interesses e alertas',
+    'interests_sub': 'O que segue põe esses eventos primeiro e, se quiser, avisa quando as inscrições abrem ou estão a terminar. Nada sai do seu telefone.',
+    'interests_sport': 'Desporto',
+    'interests_culture': 'Cultura',
+    'interests_culture_sub': 'Escolha os tipos de eventos culturais no separador Eventos, em Festas.',
+    'alerts_reg': 'Alertas de inscrições',
+    'alerts_reg_sub': 'Para eventos com estrela e os tipos que segue: quando as inscrições abrem, 3 dias antes de terminarem e na véspera.',
+    'alerts_note': 'Os alertas são definidos a partir dos eventos conhecidos na última abertura da app; uma prova publicada depois entra na abertura seguinte. As datas de inscrição vêm das plataformas que as publicam.',
+    'why_starred': 'Com estrela',
+    'why_reg_closing': 'Inscrições a terminar',
+    'why_follow': 'Segue',
+    'why_new': 'Novo desde a última visita',
+    'for_you': 'Para si',
     'remind': 'Lembrar-me',
     'remind_set': 'Lembrete definido — véspera às 18:00',
+    'remind_set_reg': 'Lembrete definido — na véspera, e quando as inscrições abrirem ou estiverem a terminar',
+    'reg_until': 'Inscrições abertas até {d}',
+    'reg_until_short': 'Inscr. até {d}',
+    'reg_closes_in': 'Inscrições terminam em {n} dias',
+    'reg_closes_today': 'Inscrições terminam hoje',
+    'reg_opens': 'Inscrições abrem a {d}',
+    'reg_full': 'Esgotado',
+    'reg_closed': 'Inscrições encerradas',
+    'reg_btn': 'Inscrever',
+    'reg_page': 'Página de inscrição',
+    'ntf_tomorrow': 'Amanhã: {name}',
+    'ntf_reg_opens': 'Inscrições abrem hoje: {name}',
+    'ntf_reg_closes': 'Inscrições terminam em 3 dias: {name}',
+    'ntf_reg_closes_tmrw': 'Inscrições terminam amanhã: {name}',
     'remind_off': 'Lembrete removido',
     'theme': 'Tema',
     'theme_system': 'Sistema',
@@ -494,6 +549,13 @@ List<String> _wdFor() => _wdName[locale.value] ?? _wdName['en']!;
 List<String> _moFor() => _moName[locale.value] ?? _moName['en']!;
 
 /// '2026-07-11' -> 'Sat, 11 Jul' / 'Sáb, 11 jul'
+/// '2026-10-25' -> '25 Oct' / '25 out'
+String fmtDay(String iso) {
+  final d = DateTime.tryParse(iso);
+  if (d == null) return iso;
+  return '${d.day} ${_moFor()[d.month - 1]}';
+}
+
 String fmtDate(String iso) {
   final d = DateTime.tryParse(iso);
   if (d == null) return iso;
@@ -567,6 +629,7 @@ void main() async {
   // audience being asked to re-state the obvious daily.
   final lang = prefs.getString('locale');
   if (lang == 'pt' || lang == 'en' || lang == 'de' || lang == 'ru') locale.value = lang!;
+  initInterests();
   runApp(const AtivaApp());
 }
 
@@ -900,6 +963,14 @@ class _HomeShellState extends State<HomeShell> {
             ),
             const Divider(),
             ListTile(
+              leading: const Icon(Icons.tune, color: kGreen),
+              title: Text(t('interests')),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InterestsPage()));
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.translate, color: kTerracotta),
               title: Text(t('language')),
               onTap: () {
@@ -968,7 +1039,13 @@ class _HomeShellState extends State<HomeShell> {
           NavigationDestination(
               icon: const Icon(Icons.auto_awesome_outlined), label: t('ask')),
           NavigationDestination(
-              icon: const Icon(Icons.calendar_month_outlined),
+              icon: ValueListenableBuilder<int>(
+                valueListenable: newForYou,
+                builder: (_, n, __) => Badge(
+                    isLabelVisible: n > 0,
+                    label: Text('$n'),
+                    child: const Icon(Icons.calendar_month_outlined)),
+              ),
               label: t('events')),
           NavigationDestination(
               icon: const Icon(Icons.map_outlined), label: t('map')),
@@ -990,6 +1067,48 @@ final RegExp _genericLink = RegExp(
     caseSensitive: false);
 bool _isGenericLink(String url) => _genericLink.hasMatch(url);
 
+/// A race's registration window, as its platform publishes it (lap2go):
+/// the app says "Registration until 25 Oct" and reminds the reader before it
+/// closes. Absent on most rows — nothing is guessed.
+class Registration {
+  final String opens, closes, closesAt, status, url;
+  final List<String> distances;
+  final List<(String, double)> prices; // (distance, €)
+  Registration.fromJson(Map<String, dynamic> j)
+      : opens = j['opens'] ?? '',
+        closes = j['closes'] ?? '',
+        closesAt = j['closes_at'] ?? '',
+        status = j['status'] ?? '',
+        url = j['url'] ?? '',
+        distances = [for (final d in (j['distances'] as List? ?? [])) if (d is Map && d['name'] != null) d['name'] as String],
+        prices = [
+          for (final p in (j['prices'] as List? ?? []))
+            if (p is Map && p['eur'] != null) ((p['distance'] ?? '') as String, (p['eur'] as num).toDouble())
+        ];
+
+  /// Days until registration closes (negative when it has).
+  int get daysLeft {
+    final d = DateTime.tryParse(closes);
+    if (d == null) return 9999;
+    final now = DateTime.now();
+    return d.difference(DateTime(now.year, now.month, now.day)).inDays;
+  }
+}
+
+/// "Registration until 25 Oct" / "closes in 3 days" / "opens 1 Dec" / "Sold
+/// out" — or '' when there is nothing to say. [short] for a list row.
+String regLabel(AtivaEvent e, {bool short = false}) {
+  final r = e.registration;
+  if (r == null || r.closes.isEmpty) return '';
+  final days = r.daysLeft;
+  if (r.status == 'closed' || days < 0) return short ? '' : t('reg_closed');
+  if (r.status == 'soon' && r.opens.isNotEmpty) return t('reg_opens').replaceAll('{d}', fmtDay(r.opens));
+  if (r.status == 'full') return t('reg_full');
+  if (days == 0) return t('reg_closes_today');
+  if (days <= 7) return t('reg_closes_in').replaceAll('{n}', '$days');
+  return t(short ? 'reg_until_short' : 'reg_until').replaceAll('{d}', fmtDay(r.closes));
+}
+
 class AtivaEvent {
   final String name;
   final String date;
@@ -1007,6 +1126,7 @@ class AtivaEvent {
   // Set on every cultural row since the feed started classifying them;
   // empty on sport rows and on a cached feed from before.
   final String category;
+  final Registration? registration;
 
   bool get isCulture => mode == 'festivals';
 
@@ -1020,17 +1140,25 @@ class AtivaEvent {
         time = j['time'] ?? '',
         price = j['price'] ?? '',
         organizer = j['organizer'] ?? '',
-        category = j['category'] ?? '';
+        category = j['category'] ?? '',
+        registration = j['registration'] is Map ? Registration.fromJson(Map<String, dynamic>.from(j['registration'])) : null;
 }
+
+/// The list as last loaded, for the Events badge and the alerts.
+List<AtivaEvent> latestEvents = [];
 
 Future<List<AtivaEvent>> fetchEvents() async {
   final data = await cachedJson('https://azenha.ai/ativa/events.json');
   final today = DateTime.now().toIso8601String().substring(0, 10);
-  return (data['events'] as List)
+  final list = (data['events'] as List)
       .map((e) => AtivaEvent.fromJson(e))
       .where((e) => e.date.compareTo(today) >= 0)
       .toList()
     ..sort((a, b) => a.date.compareTo(b.date));
+  latestEvents = list;
+  // Not awaited: the list is shown first, the alerts follow.
+  syncEventAlerts(list);
+  return list;
 }
 
 class NewsItem {
@@ -1536,6 +1664,35 @@ void showEventActions(BuildContext context, AtivaEvent e) {
               child: Text('${t('organized_by')} ${e.organizer}',
                   style: TextStyle(fontSize: 13, color: ctx.cSubtle)),
             ),
+          if (e.registration != null && regLabel(e).isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(regLabel(e),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: e.registration!.daysLeft <= 7 && e.registration!.daysLeft >= 0 ? kTerracotta : ctx.cTitle)),
+                if (e.registration!.prices.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                        e.registration!.prices
+                            .map((p) => '${p.$1.isEmpty ? '' : '${p.$1} '}${feeLabel('${p.$2} EUR')}')
+                            .join(' · '),
+                        style: TextStyle(fontSize: 13, color: ctx.cSubtle)),
+                  ),
+                if (e.registration!.url.isNotEmpty && e.registration!.status != 'closed')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: OutlinedButton.icon(
+                      onPressed: () => openUrl(e.registration!.url),
+                      icon: const Icon(Icons.how_to_reg_outlined, size: 18),
+                      label: Text(t(e.registration!.status == 'open' ? 'reg_btn' : 'reg_page')),
+                    ),
+                  ),
+              ]),
+            ),
           FutureBuilder<(Levada, double)?>(
             future: nearestHeritage(e.location),
             builder: (_, snap) {
@@ -1642,9 +1799,19 @@ void showEventActions(BuildContext context, AtivaEvent e) {
                   onChanged: (v) async {
                     final messenger = ScaffoldMessenger.of(context);
                     if (v) {
-                      final ok = await setReminder(key, e.name, e.date);
+                      final ok = await setReminder(key, e.name, e.date,
+                          body: t('ntf_tomorrow').replaceAll('{name}', e.name));
+                      final r = e.registration;
+                      if (ok && r != null) {
+                        await scheduleRegistrationAlerts(key,
+                            opensIso: r.opens,
+                            closesIso: r.closes,
+                            opensText: t('ntf_reg_opens').replaceAll('{name}', e.name),
+                            closesIn3Text: t('ntf_reg_closes').replaceAll('{name}', e.name),
+                            closesTomorrowText: t('ntf_reg_closes_tmrw').replaceAll('{name}', e.name));
+                      }
                       messenger.showSnackBar(SnackBar(
-                          content: Text(ok ? t('remind_set') : t('remind_off'))));
+                          content: Text(ok ? t(r != null ? 'remind_set_reg' : 'remind_set') : t('remind_off'))));
                     } else {
                       await cancelReminder(key);
                       messenger.showSnackBar(
@@ -1863,6 +2030,7 @@ class _EventsPageState extends State<EventsPage> {
   String _query = '';
   bool _searching = false;
   bool _favOnly = false;
+  bool _forYou = false;
   bool _compact = false;
   // Three months, not one. A month showed 40 of 120 events and hid both of
   // the island's next big races — 42 and 92 days out, which is exactly the
@@ -2087,6 +2255,15 @@ class _EventsPageState extends State<EventsPage> {
     if (_favOnly) {
       shown = shown.where((e) => isFav(_favKey(e))).toList();
     }
+    if (_forYou) {
+      // Followed kinds, starred, closing registrations and what is new, in
+      // that order of weight; the date breaks ties.
+      shown = shown.where((e) => interestScore(e) > 0).toList()
+        ..sort((a, b) {
+          final d = interestScore(b) - interestScore(a);
+          return d != 0 ? d : a.date.compareTo(b.date);
+        });
+    }
     if (_query.isNotEmpty) {
       final q = _query.toLowerCase();
       shown = shown
@@ -2127,13 +2304,28 @@ class _EventsPageState extends State<EventsPage> {
                   avatar: const Icon(Icons.close, size: 14),
                   onPressed: () => setState(() => _day = null),
                 ),
+              // "For you": the followed kinds first. Off when the reader has
+              // chosen nothing yet — then it leads to the Interests screen.
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                tooltip: t('for_you'),
+                icon: Icon(_forYou ? Icons.person : Icons.person_outline,
+                    color: _forYou ? kGreen : context.cTitle),
+                onPressed: () {
+                  if (!hasInterests()) {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InterestsPage()));
+                    return;
+                  }
+                  setState(() { _forYou = !_forYou; if (_forYou) _favOnly = false; });
+                },
+              ),
               ValueListenableBuilder(
                 valueListenable: favorites,
                 builder: (_, __, ___) => IconButton(
                   visualDensity: VisualDensity.compact,
                   icon: Icon(_favOnly ? Icons.star : Icons.star_border,
                       color: _favOnly ? kTerracotta : context.cTitle),
-                  onPressed: () => setState(() => _favOnly = !_favOnly),
+                  onPressed: () => setState(() { _favOnly = !_favOnly; if (_favOnly) _forYou = false; }),
                 ),
               ),
               IconButton(
@@ -2497,8 +2689,10 @@ class _EventsPageState extends State<EventsPage> {
                           // tonight is possible. Absent on most sport rows,
                           // which read exactly as before.
                           subtitle: dotJoin([
+                            if (_forYou && whyFor(e).isNotEmpty) whyFor(e),
                             if (e.time.isNotEmpty) e.time,
                             if (e.price.isNotEmpty) priceLabel(e.price),
+                            if (regLabel(e, short: true).isNotEmpty) regLabel(e, short: true),
                             if (g.distances.isNotEmpty) g.distances.join(', '),
                             tidyPlace(e.location),
                             e.isCulture && e.category.isNotEmpty
