@@ -353,8 +353,9 @@ Future<IslandNow> fetchIslandNow() async {
           if (hi != null && lo != null) break;
         }
         final parts = [
-          if (hi != null) '${_l('high', 'preia-mar')} $hi',
-          if (lo != null) '${_l('low', 'baixa-mar')} $lo',
+          // Russian sailors say полная / малая вода (agreeing with «вода»).
+          if (hi != null) '${locale.value == 'ru' ? 'полная' : _l('high', 'preia-mar')} $hi',
+          if (lo != null) '${locale.value == 'ru' ? 'малая' : _l('low', 'baixa-mar')} $lo',
         ];
         if (parts.isNotEmpty) n.tide = parts.join(', ');
       } catch (_) {}
@@ -502,8 +503,8 @@ class _IslandNowCardState extends State<IslandNowCard> {
     }
     if (n.seaT != null) {
       lines.add(line('🌊',
-          '${_l('Sea', 'Mar')} ${n.seaT!.toStringAsFixed(1)}°'
-          '${n.waves != null ? '  ·  ${_l('waves', 'ondas')} ${locale.value == 'ru' ? n.waves!.toStringAsFixed(1).replaceAll('.', ',') : n.waves!.toStringAsFixed(1)} $_m' : ''}'
+          '${_l('Sea', 'Mar')} ${locale.value == 'en' ? n.seaT!.toStringAsFixed(1) : n.seaT!.toStringAsFixed(1).replaceAll('.', ',')}°'
+          '${n.waves != null ? '  ·  ${_l('waves', 'ondas')} ${locale.value == 'en' ? n.waves!.toStringAsFixed(1) : n.waves!.toStringAsFixed(1).replaceAll('.', ',')} $_m' : ''}'
           '${n.tide != null ? '  ·  ${_l('tide', 'maré')}: ${n.tide}' : ''}'));
     }
     if (n.uv != null) {

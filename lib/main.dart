@@ -120,7 +120,7 @@ const _tr = {
     'closed': 'closed',
     'closed_now': 'closed now',
     'partial': 'partly open',
-    'fee': 'Fee',
+    'fee': 'fee',
     'pay_link': 'Book & pay on SIMplifica',
     'glossary': 'Words on the signs',
     'g_levada': 'Levada — a hand-cut irrigation channel; the path runs along its bank, so the walk is nearly level.',
@@ -264,7 +264,7 @@ const _tr = {
     'closed': 'fechado',
     'closed_now': 'fechadas agora',
     'partial': 'parcial',
-    'fee': 'Taxa',
+    'fee': 'taxa',
     'pay_link': 'Reservar e pagar no SIMplifica',
     'glossary': 'As palavras das placas',
     'g_levada': 'Levada — canal de rega talhado à mão; o caminho segue a margem, por isso o percurso é quase plano.',
@@ -360,6 +360,35 @@ String priceLabel(String p) => RegExp(r'^(free|grátis|gratuito|entrada livre)$'
     : p;
 
 String t(String k) => (_tr[locale.value] ?? _tr['en']!)[k] ?? _tr['en']![k] ?? k;
+
+/// "km" / "m", in Cyrillic for Russian.
+String get uKm => locale.value == 'ru' ? 'км' : 'km';
+String get uM => locale.value == 'ru' ? 'м' : 'm';
+
+/// A decimal written by the data with a point ("6.1"), with the reader's mark.
+String dec(String x) => locale.value == 'en' ? x : x.replaceAll('.', ',');
+
+/// Watchlist rows arrive as "Expected in October 2026" from the pipeline.
+String expectedLabel(String s) {
+  final m = RegExp(r'^Expected in (\w+) (\d{4})$').firstMatch(s);
+  if (m == null || locale.value == 'en') return s;
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  final i = months.indexOf(m.group(1)!);
+  if (i < 0) return s;
+  final y = m.group(2)!;
+  switch (locale.value) {
+    case 'pt':
+      const pt = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+      return 'Previsto para ${pt[i]} de $y';
+    case 'de':
+      const de = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+      return 'Erwartet im ${de[i]} $y';
+    case 'ru':
+      const ru = ['январе', 'феврале', 'марте', 'апреле', 'мае', 'июне', 'июле', 'августе', 'сентябре', 'октябре', 'ноябре', 'декабре'];
+      return 'Ожидается в ${ru[i]} $y';
+  }
+  return s;
+}
 
 /// Event `type` arrives as a raw feed key — 'road_run', 'swimming_kids',
 /// 'motorsport'. Those are pipeline identifiers, not labels, and they were
@@ -830,8 +859,14 @@ class _HomeShellState extends State<HomeShell> {
             // made it a button promising one place and going to another.
             ListTile(
               leading: const Icon(Icons.auto_awesome_outlined, color: kGreen),
-              title: const Text('azenha.ai'),
-              subtitle: Text(locale.value == 'ru' ? 'Где данные обретают форму' : 'Where data finds its form'),
+              title: const Text('Azenha.ai'),
+              // Who made the app, said plainly — the old line was a slogan
+              // that did not say what the row leads to.
+              subtitle: Text(const {
+                'pt': 'Estúdio da app',
+                'de': 'Studio hinter der App',
+                'ru': 'Студия приложения',
+              }[locale.value] ?? 'Studio behind the app'),
               onTap: () => openUrl('https://azenha.ai/'),
             ),
             // No quota on this one: a person pressed it. The system prompt
@@ -1505,7 +1540,7 @@ void showEventActions(BuildContext context, AtivaEvent e) {
                   dense: true,
                   leading: Icon(Icons.account_balance_outlined,
                       color: ctx.cTerraText),
-                  title: Text('${t('nearby_heritage')} · ${km.toStringAsFixed(1)} km',
+                  title: Text('${t('nearby_heritage')} · ${dec(km.toStringAsFixed(1))} $uKm',
                       style: TextStyle(
                           fontSize: 12, color: ctx.cTerraText)),
                   subtitle: Text('${l.code} · ${l.displayName}',
@@ -2538,7 +2573,7 @@ class _EventsPageState extends State<EventsPage> {
                       subtitle: Text(
                           w.expected.isEmpty
                               ? w.location
-                              : '${w.expected} · ${w.location}',
+                              : '${expectedLabel(w.expected)} · ${w.location}',
                           style: const TextStyle(fontSize: 12)),
                       trailing: w.url.isEmpty
                           ? null
@@ -3092,7 +3127,7 @@ class _LevadasPageState extends State<LevadasPage> {
                 style: const TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w600)),
             subtitle: Text(
-                '${l.distance} km · ↑${l.ascent} m · ${t(open ? 'open' : 'closed')}'
+                '${dec(l.distance)} $uKm · ↑${l.ascent} $uM · ${t(open ? 'open' : part ? 'partial' : 'closed')}'
                 '${l.fee.isNotEmpty && l.fee != 'None' ? ' · ${t('fee')} ${l.fee}' : ''}',
                 style: TextStyle(
                     fontSize: 12,
@@ -3173,7 +3208,7 @@ class _MapPageState extends State<MapPage> {
             const SizedBox(height: 10),
             Row(children: [
               const Icon(Icons.route, size: 16, color: kGreen),
-              Text(' ${l.distance} km   '),
+              Text(' ${dec(l.distance)} $uKm   '),
               const Icon(Icons.trending_up, size: 16, color: kGreen),
               Text(' ↑${l.ascent} m   '),
               Icon(
@@ -3520,6 +3555,13 @@ class NewsPage extends StatefulWidget {
 
 /// The feed's topics, in the order the site's news page lists them, with the
 /// site's own English labels so the two read the same.
+const _newsCatNames = {
+  'pt': {'all': 'Todas', 'desporto': 'Desporto', 'cultura': 'Cultura', 'educação': 'Educação', 'ocorrências': 'Ocorrências', 'política': 'Política', 'saúde': 'Saúde', 'tempo': 'Tempo', 'geral': 'Geral'},
+  'de': {'all': 'Alle', 'desporto': 'Sport', 'cultura': 'Kultur', 'educação': 'Bildung', 'ocorrências': 'Vorfälle', 'política': 'Politik', 'saúde': 'Gesundheit', 'tempo': 'Wetter', 'geral': 'Allgemein'},
+  'ru': {'all': 'Все', 'trail': 'Трейл', 'desporto': 'Спорт', 'cultura': 'Культура', 'educação': 'Образование', 'ocorrências': 'Происшествия', 'política': 'Политика', 'saúde': 'Здоровье', 'tempo': 'Погода', 'geral': 'Разное'},
+};
+String newsCatLabel((String, String) c) => _newsCatNames[locale.value]?[c.$1] ?? c.$2;
+
 const kNewsCats = <(String, String)>[
   ('all', 'All'),
   ('trail', 'Trail'),
@@ -3666,7 +3708,7 @@ class _NewsPageState extends State<NewsPage> {
                                       : Colors.grey.shade400,
                                   width: 0.5),
                             ),
-                            child: Text(label,
+                            child: Text(newsCatLabel((key, label)),
                                 style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -3949,15 +3991,15 @@ Future<Map<String, dynamic>?> fetchTrailWeather(LatLng at) async {
 /// screen. Fog in particular is the word that matters here: on the Paul da
 /// Serra it is the difference between a walk and a whiteout.
 (String, String) weatherFace(int code) {
-  final pt = locale.value == 'pt', ru = locale.value == 'ru';
-  if (code == 0) return ('☀️', pt ? 'Céu limpo' : ru ? 'Ясно' : 'Clear');
-  if (code <= 2) return ('🌤️', pt ? 'Pouco nublado' : ru ? 'Малооблачно' : 'Mostly clear');
-  if (code == 3) return ('☁️', pt ? 'Encoberto' : ru ? 'Пасмурно' : 'Overcast');
-  if (code == 45 || code == 48) return ('🌫️', pt ? 'Nevoeiro' : ru ? 'Туман' : 'Fog');
-  if (code >= 51 && code <= 57) return ('🌦️', pt ? 'Chuvisco' : ru ? 'Морось' : 'Drizzle');
-  if (code >= 61 && code <= 67) return ('🌧️', pt ? 'Chuva' : ru ? 'Дождь' : 'Rain');
-  if (code >= 71 && code <= 77) return ('🌨️', pt ? 'Neve' : ru ? 'Снег' : 'Snow');
-  if (code >= 80 && code <= 82) return ('🌧️', pt ? 'Aguaceiros' : ru ? 'Ливни' : 'Showers');
-  if (code >= 95) return ('⛈️', pt ? 'Trovoada' : ru ? 'Гроза' : 'Thunderstorm');
-  return ('🌥️', pt ? 'Nublado' : ru ? 'Облачно' : 'Cloudy');
+  final pt = locale.value == 'pt', ru = locale.value == 'ru', de = locale.value == 'de';
+  if (code == 0) return ('☀️', pt ? 'Céu limpo' : ru ? 'Ясно' : de ? 'Klar' : 'Clear');
+  if (code <= 2) return ('🌤️', pt ? 'Pouco nublado' : ru ? 'Малооблачно' : de ? 'Überwiegend klar' : 'Mostly clear');
+  if (code == 3) return ('☁️', pt ? 'Encoberto' : ru ? 'Пасмурно' : de ? 'Bedeckt' : 'Overcast');
+  if (code == 45 || code == 48) return ('🌫️', pt ? 'Nevoeiro' : ru ? 'Туман' : de ? 'Nebel' : 'Fog');
+  if (code >= 51 && code <= 57) return ('🌦️', pt ? 'Chuvisco' : ru ? 'Морось' : de ? 'Nieselregen' : 'Drizzle');
+  if (code >= 61 && code <= 67) return ('🌧️', pt ? 'Chuva' : ru ? 'Дождь' : de ? 'Regen' : 'Rain');
+  if (code >= 71 && code <= 77) return ('🌨️', pt ? 'Neve' : ru ? 'Снег' : de ? 'Schnee' : 'Snow');
+  if (code >= 80 && code <= 82) return ('🌧️', pt ? 'Aguaceiros' : ru ? 'Ливни' : de ? 'Schauer' : 'Showers');
+  if (code >= 95) return ('⛈️', pt ? 'Trovoada' : ru ? 'Гроза' : de ? 'Gewitter' : 'Thunderstorm');
+  return ('🌥️', pt ? 'Nublado' : ru ? 'Облачно' : de ? 'Bewölkt' : 'Cloudy');
 }
