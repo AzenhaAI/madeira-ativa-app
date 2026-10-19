@@ -107,6 +107,10 @@ const _tr = {
     'lv_closed': 'closed',
     'webcams_live': 'Live views of the island',
     'new_badge': 'NEW',
+    'reco_promo': 'Recommendations',
+    'reco_promo_sub': 'Follow trail, road or culture: those events come first, with registration alerts',
+    'studio_promo': 'Azenha.ai studio',
+    'studio_promo_sub': 'The studio behind the app: more tools and data about Madeira',
     'bus_promo': 'Island bus timetables',
     'bus_promo_sub': 'Which trails you can reach by bus, stops and next departures',
     'coming_up': 'Coming up',
@@ -282,6 +286,10 @@ const _tr = {
     'lv_closed': 'encerradas',
     'webcams_live': 'Vistas em direto da ilha',
     'new_badge': 'NOVO',
+    'reco_promo': 'Recomendações',
+    'reco_promo_sub': 'Siga trail, estrada ou cultura: esses eventos vêm primeiro, com alertas de inscrições',
+    'studio_promo': 'Estúdio Azenha.ai',
+    'studio_promo_sub': 'O estúdio por trás da app: mais ferramentas e dados sobre a Madeira',
     'bus_promo': 'Horários de autocarro',
     'bus_promo_sub': 'Percursos com acesso de autocarro, paragens e próximas partidas',
     'coming_up': 'Próximos',
@@ -1390,52 +1398,15 @@ class _HomePageState extends State<HomePage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Bright launch banner for the bus timetables (new in 1.9.3).
-          GestureDetector(
+          PromoBanner(
+            title: t('bus_promo'),
+            subtitle: t('bus_promo_sub'),
+            icon: Icons.directions_bus,
+            margin: EdgeInsets.zero,
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => WebPage(
                     title: t('bus_one'),
                     url: 'https://azenha.ai/ativa/bus?app=1&lang=${locale.value}'))),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2A65A),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                      color: kTerracotta, borderRadius: BorderRadius.circular(20)),
-                  child: Text(t('new_badge'),
-                      style: const TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w700,
-                          color: Colors.white, letterSpacing: 0.6)),
-                ),
-                const SizedBox(width: 10),
-                const Icon(Icons.directions_bus, color: Color(0xFF3A1A08), size: 22),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(t('bus_promo'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A1A08))),
-                      Text(t('bus_promo_sub'),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 12, color: Color(0xFF5A2A10))),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: Color(0xFF3A1A08)),
-              ]),
-            ),
           ),
           const SizedBox(height: 20),
           // Coast and summit, the sea, ships in Funchal, the next good sunrise
@@ -2410,6 +2381,16 @@ class _EventsPageState extends State<EventsPage> {
         // beneath it — "Next" across the 18, "Week" between SAT and SUN — and
         // on a 375-point screen, where the chips sit tighter, a tester
         // photographed it. Clip to the animated height and nothing leaks.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: PromoBanner(
+            title: t('reco_promo'),
+            subtitle: t('reco_promo_sub'),
+            icon: Icons.tune,
+            margin: EdgeInsets.zero,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InterestsPage())),
+          ),
+        ),
         ClipRect(
           child: AnimatedSize(
           duration: const Duration(milliseconds: 200),
@@ -3343,44 +3324,14 @@ class _LevadasPageState extends State<LevadasPage> {
                     onChanged: (v) => setState(() => _query = v),
                   ),
                 ),
-              // The games built on this same trail data — a shelf of its
-              // own above the numbers, as the bus banner on Home and Roots
-              // on News.
-              GestureDetector(
+              PromoBanner(
+                title: t('games'),
+                subtitle: t('games_sub'),
+                icon: Icons.sports_esports_outlined,
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => WebPage(
                         title: t('games'),
                         url: 'https://azenha.ai/games/?app=1&lang=${locale.value}'))),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-                  decoration: BoxDecoration(
-                    color: context.dark ? kGreenTintDark : kGreenLight,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: context.dark ? const Color(0xFF2E5A4B) : const Color(0xFFB9D9CC)),
-                  ),
-                  child: Row(children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(color: kGreen, borderRadius: BorderRadius.circular(12)),
-                      child: const Icon(Icons.sports_esports_outlined, color: Colors.white, size: 24),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(t('games'),
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.cTitle)),
-                          const SizedBox(height: 2),
-                          Text(t('games_sub'), style: TextStyle(fontSize: 12, color: context.cSubtle)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right, color: kGreen),
-                  ]),
-                ),
               ),
               Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -3893,6 +3844,73 @@ class _WebPageState extends State<WebPage> {
 // it reads the same live data as everything else; the app shows that page in
 // the reader's language, without the site's back link (?app=1). One engine, so
 // the app and the site cannot answer the same question differently.
+/// The orange "NEW" shelf: one look for every feature that is being
+/// introduced — the bus planner on Home, games on Levadas, Roots on News,
+/// recommendations on Events, the studio on Ask AI. The badge and the
+/// colour are the signal "this is new, have a look"; as a feature settles
+/// in, its shelf is retired or folded into the screen it lives on.
+class PromoBanner extends StatelessWidget {
+  const PromoBanner(
+      {super.key,
+      required this.title,
+      required this.subtitle,
+      required this.icon,
+      required this.onTap,
+      this.margin = const EdgeInsets.only(bottom: 12)});
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+  final EdgeInsetsGeometry margin;
+
+  @override
+  Widget build(BuildContext context) {
+    const ink = Color(0xFF3A1A08);
+    return Padding(
+      padding: margin,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF2A65A),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: kTerracotta, borderRadius: BorderRadius.circular(20)),
+              child: Text(t('new_badge'),
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.6)),
+            ),
+            const SizedBox(width: 10),
+            Icon(icon, color: ink, size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ink)),
+                  Text(subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF5A2A10))),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: ink),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
 class AskTab extends StatelessWidget {
   const AskTab({super.key});
 
@@ -3900,12 +3918,26 @@ class AskTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
       valueListenable: locale,
-      builder: (_, lang, _) => WebPage(
-        key: ValueKey('ask-$lang'),
-        title: t('ask'),
-        url: 'https://azenha.ai/ativa/ask?app=1&lang=$lang',
-        bare: true,
-      ),
+      builder: (_, lang, _) => Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: PromoBanner(
+            title: t('studio_promo'),
+            subtitle: t('studio_promo_sub'),
+            icon: Icons.auto_awesome,
+            margin: EdgeInsets.zero,
+            onTap: () => openUrl('https://azenha.ai/'),
+          ),
+        ),
+        Expanded(
+          child: WebPage(
+            key: ValueKey('ask-$lang'),
+            title: t('ask'),
+            url: 'https://azenha.ai/ativa/ask?app=1&lang=$lang',
+            bare: true,
+          ),
+        ),
+      ]),
     );
   }
 }
@@ -4014,48 +4046,12 @@ class _NewsPageState extends State<NewsPage> {
                 const SizedBox(height: 8),
                 // Roots moved off the bottom bar; today's news is where the
                 // island's longer story sits best.
-                // A shelf of its own, not a one-line link: the story deserves
-                // a title, a line of what is inside, and room to breathe.
-                InkWell(
-                  borderRadius: BorderRadius.circular(16),
+                PromoBanner(
+                  title: t('roots'),
+                  subtitle: t('roots_sub'),
+                  icon: Icons.menu_book_outlined,
+                  margin: EdgeInsets.zero,
                   onTap: () => openRoots(context),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          colors: [context.cTerraTint, context.dark ? kDarkCard : const Color(0xFFFCF4EC)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: context.dark ? const Color(0xFF5A3324) : const Color(0xFFF0CDBB)),
-                    ),
-                    child: Row(children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                            color: context.dark ? kTerraBright : kTerracotta,
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Icon(Icons.menu_book_outlined,
-                            color: context.dark ? kDarkBg : Colors.white, size: 24),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(t('roots'),
-                                style: TextStyle(
-                                    fontSize: 17, fontWeight: FontWeight.w700, color: context.cTitle)),
-                            const SizedBox(height: 2),
-                            Text(t('roots_sub'),
-                                style: TextStyle(fontSize: 13, color: context.cSubtle)),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.chevron_right, color: context.dark ? kTerraBright : kTerracotta),
-                    ]),
-                  ),
                 ),
                 const SizedBox(height: 10),
                 Wrap(
