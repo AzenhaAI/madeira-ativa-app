@@ -177,6 +177,7 @@ const _tr = {
     'view_all_tv': 'All broadcasts',
     'p_week': 'Week',
     'p_month': 'Month',
+    'p_later': 'Later',
     'p_3mo': '3 mo',
     'p_6mo': '6 mo',
     'p_year': 'Year',
@@ -347,6 +348,7 @@ const _tr = {
     'view_all_tv': 'Todas as transmissões',
     'p_week': 'Semana',
     'p_month': 'Mês',
+    'p_later': 'Depois',
     'p_3mo': '3 meses',
     'p_6mo': '6 meses',
     'p_year': 'Ano',
@@ -668,6 +670,13 @@ class AtivaApp extends StatelessWidget {
             backgroundColor: Colors.white,
             indicatorColor: kGreenLight,
           ),
+          // Filters and quick actions are pills; containers keep their 12 pt
+          // corners. One rule for the whole app, so the Events, News,
+          // Interests and trail screens stop each drawing chips their own way.
+          chipTheme: ChipThemeData(
+            shape: StadiumBorder(side: BorderSide(color: Colors.grey.shade300)),
+            backgroundColor: Colors.white,
+          ),
         ),
         darkTheme: ThemeData(
           useMaterial3: true,
@@ -685,6 +694,10 @@ class AtivaApp extends StatelessWidget {
           ),
           bottomSheetTheme:
               const BottomSheetThemeData(backgroundColor: kDarkCard),
+          chipTheme: const ChipThemeData(
+            shape: StadiumBorder(side: BorderSide(color: Color(0xFF3A3931))),
+            backgroundColor: kDarkCard,
+          ),
         ),
         // The tabs are the '/' route rather than `home`: Flutter refuses `home`
         // next to onGenerateInitialRoutes, and a cold start from a link needs
@@ -2070,13 +2083,18 @@ class _EventsPageState extends State<EventsPage> {
     ('next', 'p_next', 0),
     ('week', 'p_week', 7),
     ('month', 'p_month', 31),
+  ];
+
+  /// The ranges a visitor plans with, behind one "Later" chip: eight chips
+  /// never fit a phone in one row, and these three are the rarely used ones.
+  static const _laterPeriods = <(String, String, int)>[
     ('3mo', 'p_3mo', 92),
     ('6mo', 'p_6mo', 183),
     ('year', 'p_year', 365),
   ];
 
   int get _periodDays =>
-      _periods.firstWhere((p) => p.$1 == _period).$3;
+      [..._periods, ..._laterPeriods].firstWhere((p) => p.$1 == _period).$3;
 
   String _favKey(AtivaEvent e) => 'event:${e.name}|${e.date}';
 
@@ -2097,6 +2115,35 @@ class _EventsPageState extends State<EventsPage> {
     ('other', '🎾', 'cat_other'),
     ('festivals', '🎪', 'cat_fest'),
   ];
+
+  // Three families on one row: "All" (dark green, filled), the sports
+  // (green outline, light green when chosen) and "Fest" (the culture
+  // colour, terracotta, as its own sub-chips and the "+N more in Fest"
+  // link already are).
+  Color _chipFill(BuildContext context, String key) {
+    if (key == 'all') return kGreen;
+    if (key == 'festivals') return context.dark ? kTerraBright : kTerracotta;
+    return context.dark ? kGreenTintDark : kGreenLight;
+  }
+
+  Color _chipEdge(BuildContext context, String key) {
+    final on = _filter == key;
+    if (key == 'festivals') {
+      return on ? _chipFill(context, key) : (context.dark ? const Color(0xFF6B3A28) : const Color(0xFFE0B9A6));
+    }
+    if (on) return kGreen;
+    return context.dark ? const Color(0xFF2E5A4B) : const Color(0xFFB9D9CC);
+  }
+
+  Color _chipInk(BuildContext context, String key) {
+    final on = _filter == key;
+    if (key == 'all') return on ? kGreenLight : kGreen;
+    if (key == 'festivals') {
+      if (on) return context.dark ? kDarkBg : kTerracottaLight;
+      return context.dark ? kTerraBright : kTerracotta;
+    }
+    return context.dark ? (on ? kGreenLight : const Color(0xFF7FCBAF)) : kGreen;
+  }
 
   @override
   void initState() {
@@ -2362,18 +2409,27 @@ class _EventsPageState extends State<EventsPage> {
           duration: const Duration(milliseconds: 200),
           child: SizedBox(
           height: _compact ? 0 : 38,
+          child: ShaderMask(
+          shaderCallback: (r) => const LinearGradient(
+                  colors: [Colors.black, Colors.black, Colors.transparent],
+                  stops: [0, 0.94, 1])
+              .createShader(r),
+          blendMode: BlendMode.dstIn,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             children: [
               for (final p in _periods)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: ChoiceChip(
                     label: Text(t(p.$2)),
                     selected: _day == null && _period == p.$1,
                     showCheckmark: false,
                     selectedColor: kGreen,
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                     labelStyle: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -2386,7 +2442,54 @@ class _EventsPageState extends State<EventsPage> {
                     }),
                   ),
                 ),
+              // "Later ▾": 3 months, 6 months, a year. Lit, and named after
+              // the range, while one of them is chosen.
+              Builder(builder: (context) {
+                final later = _laterPeriods.where((p) => p.$1 == _period).firstOrNull;
+                final on = _day == null && later != null;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: PopupMenuButton<String>(
+                    tooltip: t('p_later'),
+                    position: PopupMenuPosition.under,
+                    onSelected: (k) => setState(() {
+                      _period = k;
+                      _day = null;
+                    }),
+                    itemBuilder: (_) => [
+                      for (final p in _laterPeriods)
+                        PopupMenuItem(
+                            value: p.$1,
+                            child: Text(t(p.$2),
+                                style: TextStyle(
+                                    fontWeight: _period == p.$1 ? FontWeight.w700 : FontWeight.w500))),
+                    ],
+                    // The menu takes the tap; the chip only draws. It keeps
+                    // a handler so it is painted enabled, not greyed out.
+                    child: IgnorePointer(
+                    child: ChoiceChip(
+                      label: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Text(t(on ? later.$2 : 'p_later')),
+                        Icon(Icons.arrow_drop_down, size: 18, color: on ? kGreenLight : context.cTitle),
+                      ]),
+                      selected: on,
+                      showCheckmark: false,
+                      selectedColor: kGreen,
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      labelPadding: const EdgeInsets.only(left: 2, right: 0),
+                      labelStyle: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: on ? kGreenLight : context.cTitle),
+                      onSelected: (_) {},
+                    ),
+                    ),
+                  ),
+                );
+              }),
             ],
+          ),
           ),
           ),
         ),
@@ -2499,7 +2602,12 @@ class _EventsPageState extends State<EventsPage> {
             spacing: spacing,
             runSpacing: 6,
             children: [
-              for (final cat in _modeCats)
+              for (final cat in _modeCats) ...[
+                if (cat.$1 == 'festivals')
+                  // Sport on the left, culture on the right.
+                  SizedBox(
+                      height: 32,
+                      child: VerticalDivider(width: 8, thickness: 1, color: context.cHairline)),
                 Builder(
                   builder: (context) => FilterChip(
                     showCheckmark: false,
@@ -2512,23 +2620,20 @@ class _EventsPageState extends State<EventsPage> {
                         : Text(cat.$2, style: const TextStyle(fontSize: 14)),
                     label: Text(t(cat.$3), maxLines: 1, softWrap: false),
                     selected: _filter == cat.$1,
-                    selectedColor: kGreen,
+                    selectedColor: _chipFill(context, cat.$1),
                     backgroundColor: context.cSurface,
-                    shape: StadiumBorder(
-                        side: BorderSide(
-                            color: _filter == cat.$1
-                                ? kGreen
-                                : context.cHairline)),
+                    shape: StadiumBorder(side: BorderSide(color: _chipEdge(context, cat.$1))),
                     labelStyle: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: _filter == cat.$1 ? kGreenLight : context.cTitle),
+                        color: _chipInk(context, cat.$1)),
                     onSelected: (_) => setState(() {
                       _filter = cat.$1;
                       _peek = false;
                     }),
                   ),
                 ),
+              ],
             ],
             );
           }),

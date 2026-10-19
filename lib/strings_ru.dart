@@ -118,6 +118,7 @@ const trRu = <String, String>{
   'organized_by': 'Организатор',
   'p_3mo': '3 мес.',
   'p_6mo': '6 мес.',
+  'p_later': 'Позже',
   'p_month': 'Месяц',
   'p_next': 'Ближайшие',
   'p_today': 'Сегодня',
