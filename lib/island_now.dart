@@ -20,7 +20,7 @@ import 'store.dart';
 // The card's own words in the reader's language: Portuguese inline, German
 // from this table (keyed by the English); anything missing stays English.
 String _l(String en, String pt) =>
-    locale.value == 'pt' ? pt : locale.value == 'de' ? (_deIsl[en] ?? en) : en;
+    locale.value == 'pt' ? pt : locale.value == 'de' ? (_deIsl[en] ?? en) : locale.value == 'ru' ? (_ruIsl[en] ?? en) : en;
 
 const _deIsl = <String, String>{
   'Airport: wind': 'Flughafen: Wind',
@@ -54,6 +54,41 @@ const _deIsl = <String, String>{
   'until': 'bis',
   'very high': 'sehr hoch',
   'waves': 'Wellen',
+};
+
+// Russian, reached from the menu only (EN → PT → DE → RU); same keys.
+const _ruIsl = <String, String>{
+  'Airport: wind': 'Аэропорт: ветер',
+  'Best morning': 'Лучшее утро',
+  'IPMA WARNINGS': 'ПРЕДУПРЕЖДЕНИЯ IPMA',
+  'Next ship': 'Следующее судно',
+  'No clear sunrise forecast in the next days.': 'В ближайшие дни ясного рассвета не обещают.',
+  'No railing recorded on any section': 'Перила не отмечены ни на одном участке',
+  'Sea': 'Море',
+  'Sunrise at Pico do Arieiro': 'Рассвет на Pico do Arieiro',
+  'The island now': 'Остров сейчас',
+  'Today': 'Сегодня',
+  'Tomorrow': 'Завтра',
+  'above the usual 15-knot limit — diversions likely': 'выше обычного предела 15 узлов — возможны уходы на запасной',
+  'at anchor': 'на якоре',
+  'calm for landings': 'спокойно для посадок',
+  'cement carrier': 'цементовоз',
+  'clear': 'ясно',
+  'crosswind': 'боковой ветер',
+  'cruise': 'круизный лайнер',
+  'extreme': 'экстремальный',
+  'ferry / cargo': 'паром / грузовое',
+  'from': 'с',
+  'gusts': 'порывы',
+  'gusty — delays possible': 'порывисто — возможны задержки',
+  'high': 'высокий',
+  'low': 'низкий',
+  'moderate': 'умеренный',
+  'sea of clouds': 'море облаков',
+  'tide': 'прилив',
+  'until': 'до',
+  'very high': 'очень высокий',
+  'waves': 'волны',
 };
 
 // ------------------------------------------------------------------ time
