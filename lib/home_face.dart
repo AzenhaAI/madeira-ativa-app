@@ -146,7 +146,7 @@ class HeroBand extends StatelessWidget {
                 Text(greeting(n),
                     style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                 Text(parts.join(' · '),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: Colors.white.withValues(alpha: .92), fontSize: 12)),
               ],
