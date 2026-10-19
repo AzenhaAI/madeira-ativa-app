@@ -3596,7 +3596,22 @@ class _NewsPageState extends State<NewsPage> {
   void initState() {
     super.initState();
     _lang = kNewsLangs.contains(locale.value) ? locale.value : 'en';
+    // The feed follows the app's language when it changes (header or menu):
+    // switching to German while reading the news used to leave it in English
+    // until the tab was reopened. A language picked here still holds until
+    // the app's language changes again.
+    locale.addListener(_followApp);
     _load();
+  }
+
+  void _followApp() {
+    if (mounted) setState(() => _lang = kNewsLangs.contains(locale.value) ? locale.value : 'en');
+  }
+
+  @override
+  void dispose() {
+    locale.removeListener(_followApp);
+    super.dispose();
   }
 
   Future<void> _load() async {
