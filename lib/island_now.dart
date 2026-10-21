@@ -104,7 +104,18 @@ const _ruIsl = <String, String>{
 /// March to the last Sunday of October (both at 01:00 UTC). Returned as a UTC
 /// DateTime holding Madeira's wall-clock reading, so it compares directly with
 /// IPMA's offset-less times parsed the same way.
+/// Store screenshots and videos are shot at night as often as not; a build
+/// made with --dart-define=SHOT_TIME=11:20 pins Madeira's clock to that time
+/// of today so the home shows a daytime greeting and photo. Empty in every
+/// real build.
+const _shotTime = String.fromEnvironment('SHOT_TIME');
+
 DateTime madeiraNow() {
+  if (_shotTime.isNotEmpty) {
+    final p = _shotTime.split(':');
+    final d = DateTime.now().toUtc();
+    return DateTime.utc(d.year, d.month, d.day, int.parse(p[0]), int.parse(p[1]));
+  }
   final u = DateTime.now().toUtc();
   DateTime lastSunday(int month) {
     var d = DateTime.utc(u.year, month + 1, 1).subtract(const Duration(days: 1));
