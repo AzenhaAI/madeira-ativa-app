@@ -842,8 +842,13 @@ class _HomeShellState extends State<HomeShell> {
           padding: const EdgeInsets.only(left: 12),
           child: Image.asset('assets/icon_mark.png', width: 32, height: 32),
         ),
-        title: const Text('Madeira Ativa',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
+        // The name gives way first on a narrow phone: the four languages and
+        // the menu must always fit.
+        title: const FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text('Madeira Ativa', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600))),
+        titleSpacing: 4,
         actions: [
           // Used to print just the current locale ('EN'), which reads as a state
           // label: nothing announced that a Portuguese version existed, and the
@@ -858,23 +863,32 @@ class _HomeShellState extends State<HomeShell> {
           // the whole pair lit up as one control. Worse, this build() read
           // locale.value without listening to it, so the highlight never moved
           // after a tap and both labels looked equally active.
+          // All four languages, every tab, as one pill like the site's header:
+          // the active one filled. Russian is no longer tucked into the menu
+          // (Kirill, 20.10.2026); the default is still English and Russian is
+          // never chosen from the device locale.
           ValueListenableBuilder<String>(
             valueListenable: locale,
-            builder: (context, lang, _) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _LangTab(label: 'EN', code: 'en', active: lang),
-                Text('·', style: TextStyle(color: context.cHairline)),
-                _LangTab(label: 'PT', code: 'pt', active: lang),
-                Text('·', style: TextStyle(color: context.cHairline)),
-                _LangTab(label: 'DE', code: 'de', active: lang),
-              ],
-            ),
+            builder: (context, lang, _) => _LangPill(active: lang),
           ),
+          const SizedBox(width: 6),
           Builder(
-            builder: (ctx) => IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+            builder: (ctx) => Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Material(
+                color: context.cSurface,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: context.cHairline)),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Scaffold.of(ctx).openEndDrawer(),
+                  child: SizedBox(
+                      width: 40,
+                      height: 36,
+                      child: Icon(Icons.menu, size: 22, color: context.cBody, semanticLabel: 'Menu')),
+                ),
+              ),
             ),
           ),
         ],
@@ -889,20 +903,6 @@ class _HomeShellState extends State<HomeShell> {
               padding: EdgeInsets.fromLTRB(16, MediaQuery.paddingOf(context).top + 10, 16, 12),
               child: const Text('Madeira Ativa',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: kGreenLight)),
-            ),
-            // Settings first: the language is what a visitor looks for.
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.translate, color: kTerracotta),
-              title: Text(t('language_row')),
-              // Only the current language is named; the next ones, Russian
-              // among them, come up as you tap. EN → PT → DE → RU → EN.
-              trailing: Text(locale.value.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.w700, color: kTerracotta)),
-              onTap: () {
-                setLocale(locale.value == 'en' ? 'pt' : locale.value == 'pt' ? 'de' : locale.value == 'de' ? 'ru' : 'en');
-                Navigator.pop(context);
-              },
             ),
             ListTile(
               dense: true,
@@ -4082,37 +4082,9 @@ class _NewsPageState extends State<NewsPage> {
                   margin: EdgeInsets.zero,
                   onTap: () => openRoots(context),
                 ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 6,
-                  children: [
-                    for (final lg in kNewsLangs)
-                      GestureDetector(
-                        onTap: () => setState(() => _lang = lg),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            color:
-                                _lang == lg ? kGreen : Colors.transparent,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                                color: _lang == lg
-                                    ? kGreen
-                                    : Colors.grey.shade400,
-                                width: 0.5),
-                          ),
-                          child: Text(kNewsLangLabels[lg]!,
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _lang == lg
-                                      ? Colors.white
-                                      : context.cTitle)),
-                        ),
-                      ),
-                  ],
-                ),
+                // The feed is read in the app's language, chosen in the header
+                // on any tab; the six buttons that used to sit here are gone.
+                const SizedBox(height: 4),
                 if (cats.length > 1) ...[
                   const SizedBox(height: 8),
                   Wrap(
@@ -4350,36 +4322,57 @@ Widget histImage(String path, {double height = 190}) {
 /// agree: tapping EN gives you English whatever you were reading. The active
 /// side is inert — there is nothing to do when you are already there — and the
 /// tap target is padded out to 44pt, which the bare text was not.
-class _LangTab extends StatelessWidget {
-  final String label;
-  final String code;
-  final String active;
+/// The interface languages, in the order the header shows them. A new one
+/// is a line here plus its string table.
+const kUiLangs = <(String, String, String)>[
+  ('en', 'EN', 'English'),
+  ('pt', 'PT', 'Português'),
+  ('de', 'DE', 'Deutsch'),
+  ('ru', 'RU', 'Русский'),
+];
 
-  const _LangTab(
-      {required this.label, required this.code, required this.active});
+/// One rounded pill, one segment per language, the active one filled green —
+/// the site header's control, so the two read the same.
+class _LangPill extends StatelessWidget {
+  const _LangPill({required this.active});
+  final String active;
 
   @override
   Widget build(BuildContext context) {
-    final on = active == code;
-    return InkWell(
-      onTap: on ? null : () => setLocale(code),
-      borderRadius: BorderRadius.circular(8),
-      child: Semantics(
-        selected: on,
-        button: !on,
-        label: code == 'en' ? 'English' : code == 'de' ? 'Deutsch' : 'Português',
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: on ? kGreen : context.cSubtle),
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: context.cSurface,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: context.cHairline),
       ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        for (final (code, label, name) in kUiLangs)
+          Semantics(
+            selected: active == code,
+            button: active != code,
+            label: name,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: active == code ? null : () => setLocale(code),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                constraints: const BoxConstraints(minWidth: 34, minHeight: 30),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: active == code ? kGreen : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(label,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: active == code ? Colors.white : context.cSubtle)),
+              ),
+            ),
+          ),
+      ]),
     );
   }
 }

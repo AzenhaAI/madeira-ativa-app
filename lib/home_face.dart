@@ -23,6 +23,16 @@ String _w(String en, String pt) {
 }
 
 const _de = <String, String>{
+  'low': 'niedrig',
+  'moderate': 'mäßig',
+  'high': 'hoch',
+  'very high': 'sehr hoch',
+  'extreme': 'extrem',
+  'crosswind': 'Seitenwind',
+  'Sea': 'Meer',
+  'Live webcam': 'Live-Webcam',
+  'Flight board': 'Flugtafel',
+  'Airport': 'Flughafen',
   'Good morning': 'Guten Morgen', 'Good afternoon': 'Guten Tag', 'Good evening': 'Guten Abend', 'Good night': 'Gute Nacht',
   'in Funchal': 'in Funchal', 'levadas open': 'Levadas offen', 'sunrise': 'Sonnenaufgang', 'sunset': 'Sonnenuntergang',
   'Hiking': 'Wandern', 'Beach': 'Strand', 'Viewpoints': 'Aussicht', 'Flights': 'Flüge',
@@ -37,6 +47,16 @@ const _de = <String, String>{
 };
 
 const _ru = <String, String>{
+  'low': 'низкий',
+  'moderate': 'умеренный',
+  'high': 'высокий',
+  'very high': 'очень высокий',
+  'extreme': 'экстремальный',
+  'crosswind': 'боковой ветер',
+  'Sea': 'Море',
+  'Live webcam': 'Вебкамера',
+  'Flight board': 'Табло рейсов',
+  'Airport': 'Аэропорт',
   'Good morning': 'Доброе утро', 'Good afternoon': 'Добрый день', 'Good evening': 'Добрый вечер', 'Good night': 'Доброй ночи',
   'in Funchal': 'в Фуншале', 'levadas open': 'левад открыто', 'sunrise': 'восход', 'sunset': 'закат',
   'Hiking': 'Походы', 'Beach': 'Пляж', 'Viewpoints': 'Смотровые', 'Flights': 'Рейсы',
@@ -247,11 +267,37 @@ class _IslandSilhouetteState extends State<IslandSilhouette> {
       const padX = 120.0, padT = 64.0, padB = 96.0;
       final vw = isl.w + 2 * padX, vh = isl.h + padT + padB;
       final h = box.maxWidth * vh / vw;
-      return SizedBox(
-        width: box.maxWidth,
-        height: h,
-        child: CustomPaint(
-          painter: _IslandPainter(isl, widget.now, context, padX, padT, vw, vh),
+      final scale = box.maxWidth / vw;
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: (d) {
+          // Back to the island's own coordinates, then the nearest point
+          // within a finger's reach (about 28 pt on screen).
+          final p = Offset(d.localPosition.dx / scale - padX, d.localPosition.dy / scale - padT);
+          final f = isl.pts['funchal']!;
+          final spots = <String, Offset>{
+            'funchal': f,
+            'airport': isl.pts['airport']!,
+            'arieiro': isl.pts['arieiro']!,
+            'sea': Offset(f.dx - 330, f.dy + 40),
+          };
+          String? hit;
+          var best = 28 / scale;
+          spots.forEach((k, o) {
+            final dist = (o - p).distance;
+            if (dist < best) {
+              best = dist;
+              hit = k;
+            }
+          });
+          onIslandTap(context, widget.now, hit);
+        },
+        child: SizedBox(
+          width: box.maxWidth,
+          height: h,
+          child: CustomPaint(
+            painter: _IslandPainter(isl, widget.now, context, padX, padT, vw, vh),
+          ),
         ),
       );
     });
@@ -360,7 +406,7 @@ class _IslandPainter extends CustomPainter {
     }
 
     final f = isl.pts['funchal']!, ap = isl.pts['airport']!, pm = isl.pts['portomoniz']!;
-    final kmh = locale.value == 'ru' ? 'км/ч' : 'km/h';
+    final kmh = _kmhU();
     if (n.coastT != null) {
       dot(f, kGreen);
       label(Offset(f.dx, f.dy + 80), '${n.coastT!.round()}°',
@@ -491,33 +537,7 @@ class GoodDayStrip extends StatelessWidget {
     final scores = dayScores(now);
     Color col(int s) => s >= 4 ? kGreen : s == 3 ? const Color(0xFFD9A441) : (context.dark ? kTerraBright : kTerracotta);
     return InkWell(
-      onTap: () => showModalBottomSheet(
-        context: context,
-        backgroundColor: context.cSurface,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
-        builder: (_) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_w('Today is good for', 'Hoje está bom para'),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.cTitle)),
-            const SizedBox(height: 10),
-            for (final s in scores)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(children: [
-                  Icon(s.icon, size: 22, color: col(s.score)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('${s.label} · ${s.score}/5', style: TextStyle(fontWeight: FontWeight.w600, color: context.cBody)),
-                      Text(s.why, style: TextStyle(fontSize: 13, color: context.cSubtle)),
-                    ]),
-                  ),
-                ]),
-              ),
-          ]),
-        ),
-      ),
+      onTap: () => showGoodDaySheet(context, now),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(children: [
@@ -547,3 +567,104 @@ class GoodDayStrip extends StatelessWidget {
     );
   }
 }
+
+
+Color _scoreCol(BuildContext context, int s) =>
+    s >= 4 ? kGreen : s == 3 ? const Color(0xFFD9A441) : (context.dark ? kTerraBright : kTerracotta);
+
+/// The four verdicts with their reasons, from the strip or from Funchal on
+/// the island.
+void showGoodDaySheet(BuildContext context, IslandNow now) {
+  final scores = dayScores(now);
+  _sheet(context, _w('Today is good for', 'Hoje está bom para'), [
+    for (final s in scores)
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(children: [
+          Icon(s.icon, size: 22, color: _scoreCol(context, s.score)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('${s.label} · ${s.score}/5', style: TextStyle(fontWeight: FontWeight.w600, color: context.cBody)),
+              Text(s.why, style: TextStyle(fontSize: 13, color: context.cSubtle)),
+            ]),
+          ),
+        ]),
+      ),
+  ]);
+}
+
+void _sheet(BuildContext context, String title, List<Widget> body, {String? button, VoidCallback? onButton}) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: context.cSurface,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(18))),
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: context.cTitle)),
+        const SizedBox(height: 10),
+        ...body,
+        if (button != null) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: kGreen),
+              onPressed: () {
+                Navigator.pop(ctx);
+                onButton?.call();
+              },
+              child: Text(button),
+            ),
+          ),
+        ],
+      ]),
+    ),
+  );
+}
+
+Widget _line(BuildContext context, String icon, String text) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(width: 28, child: Text(icon, style: const TextStyle(fontSize: 16))),
+        Expanded(child: Text(text, style: TextStyle(fontSize: 14, color: context.cBody))),
+      ]),
+    );
+
+/// A tap on the island: each point opens what it stands for; anywhere else
+/// opens the Map tab.
+void onIslandTap(BuildContext context, IslandNow n, String? what) {
+  switch (what) {
+    case 'funchal':
+      showGoodDaySheet(context, n);
+    case 'airport':
+      final cross = n.airCross?.round();
+      _sheet(context, _w('Airport', 'Aeroporto'), [
+        _line(context, '✈', '${_w('gusts', 'rajadas')} ${n.airGusts?.round() ?? '–'} ${_kmhU()}'
+            '${cross != null ? ' · ${_w('crosswind', 'vento cruzado')} $cross ${_kmhU()}' : ''}'),
+        _line(context, 'ℹ️', cross == null
+            ? _w('calm', 'calmo')
+            : cross >= 28
+                ? _w('diversions likely', 'desvios prováveis')
+                : cross >= 20
+                    ? '${_w('gusty', 'rajadas')} · ${_w('delays', 'atrasos')}'
+                    : _w('calm for landings', 'calmo para aterrar')),
+      ], button: _w('Flight board', 'Painel de voos'), onButton: () => openUrl('https://www.flightradar24.com/airport/fnc'));
+    case 'arieiro':
+      _sheet(context, 'Pico do Arieiro', [
+        if (n.summitT != null) _line(context, '⛰', '${n.summitT!.round()}° · ${_sky(n.summitCode)}'),
+        if (n.sunriseLine != null) _line(context, '🌅', n.sunriseLine!),
+      ], button: _w('Live webcam', 'Webcam em direto'), onButton: () => openUrl('https://www.netmadeira.com/webcams-madeira/pico-do-arieiro'));
+    case 'sea':
+      _sheet(context, _w('Sea', 'Mar'), [
+        if (n.seaT != null) _line(context, '🌊', '${n.seaT!.toStringAsFixed(1)}° · ${_w('waves', 'ondas')} ${n.waves?.toStringAsFixed(1) ?? '–'} m'),
+        if (n.tide != null) _line(context, '↕', n.tide!),
+        if (n.uv != null) _line(context, '☀️', 'UV ${n.uv!.round()}'),
+      ]);
+    default:
+      homeTab.value = kTabMap;
+  }
+}
+
+String _kmhU() => locale.value == 'ru' ? 'км/ч' : 'km/h';
