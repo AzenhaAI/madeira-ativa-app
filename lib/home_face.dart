@@ -36,7 +36,7 @@ const _de = <String, String>{
   'Airport': 'Flughafen',
   'Good morning': 'Guten Morgen', 'Good afternoon': 'Guten Tag', 'Good evening': 'Guten Abend', 'Good night': 'Gute Nacht',
   'in Funchal': 'in Funchal', 'levadas open': 'Levadas offen', 'sunrise': 'Sonnenaufgang', 'sunset': 'Sonnenuntergang',
-  'Hiking': 'Wandern', 'Beach': 'Strand', 'Viewpoints': 'Aussicht', 'Flights': 'Flüge',
+  'Hiking': 'Wandern', 'Beach': 'Strand', 'Views': 'Aussicht', 'Flights': 'Flüge',
   'Today is good for': 'Heute gut für', 'Tap an icon for why': 'Tippe ein Symbol für den Grund',
   'fog': 'Nebel', 'cloud': 'Wolken', 'rain': 'Regen', 'showers': 'Schauer', 'clear': 'klar', 'sunny': 'sonnig',
   'sea': 'Meer', 'waves': 'Wellen', 'gusts': 'Böen', 'delays': 'Verspätungen', 'diversions likely': 'Umleitungen wahrscheinlich',
@@ -61,7 +61,7 @@ const _ru = <String, String>{
   'Airport': 'Аэропорт',
   'Good morning': 'Доброе утро', 'Good afternoon': 'Добрый день', 'Good evening': 'Добрый вечер', 'Good night': 'Доброй ночи',
   'in Funchal': 'в Фуншале', 'levadas open': 'левад открыто', 'sunrise': 'восход', 'sunset': 'закат',
-  'Hiking': 'Походы', 'Beach': 'Пляж', 'Viewpoints': 'Смотровые', 'Flights': 'Рейсы',
+  'Hiking': 'Походы', 'Beach': 'Пляж', 'Views': 'Виды', 'Flights': 'Рейсы',
   'Today is good for': 'Сегодня хорошо для', 'Tap an icon for why': 'Нажмите на значок, чтобы узнать почему',
   'fog': 'туман', 'cloud': 'облачно', 'rain': 'дождь', 'showers': 'ливни', 'clear': 'ясно', 'sunny': 'солнечно',
   'sea': 'море', 'waves': 'волна', 'gusts': 'порывы', 'delays': 'задержки', 'diversions likely': 'вероятны уходы на запасной',
@@ -498,7 +498,7 @@ class DayScore {
   String get label => switch (key) {
         'hiking' => _w('Hiking', 'Caminhadas'),
         'beach' => _w('Beach', 'Praia'),
-        'views' => _w('Viewpoints', 'Miradouros'),
+        'views' => _w('Views', 'Vistas'),
         _ => _w('Flights', 'Voos'),
       };
 }
@@ -574,12 +574,20 @@ class GoodDayStrip extends StatelessWidget {
         child: Row(children: [
           for (final s in scores)
             Expanded(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(s.icon, size: 18, color: col(s.score)),
-                  const SizedBox(width: 4),
-                  Text(s.label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.cBody)),
-                ]),
+              // Icon and label shrink to their quarter of the row instead of
+              // running into the next one: with the phone's text enlarged,
+              // "Viewpoints" ran under "Flights" (Kirill's Pixel, 21.10.2026).
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(s.icon, size: 18, color: col(s.score)),
+                    const SizedBox(width: 4),
+                    Text(s.label, maxLines: 1, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.cBody)),
+                  ]),
+                ),
                 const SizedBox(height: 3),
                 Row(mainAxisSize: MainAxisSize.min, children: [
                   for (var i = 0; i < 5; i++)
@@ -592,6 +600,7 @@ class GoodDayStrip extends StatelessWidget {
                     ),
                 ]),
               ]),
+              ),
             ),
         ]),
       ),
