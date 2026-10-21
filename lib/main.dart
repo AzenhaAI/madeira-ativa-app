@@ -888,26 +888,41 @@ class _HomeShellState extends State<HomeShell> {
           // the active one filled. Russian is no longer tucked into the menu
           // (Kirill, 20.10.2026); the default is still English and Russian is
           // never chosen from the device locale.
-          ValueListenableBuilder<String>(
-            valueListenable: locale,
-            builder: (context, lang, _) => _LangPill(active: lang),
-          ),
-          const SizedBox(width: 6),
+          // The pill and the round menu button as one unit: the circle takes
+          // the pill's height, whatever the phone's text size. A fixed 38-pt
+          // circle came out smaller than the pill when iOS text was enlarged
+          // (Kirill's iPhone, 21.10.2026).
           Builder(
             builder: (ctx) => Padding(
               padding: const EdgeInsets.only(right: 10),
-              // A circle as tall as the language pill, with the same hairline:
-              // two objects of one height side by side, as on the site.
-              child: Material(
-                color: context.cSurface,
-                shape: CircleBorder(side: BorderSide(color: context.cHairline)),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () => Scaffold.of(ctx).openEndDrawer(),
-                  child: SizedBox(
-                      width: 38,
-                      height: 38,
-                      child: Icon(Icons.menu, size: 20, color: context.cBody, semanticLabel: 'Menu')),
+              child: Center(
+                child: IntrinsicHeight(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ValueListenableBuilder<String>(
+                        valueListenable: locale,
+                        builder: (context, lang, _) => _LangPill(active: lang),
+                      ),
+                      const SizedBox(width: 6),
+                      AspectRatio(
+                        aspectRatio: 1,
+                        child: Material(
+                          color: context.cSurface,
+                          shape: CircleBorder(side: BorderSide(color: context.cHairline)),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () => Scaffold.of(ctx).openEndDrawer(),
+                            child: Icon(Icons.menu,
+                                size: MediaQuery.textScalerOf(context).scale(20).clamp(20, 30).toDouble(),
+                                color: context.cBody,
+                                semanticLabel: 'Menu'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
