@@ -109,7 +109,7 @@ class _LevadaPageState extends State<LevadaPage> {
               ),
               child: CustomPaint(
                   size: Size.infinite,
-                  painter: _ProfilePainter(l.profile, context.cSubtle)),
+                  painter: _ProfilePainter(l.profile, context.cSubtle, l.profileBreaks)),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -372,31 +372,38 @@ class _S extends StatelessWidget {
 class _ProfilePainter extends CustomPainter {
   final List<double> pts;
   final Color axis;
-  _ProfilePainter(this.pts, this.axis);
+  final List<int> breaks;
+  _ProfilePainter(this.pts, this.axis, [this.breaks = const []]);
 
   @override
   void paint(Canvas c, Size s) {
     final mn = pts.reduce((a, b) => a < b ? a : b);
     final mx = pts.reduce((a, b) => a > b ? a : b);
     final span = (mx - mn) == 0 ? 1 : mx - mn;
-    final path = Path();
-    for (var i = 0; i < pts.length; i++) {
-      final x = i / (pts.length - 1) * s.width;
-      final y = s.height - (pts[i] - mn) / span * (s.height - 8) - 4;
-      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+    // One filled run per piece of the mapped route: a break in the route is a
+    // gap in the chart, not a cliff the walker never climbs.
+    final cuts = [0, ...breaks.where((b) => b > 0 && b < pts.length), pts.length];
+    for (var k = 0; k + 1 < cuts.length; k++) {
+      final a = cuts[k], b = cuts[k + 1];
+      if (b - a < 2) continue;
+      final path = Path();
+      double x(int i) => i / (pts.length - 1) * s.width;
+      for (var i = a; i < b; i++) {
+        final y = s.height - (pts[i] - mn) / span * (s.height - 8) - 4;
+        i == a ? path.moveTo(x(i), y) : path.lineTo(x(i), y);
+      }
+      final fill = Path.from(path)
+        ..lineTo(x(b - 1), s.height)
+        ..lineTo(x(a), s.height)
+        ..close();
+      c.drawPath(fill, Paint()..color = kGreen.withValues(alpha: 0.15));
+      c.drawPath(
+          path,
+          Paint()
+            ..color = kGreen
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2);
     }
-    final fill = Path.from(path)
-      ..lineTo(s.width, s.height)
-      ..lineTo(0, s.height)
-      ..close();
-    c.drawPath(fill,
-        Paint()..color = kGreen.withValues(alpha: 0.15));
-    c.drawPath(
-        path,
-        Paint()
-          ..color = kGreen
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2);
   }
 
   @override

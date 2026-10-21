@@ -2898,6 +2898,8 @@ class Levada {
   final String urlPt;
   final LatLng? center;
   final List<double> profile;
+  /// Where the mapped route is broken: the chart leaves a gap there.
+  final List<int> profileBreaks;
   final String fromP, toP;
   final String descent;
   final String marking;
@@ -3013,6 +3015,7 @@ class Levada {
         urlEn = j['url_en'] ?? '',
         urlPt = j['url_pt'] ?? '',
         profile = _parseProfile(j['profile']),
+        profileBreaks = ((j['profile_breaks'] as List?) ?? const []).map((e) => (e as num).toInt()).toList(),
         fromP = j['from'] ?? '',
         toP = j['to'] ?? '',
         descent = j['descent_m']?.toString() ?? '',
