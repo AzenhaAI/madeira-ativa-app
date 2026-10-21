@@ -12,7 +12,7 @@ import 'gazetteer.dart';
 import 'ask_review.dart';
 import 'island_now.dart';
 import 'levada_page.dart';
-import 'stats_page.dart';
+import 'orienteering.dart';
 import 'notify.dart';
 import 'roots_page.dart';
 import 'store.dart';
@@ -582,6 +582,15 @@ String fmtDate(String iso) {
   return '${_wdFor()[d.weekday - 1]}, ${d.day} ${_moFor()[d.month - 1]}';
 }
 
+/// The full trail-running statistics page from the site, inside the app: the
+/// charts, the MIUT block, records and clubs. The app's own stats screen was
+/// a thin set of bars and the infographics were lost (Kirill, 21.10.2026).
+void openTrailStats(BuildContext context, {String anchor = 'miut'}) =>
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => WebPage(
+            title: tr(('Trail running statistics', 'Estatísticas de trail', 'Trailrunning-Statistik', 'Статистика трейлов')),
+            url: 'https://azenha.ai/ativa/madeira_stat?app=1&lang=${locale.value}#$anchor')));
+
 Future<void> openUrl(String url) async {
   if (url.isEmpty) return;
   final uri = Uri.tryParse(url);
@@ -1000,8 +1009,19 @@ class _HomeShellState extends State<HomeShell> {
               dense: true,
               leading: const Icon(Icons.bar_chart, color: kGreen),
               title: Text(t('stats')),
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const StatsPage())),
+              onTap: () {
+                Navigator.of(context).pop();
+                openTrailStats(context, anchor: 'facts');
+              },
+            ),
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.explore, color: kGreen),
+              title: Text(tr(kOrientTitle)),
+              onTap: () {
+                Navigator.of(context).pop();
+                openOrienteering(context);
+              },
             ),
             ListTile(
               dense: true,
@@ -1648,6 +1668,32 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          // Two NEW chips (Kirill, 21.10.2026): the site's full statistics with
+          // its infographics, opened at the MIUT block, and orienteering basics.
+          PromoBanner(
+            title: tr(('Trail running statistics', 'Estatísticas de trail', 'Trailrunning-Statistik', 'Статистика трейлов')),
+            subtitle: tr((
+              'MIUT and every race: finishers, records, countries, clubs',
+              'MIUT e todas as provas: finalistas, recordes, países, clubes',
+              'MIUT und alle Rennen: Finisher, Rekorde, Länder, Vereine',
+              'MIUT и все гонки: финишёры, рекорды, страны, клубы'
+            )),
+            icon: Icons.insights,
+            onTap: () => openTrailStats(context),
+          ),
+          PromoBanner(
+            title: tr(kOrientTitle),
+            subtitle: tr((
+              'Map symbols, control descriptions, how a race works, compass',
+              'Símbolos do mapa, sinalética, como é uma prova, bússola',
+              'Kartenzeichen, Postenbeschreibung, Ablauf, Kompass',
+              'Знаки карты, легенды КП, как проходит старт, компас'
+            )),
+            icon: Icons.explore,
+            margin: EdgeInsets.zero,
+            onTap: () => openOrienteering(context),
+          ),
         ],
       ),
     );
@@ -1681,7 +1727,7 @@ Future<(Levada, double)?> nearestHeritage(String location,
   return best == null ? null : (best, bestKm);
 }
 
-void showEventActions(BuildContext context, AtivaEvent e) {
+void showEventActions(BuildContext context, AtivaEvent e, {bool fromOrienteering = false}) {
   final key = 'event:${e.name}|${e.date}';
   showModalBottomSheet(
     context: context,
@@ -1753,6 +1799,24 @@ void showEventActions(BuildContext context, AtivaEvent e) {
                     ),
                   ),
               ]),
+            ),
+          // Every orienteering event leads to the basics (Kirill, 21.10.2026).
+          if (isOrienteeringEvent(e) && !fromOrienteering)
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              decoration: BoxDecoration(color: ctx.cGreenTint, borderRadius: BorderRadius.circular(10)),
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.explore, color: ctx.cTitle),
+                title: Text(tr(kOrientTitle), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                subtitle: Text(tr(('Map symbols, control descriptions, compass', 'Símbolos, sinalética, bússola', 'Kartenzeichen, Postenbeschreibung, Kompass', 'Знаки карты, легенды КП, компас')),
+                    style: const TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right, size: 18),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  openOrienteering(context);
+                },
+              ),
             ),
           FutureBuilder<(Levada, double)?>(
             future: nearestHeritage(e.location),
@@ -2464,13 +2528,28 @@ class _EventsPageState extends State<EventsPage> {
         // photographed it. Clip to the animated height and nothing leaks.
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-          child: PromoBanner(
-            title: t('reco_promo'),
-            subtitle: t('reco_promo_sub'),
-            icon: Icons.tune,
-            margin: EdgeInsets.zero,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InterestsPage())),
-          ),
+          // Under the Orient filter the shelf offers the basics instead
+          // (Kirill, 20–21.10.2026).
+          child: _filter == 'orienteering'
+              ? PromoBanner(
+                  title: tr(kOrientTitle),
+                  subtitle: tr((
+                    'Map symbols, control descriptions, how a race works, compass',
+                    'Símbolos do mapa, sinalética, como é uma prova, bússola',
+                    'Kartenzeichen, Postenbeschreibung, Ablauf, Kompass',
+                    'Знаки карты, легенды КП, как проходит старт, компас'
+                  )),
+                  icon: Icons.explore,
+                  margin: EdgeInsets.zero,
+                  onTap: () => openOrienteering(context),
+                )
+              : PromoBanner(
+                  title: t('reco_promo'),
+                  subtitle: t('reco_promo_sub'),
+                  icon: Icons.tune,
+                  margin: EdgeInsets.zero,
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InterestsPage())),
+                ),
         ),
         ClipRect(
           child: AnimatedSize(
@@ -3358,10 +3437,9 @@ class _LevadasPageState extends State<LevadasPage> {
                     ),
                     IconButton(
                       visualDensity: VisualDensity.compact,
+                      tooltip: t('stats'),
                       icon: Icon(Icons.bar_chart, color: context.cTitle),
-                      onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                              builder: (_) => const StatsPage())),
+                      onPressed: () => openTrailStats(context, anchor: 'facts'),
                     ),
                     PopupMenuButton<String>(
                       icon: Icon(Icons.sort, color: context.cTitle),

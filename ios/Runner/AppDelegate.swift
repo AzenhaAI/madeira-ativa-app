@@ -1,3 +1,4 @@
+import CoreMotion
 import Flutter
 import MapKit
 import UIKit
@@ -15,6 +16,70 @@ import UIKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AtivaDirections") {
       registrar.addSceneDelegate(DirectionsRequestHandler(messenger: registrar.messenger()))
+    }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AtivaHeading") {
+      HeadingBridge.register(with: registrar)
+    }
+  }
+}
+
+/// Device attitude for the orienteering compass, from Cosmolabe's bridge.
+/// Magnetic north on purpose: orienteering maps are drawn to magnetic north,
+/// so a bearing is read straight off the map, and no location permission is
+/// needed (true north would need the position). Core Motion's frame has X to
+/// north and Z up; every sample is turned a quarter about the vertical into
+/// East-North-Up, the frame Android's rotation vector already uses.
+final class HeadingBridge: NSObject, FlutterStreamHandler {
+  static let channelName = "ativa/heading"
+  private let motion = CMMotionManager()
+  private static let nwuToEnu = (w: (2.0).squareRoot() / 2, z: (2.0).squareRoot() / 2)
+
+  static func register(with registrar: FlutterPluginRegistrar) {
+    let bridge = HeadingBridge()
+    FlutterEventChannel(name: channelName, binaryMessenger: registrar.messenger()).setStreamHandler(bridge)
+    FlutterMethodChannel(name: "\(channelName)/control", binaryMessenger: registrar.messenger())
+      .setMethodCallHandler { call, result in
+        if call.method == "isAvailable" {
+          result(bridge.motion.isDeviceMotionAvailable
+            && CMMotionManager.availableAttitudeReferenceFrames().contains(.xMagneticNorthZVertical))
+        } else {
+          result(FlutterMethodNotImplemented)
+        }
+      }
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    guard motion.isDeviceMotionAvailable else {
+      return FlutterError(code: "unavailable", message: "No motion sensors", details: nil)
+    }
+    motion.deviceMotionUpdateInterval = 1.0 / 30.0
+    motion.startDeviceMotionUpdates(using: .xMagneticNorthZVertical, to: .main) { m, _ in
+      guard let m else { return }
+      let q = m.attitude.quaternion
+      let c = Self.nwuToEnu
+      // Left-multiply by the quarter turn about Z (x and y of c are zero).
+      events([
+        "w": c.w * q.w - c.z * q.z,
+        "x": c.w * q.x - c.z * q.y,
+        "y": c.w * q.y + c.z * q.x,
+        "z": c.w * q.z + c.z * q.w,
+        "accuracy": Self.accuracy(m.magneticField.accuracy),
+      ])
+    }
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    motion.stopDeviceMotionUpdates()
+    return nil
+  }
+
+  private static func accuracy(_ a: CMMagneticFieldCalibrationAccuracy) -> Double {
+    switch a {
+    case .high: return 5
+    case .medium: return 15
+    case .low: return 35
+    default: return 180
     }
   }
 }
