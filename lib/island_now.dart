@@ -304,6 +304,9 @@ class IslandNow {
   int? northCode;
   // Today's sunrise and sunset on the coast, local ISO strings.
   String? sunrise, sunset;
+  /// When these facts were read (Madeira time): the card shows it, and a
+  /// return to the app refreshes them once they are older than ten minutes.
+  DateTime fetched = madeiraNow();
   // The airport: wind, gusts and the crosswind on runway 05/23 in the gusts.
   double? airWind, airGusts, airCross;
   List<Map<String, dynamic>> shipsToday = [];
@@ -506,16 +509,39 @@ class IslandNowCard extends StatefulWidget {
 /// The latest facts, for the Home hero band above the card.
 final islandNow = ValueNotifier<IslandNow?>(null);
 
-class _IslandNowCardState extends State<IslandNowCard> {
+class _IslandNowCardState extends State<IslandNowCard> with WidgetsBindingObserver {
   IslandNow? _n = islandNow.value;
 
-  @override
-  void initState() {
-    super.initState();
+  // The card used to print the clock at the moment it was drawn; left in the
+  // background overnight it still said 11:20 the next morning. It now shows
+  // when the facts were read and reloads them when the app comes back.
+  void _load() {
     fetchIslandNow().then((n) {
       islandNow.value = n;
       if (mounted) setState(() => _n = n);
     }).catchError((_) {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final n = _n;
+    if (state == AppLifecycleState.resumed &&
+        (n == null || madeiraNow().difference(n.fetched).inMinutes >= 10)) {
+      _load();
+    }
   }
 
   @override
@@ -628,7 +654,7 @@ class _IslandNowCardState extends State<IslandNowCard> {
                 child: Text(_l('The island now', 'A ilha agora'),
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.cTitle))),
             if (face)
-              Text('${madeiraNow().hour.toString().padLeft(2, '0')}:${madeiraNow().minute.toString().padLeft(2, '0')}',
+              Text('${n.fetched.hour.toString().padLeft(2, '0')}:${n.fetched.minute.toString().padLeft(2, '0')}',
                   style: TextStyle(fontSize: 12, color: context.cSubtle)),
           ]),
           const SizedBox(height: 6),

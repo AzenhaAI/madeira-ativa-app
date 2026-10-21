@@ -896,18 +896,18 @@ class _HomeShellState extends State<HomeShell> {
           Builder(
             builder: (ctx) => Padding(
               padding: const EdgeInsets.only(right: 10),
+              // A circle as tall as the language pill, with the same hairline:
+              // two objects of one height side by side, as on the site.
               child: Material(
                 color: context.cSurface,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: context.cHairline)),
+                shape: CircleBorder(side: BorderSide(color: context.cHairline)),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
+                  customBorder: const CircleBorder(),
                   onTap: () => Scaffold.of(ctx).openEndDrawer(),
                   child: SizedBox(
-                      width: 40,
-                      height: 36,
-                      child: Icon(Icons.menu, size: 22, color: context.cBody, semanticLabel: 'Menu')),
+                      width: 38,
+                      height: 38,
+                      child: Icon(Icons.menu, size: 20, color: context.cBody, semanticLabel: 'Menu')),
                 ),
               ),
             ),
