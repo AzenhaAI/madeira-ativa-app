@@ -94,27 +94,56 @@ DayPart dayPart(IslandNow? n) {
 
 // -------------------------------------------------------------- the photo
 
-/// The band's photo: by the time of day first, then by what the island is
-/// doing — cloud on the ridge gets the cloud-sea pictures. Within a pool
-/// the day of the year rotates the choice, so a week of mornings is not
-/// one morning seven times.
+/// What the sky is doing, from the coast (Funchal) and the summit codes.
+enum Sky { clear, cloud, fog, rain }
+
+Sky skyNow(IslandNow? n) {
+  final c = n?.coastCode ?? 0, s = n?.summitCode ?? 0;
+  if (c >= 51) return Sky.rain;
+  if ((c >= 45 && c <= 48) || (s >= 45 && s <= 48)) return Sky.fog;
+  if (c == 3 || s == 3) return Sky.cloud;
+  return Sky.clear;
+}
+
+/// Photo pools by the time of day and the sky. Pools are wide on purpose,
+/// so a fortnight of mornings rarely shows the same picture. Keep in step
+/// with the site (ativa-next/pages.js, HERO).
+const _heroPools = <DayPart, Map<Sky, List<String>>>{
+  DayPart.morning: {
+    Sky.clear: ['morning_umbrella', 'morning_rays', 'day_rocks', 'ps_ferry', 'day_cloudfall_village', 'ps_ferry_wake', 'day_levada'],
+    Sky.cloud: ['morning_funchal_sea', 'cloud_ridge', 'morning_rays', 'cloud_sea', 'day_cloudfall_ridge', 'day_cloudfall_village', 'ps_beach_clouds'],
+    Sky.fog: ['fog_valley', 'fog_heath', 'cloud_sea', 'cloud_eucalyptus', 'day_levada'],
+    Sky.rain: ['morning_funchal_sea', 'grey_sea', 'rain_yachts', 'fog_valley', 'day_levada'],
+  },
+  DayPart.afternoon: {
+    Sky.clear: ['day_terraces', 'day_tallship', 'day_plane', 'day_valley', 'day_rocks', 'cloud_sea', 'ps_ferry', 'ps_ferry_wake', 'ps_beach_clouds', 'day_cloudfall_village', 'day_cloudfall_ridge', 'day_levada'],
+    Sky.cloud: ['cloud_sea', 'cloud_ridge', 'day_valley', 'day_terraces', 'day_cloudfall_village', 'day_cloudfall_ridge', 'ps_beach_clouds', 'cloud_eucalyptus', 'day_levada', 'rain_yachts'],
+    Sky.fog: ['fog_valley', 'fog_heath', 'cloud_eucalyptus', 'cloud_sea', 'day_levada'],
+    Sky.rain: ['rain_yachts', 'grey_sea', 'fog_valley', 'fog_heath', 'day_levada'],
+  },
+  DayPart.evening: {
+    Sky.clear: ['evening_banana', 'evening_redsun', 'dusk_islets'],
+    Sky.cloud: ['dusk_islets', 'evening_banana', 'evening_redsun'],
+    Sky.fog: ['dusk_islets', 'evening_banana'],
+    Sky.rain: ['dusk_islets', 'evening_banana'],
+  },
+  DayPart.night: {
+    Sky.clear: ['night_sea', 'evening_redsun', 'dusk_islets'],
+    Sky.cloud: ['night_sea', 'dusk_islets'],
+    Sky.fog: ['night_sea', 'dusk_islets'],
+    Sky.rain: ['night_sea', 'dusk_islets'],
+  },
+};
+
+/// The band's photo: the pool for this part of the day and this sky, then
+/// the day of the year rotates within it (offset by the part, so morning
+/// and afternoon of one day do not share a picture).
 String heroAsset(IslandNow? n) {
   final part = dayPart(n);
-  final code = n?.summitCode ?? 0;
-  final cloudy = code == 3 || (code >= 45 && code <= 48);
-  final pool = switch (part) {
-    DayPart.morning => cloudy
-        ? ['cloud_ridge', 'morning_rays', 'cloud_sea']
-        : ['morning_umbrella', 'morning_rays', 'day_rocks'],
-    DayPart.afternoon => cloudy
-        ? ['cloud_sea', 'cloud_ridge', 'day_valley', 'day_terraces']
-        : ['day_terraces', 'day_tallship', 'day_plane', 'day_valley', 'day_rocks', 'cloud_sea'],
-    DayPart.evening => ['evening_banana', 'evening_redsun'],
-    DayPart.night => ['night_sea', 'evening_redsun'],
-  };
+  final pool = _heroPools[part]![skyNow(n)]!;
   final now = madeiraNow();
   final doy = now.difference(DateTime.utc(now.year)).inDays;
-  return 'assets/hero/${pool[doy % pool.length]}.jpg';
+  return 'assets/hero/${pool[(doy + part.index * 3) % pool.length]}.jpg';
 }
 
 String greeting(IslandNow? n) => switch (dayPart(n)) {
