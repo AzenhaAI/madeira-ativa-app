@@ -23,6 +23,7 @@ String _w(String en, String pt) {
 }
 
 const _de = <String, String>{
+  'Tide': 'Gezeiten',
   'low': 'niedrig',
   'moderate': 'mäßig',
   'high': 'hoch',
@@ -47,6 +48,7 @@ const _de = <String, String>{
 };
 
 const _ru = <String, String>{
+  'Tide': 'Прилив',
   'low': 'низкий',
   'moderate': 'умеренный',
   'high': 'высокий',
@@ -491,7 +493,7 @@ List<DayScore> dayScores(IslandNow n) {
   if (rain) { h -= 3; hw.add(_w('wet on the trails', 'molhado nas veredas')); } else { hw.add(_w('dry', 'seco')); }
   if ((n.summitT ?? 15) < 5) { h -= 1; hw.add(_w('cold on the summit', 'frio no cume')); }
   if (fog) { h -= 1; hw.add(_w('ridge in cloud', 'cumeada nas nuvens')); }
-  if (gusts > 55) { h -= 1; hw.add('${_w('gusts', 'rajadas')} ${gusts.round()}'); }
+  if (gusts > 55) { h -= 1; hw.add('${_w('gusts', 'rajadas')} ${gusts.round()} ${_kmhU()}'); }
   if (severe) { h -= 2; hw.add(_w('IPMA warning', 'aviso IPMA')); }
   out.add(DayScore('hiking', Icons.hiking, _clamp(h), hw.join(' · ')));
 
@@ -500,7 +502,7 @@ List<DayScore> dayScores(IslandNow n) {
   var b = seaT >= 22 ? 4 : seaT >= 20 ? 3 : 2;
   final bw = <String>['${_w('sea', 'mar')} ${seaT.toStringAsFixed(1)}°'];
   if (cc <= 1 && !rain) { b += 1; }
-  if (waves > 2.5) { b -= 2; bw.add(_w('sea too rough', 'mar demasiado agitado')); } else if (waves > 1.5) { b -= 1; bw.add('${_w('waves', 'ondas')} ${waves.toStringAsFixed(1)} m'); } else { bw.add('${_w('waves', 'ondas')} ${waves.toStringAsFixed(1)} m'); }
+  if (waves > 2.5) { b -= 2; bw.add(_w('sea too rough', 'mar demasiado agitado')); } else if (waves > 1.5) { b -= 1; bw.add('${_w('waves', 'ondas')} ${waves.toStringAsFixed(1)} ${_mU()}'); } else { bw.add('${_w('waves', 'ondas')} ${waves.toStringAsFixed(1)} ${_mU()}'); }
   if (rain) { b -= 2; bw.add(_w('rain', 'chuva')); }
   if ((n.coastWind ?? 0) > 30) { b -= 1; bw.add(_w('strong wind', 'vento forte')); }
   if ((n.uv ?? 0) >= 8) bw.add(_w('UV very high', 'UV muito alto'));
@@ -522,7 +524,7 @@ List<DayScore> dayScores(IslandNow n) {
   final fw = <String>[];
   if (cross == null) { fw.add(_w('calm', 'calmo')); }
   else if (cross >= 28) { fw.add(_w('crosswind over the limit', 'vento cruzado acima do limite')); fw.add(_w('diversions likely', 'desvios prováveis')); }
-  else if (cross >= 20) { fw.add('${_w('gusts', 'rajadas')} ${gusts.round()}'); fw.add(_w('delays', 'atrasos')); }
+  else if (cross >= 20) { fw.add('${_w('gusts', 'rajadas')} ${gusts.round()} ${_kmhU()}'); fw.add(_w('delays', 'atrasos')); }
   else { fw.add(_w('calm for landings', 'calmo para aterrar')); }
   out.add(DayScore('flights', Icons.flight, _clamp(fl), fw.join(' · ')));
   return out;
@@ -658,8 +660,8 @@ void onIslandTap(BuildContext context, IslandNow n, String? what) {
       ], button: _w('Live webcam', 'Webcam em direto'), onButton: () => openUrl('https://www.netmadeira.com/webcams-madeira/pico-do-arieiro'));
     case 'sea':
       _sheet(context, _w('Sea', 'Mar'), [
-        if (n.seaT != null) _line(context, '🌊', '${n.seaT!.toStringAsFixed(1)}° · ${_w('waves', 'ondas')} ${n.waves?.toStringAsFixed(1) ?? '–'} m'),
-        if (n.tide != null) _line(context, '↕', n.tide!),
+        if (n.seaT != null) _line(context, '🌊', '${n.seaT!.toStringAsFixed(1)}° · ${_w('waves', 'ondas')} ${n.waves?.toStringAsFixed(1) ?? '–'} ${_mU()}'),
+        if (n.tide != null) _line(context, '↕', '${_w('Tide', 'Maré')}: ${n.tide}'),
         if (n.uv != null) _line(context, '☀️', 'UV ${n.uv!.round()}'),
       ]);
     default:
@@ -668,3 +670,4 @@ void onIslandTap(BuildContext context, IslandNow n, String? what) {
 }
 
 String _kmhU() => locale.value == 'ru' ? 'км/ч' : 'km/h';
+String _mU() => locale.value == 'ru' ? 'м' : 'm';

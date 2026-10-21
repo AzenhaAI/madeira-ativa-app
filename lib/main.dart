@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -800,6 +801,7 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _tab = homeTab.value;
+  final _scaffold = GlobalKey<ScaffoldState>();
 
   void _goTo(int i) => homeTab.value = i;
   void _follow() {
@@ -836,7 +838,26 @@ class _HomeShellState extends State<HomeShell> {
       LevadasPage(),
       NewsPage(),
     ];
-    return Scaffold(
+    // System Back: the menu closes first, then another tab goes back to
+    // Home, and only Home leaves the app. Without this, Back with the menu
+    // open closed the whole app (Android tester, 21.10.2026).
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        final sc = _scaffold.currentState;
+        if (sc != null && (sc.isEndDrawerOpen || sc.isDrawerOpen)) {
+          sc.closeEndDrawer();
+          return;
+        }
+        if (_tab != 0) {
+          _goTo(0);
+          return;
+        }
+        SystemNavigator.pop();
+      },
+      child: Scaffold(
+      key: _scaffold,
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.only(left: 12),
@@ -895,6 +916,8 @@ class _HomeShellState extends State<HomeShell> {
       ),
       endDrawer: Drawer(
         child: ListView(
+          // The theme switch at the bottom stays clear of the gesture bar.
+          padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 16),
           children: [
             // A short band, not Material's 160-point header: the menu is
             // long, and the name needs one line.
@@ -1098,6 +1121,7 @@ class _HomeShellState extends State<HomeShell> {
               icon: const Icon(Icons.article_outlined), label: t('news')),
         ],
       ),
+    ),
     );
   }
 }
@@ -3724,6 +3748,12 @@ class _MapPageState extends State<MapPage> {
           left: 0,
           right: 0,
           child: Center(
+            // Russian labels are longer: the bar keeps its side margins and
+            // shrinks instead of running edge to edge.
+            child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: FittedBox(
+            fit: BoxFit.scaleDown,
             child: SegmentedButton<String>(
               style: SegmentedButton.styleFrom(
                   backgroundColor: context.cSurface),
@@ -3747,6 +3777,8 @@ class _MapPageState extends State<MapPage> {
               selected: {_layer},
               showSelectedIcon: false,
               onSelectionChanged: (s) => setState(() => _layer = s.first),
+            ),
+            ),
             ),
           ),
         ),
@@ -4159,6 +4191,7 @@ class _NewsPageState extends State<NewsPage> {
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500)),
                       ),
+                      const SizedBox(width: 10),
                       const Icon(Icons.open_in_new,
                           size: 14, color: Colors.grey),
                     ],
