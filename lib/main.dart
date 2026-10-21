@@ -683,6 +683,10 @@ class AtivaApp extends StatelessWidget {
             backgroundColor: kCream,
             foregroundColor: kGreenDark,
             elevation: 0,
+            // Titles sit on the left on both platforms. Flutter centres them
+            // on iOS by default, so the header name drifted right on an
+            // iPhone with normal text size (Kirill, 21.10.2026).
+            centerTitle: false,
           ),
           navigationBarTheme: NavigationBarThemeData(
             backgroundColor: Colors.white,
@@ -705,6 +709,10 @@ class AtivaApp extends StatelessWidget {
             backgroundColor: kDarkBg,
             foregroundColor: kGreenLight,
             elevation: 0,
+            // Titles sit on the left on both platforms. Flutter centres them
+            // on iOS by default, so the header name drifted right on an
+            // iPhone with normal text size (Kirill, 21.10.2026).
+            centerTitle: false,
           ),
           navigationBarTheme: const NavigationBarThemeData(
             backgroundColor: kDarkCard,
