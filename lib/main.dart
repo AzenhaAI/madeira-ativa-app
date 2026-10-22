@@ -244,7 +244,7 @@ const _tr = {
     'countries': 'Countries',
     'intl_trend': 'International runners by year',
     'time_dist': 'Median finish time',
-    'stats': 'Trail stats','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next day','p_today':'Today','p_weekend':'Weekend','organized_by':'Organised by',
+    'stats': 'Trail running statistics','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next day','p_today':'Today','p_weekend':'Weekend','organized_by':'Organised by',
   },
   'pt': {
     'home': 'Início',
@@ -423,7 +423,7 @@ const _tr = {
     'countries': 'Países',
     'intl_trend': 'Corredores estrangeiros por ano',
     'time_dist': 'Tempo mediano',
-    'stats': 'Estatísticas','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo dia','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:',
+    'stats': 'Estatísticas de trail','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo dia','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:',
   },
   'de': trDe,
   'ru': trRu,
@@ -488,20 +488,21 @@ String expectedLabel(String s) {
 /// "Estrada" — the same category named twice, differently, one of them in the
 /// wrong language. The words here match the chips deliberately.
 const _typeNames = {
-  'trail': {'en': 'Trail', 'pt': 'Trail', 'ru': 'Трейл'},
-  'running': {'en': 'Running', 'pt': 'Corrida', 'ru': 'Бег'},
-  'road_run': {'en': 'Road run', 'pt': 'Estrada', 'ru': 'Шоссе'},
-  'orienteering': {'en': 'Orienteering', 'pt': 'Orientação', 'ru': 'Ориентирование'},
-  'cycling': {'en': 'Cycling', 'pt': 'Ciclismo', 'ru': 'Велоспорт'},
-  'cycling_pro': {'en': 'Cycling pro', 'pt': 'Ciclismo pro', 'ru': 'Велоспорт pro'},
-  'cycling_kids': {'en': 'Cycling kids', 'pt': 'Ciclismo infantil', 'ru': 'Велоспорт, дети'},
-  'motorsport': {'en': 'Motorsport', 'pt': 'Automobilismo', 'ru': 'Автоспорт'},
-  'swimming': {'en': 'Swimming', 'pt': 'Natação', 'ru': 'Плавание'},
-  'swimrun': {'en': 'Swimrun', 'pt': 'Swimrun', 'ru': 'Swimrun'},
-  'triathlon': {'en': 'Triathlon', 'pt': 'Triatlo', 'ru': 'Триатлон'},
-  'triathlon_pro': {'en': 'Triathlon pro', 'pt': 'Triatlo pro', 'ru': 'Триатлон pro'},
-  'children': {'en': 'Children', 'pt': 'Crianças', 'ru': 'Дети'},
-  'festival': {'en': 'Festival', 'pt': 'Festa', 'ru': 'Праздник'},
+  'trail': {'en': 'Trail', 'pt': 'Trail', 'de': 'Trail', 'ru': 'Трейл'},
+  'running': {'en': 'Running', 'pt': 'Corrida', 'de': 'Laufen', 'ru': 'Бег'},
+  'road_run': {'en': 'Road run', 'pt': 'Estrada', 'de': 'Straße', 'ru': 'Шоссе'},
+  'orienteering': {'en': 'Orienteering', 'pt': 'Orientação', 'de': 'Orientierungslauf', 'ru': 'Ориентирование'},
+  'cycling': {'en': 'Cycling', 'pt': 'Ciclismo', 'de': 'Radsport', 'ru': 'Велоспорт'},
+  'cycling_pro': {'en': 'Cycling pro', 'pt': 'Ciclismo pro', 'de': 'Radsport Profi', 'ru': 'Велоспорт pro'},
+  'cycling_kids': {'en': 'Cycling kids', 'pt': 'Ciclismo infantil', 'de': 'Radsport Kinder', 'ru': 'Велоспорт, дети'},
+  'motorsport': {'en': 'Motorsport', 'pt': 'Automobilismo', 'de': 'Motorsport', 'ru': 'Автоспорт'},
+  'swimming': {'en': 'Swimming', 'pt': 'Natação', 'de': 'Schwimmen', 'ru': 'Плавание'},
+  'swimrun': {'en': 'Swimrun', 'pt': 'Swimrun', 'de': 'Swimrun', 'ru': 'Swimrun'},
+  'triathlon': {'en': 'Triathlon', 'pt': 'Triatlo', 'de': 'Triathlon', 'ru': 'Триатлон'},
+  'triathlon_pro': {'en': 'Triathlon pro', 'pt': 'Triatlo pro', 'de': 'Triathlon Profi', 'ru': 'Триатлон pro'},
+  'swimming_kids': {'en': 'Kids swimming', 'pt': 'Natação infantil', 'de': 'Kinderschwimmen', 'ru': 'Плавание, дети'},
+  'children': {'en': 'Children', 'pt': 'Crianças', 'de': 'Kinder', 'ru': 'Дети'},
+  'festival': {'en': 'Festival', 'pt': 'Festa', 'de': 'Fest', 'ru': 'Праздник'},
 };
 
 /// The subtype, unless it merely restates the filter the row already sits
@@ -697,9 +698,10 @@ class AtivaApp extends StatelessWidget {
             // iPhone with normal text size (Kirill, 21.10.2026).
             centerTitle: false,
           ),
-          navigationBarTheme: NavigationBarThemeData(
+          navigationBarTheme: const NavigationBarThemeData(
             backgroundColor: Colors.white,
             indicatorColor: kGreenLight,
+            labelTextStyle: WidgetStatePropertyAll(TextStyle(fontSize: 11.5)),
           ),
           // Filters and quick actions are pills; containers keep their 12 pt
           // corners. One rule for the whole app, so the Events, News,
@@ -726,6 +728,7 @@ class AtivaApp extends StatelessWidget {
           navigationBarTheme: const NavigationBarThemeData(
             backgroundColor: kDarkCard,
             indicatorColor: kGreenTintDark,
+            labelTextStyle: WidgetStatePropertyAll(TextStyle(fontSize: 11.5)),
           ),
           bottomSheetTheme:
               const BottomSheetThemeData(backgroundColor: kDarkCard),
@@ -947,7 +950,15 @@ class _HomeShellState extends State<HomeShell> {
         ],
       ),
       endDrawer: Drawer(
-        child: ListView(
+        // The list starts below the status bar, so the name does not slide
+        // under the clock when the menu scrolls (tester, 22.10.2026).
+        child: ColoredBox(
+          color: kGreen,
+          child: SafeArea(
+            bottom: false,
+            child: ColoredBox(
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              child: ListView(
           // The theme switch at the bottom stays clear of the gesture bar.
           padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 16),
           children: [
@@ -1133,36 +1144,45 @@ class _HomeShellState extends State<HomeShell> {
             ),
           ],
         ),
+            ),
+          ),
+        ),
       ),
       body: SafeArea(
         child: _tab == kTabMap || _tab == kTabAsk
             ? pages[_tab]
             : ReadableWidth(child: pages[_tab]),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: _goTo,
-        destinations: [
-          NavigationDestination(
-              icon: const Icon(Icons.home_outlined), label: t('home')),
-          NavigationDestination(
-              icon: const Icon(Icons.auto_awesome_outlined), label: t('ask')),
-          NavigationDestination(
-              icon: ValueListenableBuilder<int>(
-                valueListenable: newForYou,
-                builder: (_, n, __) => Badge(
-                    isLabelVisible: n > 0,
-                    label: Text('$n'),
-                    child: const Icon(Icons.calendar_month_outlined)),
-              ),
-              label: t('events')),
-          NavigationDestination(
-              icon: const Icon(Icons.map_outlined), label: t('map')),
-          NavigationDestination(
-              icon: const Icon(Icons.hiking), label: t('levadas')),
-          NavigationDestination(
-              icon: const Icon(Icons.article_outlined), label: t('news')),
-        ],
+      // Tab labels stop growing a little past the default size: at 130% text
+      // "События" broke onto two lines and the icons jumped (tester, 22.10.2026).
+      bottomNavigationBar: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+            textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.1)),
+        child: NavigationBar(
+          selectedIndex: _tab,
+          onDestinationSelected: _goTo,
+          destinations: [
+            NavigationDestination(
+                icon: const Icon(Icons.home_outlined), label: t('home')),
+            NavigationDestination(
+                icon: const Icon(Icons.auto_awesome_outlined), label: t('ask')),
+            NavigationDestination(
+                icon: ValueListenableBuilder<int>(
+                  valueListenable: newForYou,
+                  builder: (_, n, __) => Badge(
+                      isLabelVisible: n > 0,
+                      label: Text('$n'),
+                      child: const Icon(Icons.calendar_month_outlined)),
+                ),
+                label: t('events')),
+            NavigationDestination(
+                icon: const Icon(Icons.map_outlined), label: t('map')),
+            NavigationDestination(
+                icon: const Icon(Icons.hiking), label: t('levadas')),
+            NavigationDestination(
+                icon: const Icon(Icons.article_outlined), label: t('news')),
+          ],
+        ),
       ),
     ),
     );

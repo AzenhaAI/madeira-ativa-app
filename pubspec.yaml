@@ -50,6 +50,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Store videos and screenshots: integration_test/store_tour_test.dart drives
+  # the app while the simulator records. Not part of any release build.
+  integration_test:
+    sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

@@ -55,7 +55,7 @@ class OrienteeringPage extends StatelessWidget {
             tabs: [
               Tab(text: tr(('Map symbols', 'Símbolos', 'Kartenzeichen', 'Знаки карты'))),
               Tab(text: tr(('Control descriptions', 'Sinalética', 'Postenbeschreibung', 'Легенды КП'))),
-              Tab(text: tr(('How a race works', 'Como é uma prova', 'So läuft ein Rennen', 'Как проходит старт'))),
+              Tab(text: tr(('How a race works', 'Como é uma prova', 'So läuft ein OL-Wettkampf', 'Как проходит старт'))),
               Tab(text: tr(('Compass', 'Bússola', 'Kompass', 'Компас'))),
             ],
           ),
@@ -171,14 +171,14 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('103', ('Form line', 'Curva auxiliar', 'Hilfshöhenlinie', 'Полугоризонталь'),
           ('Half a contour: shows a small shape', 'Meia curva: mostra uma forma pequena', 'Halbe Stufe: zeigt kleine Formen', 'Половина сечения: мелкие формы'),
           (c, s) => _dashPath(c, _wave(s), _st(_brown, 1.4), 7, 3)),
-      Sym('104', ('Slope line', 'Indicador de declive', 'Gefällsstrich', 'Бергштрих'),
+      Sym('', ('Slope line', 'Indicador de declive', 'Gefällsstrich', 'Бергштрих'),
           ('Tick on a contour, points downhill', 'Traço na curva, aponta para baixo', 'Strich an der Höhenlinie, zeigt bergab', 'Штрих на горизонтали, смотрит под уклон'),
           (c, s) {
             c.drawPath(_wave(s), _st(_brown, 1.4));
             final t = _wave(s).computeMetrics().first.getTangentForOffset(26)!;
             c.drawLine(t.position, t.position + Offset(-t.vector.dy, t.vector.dx) * 7, _st(_brown, 1.4));
           }),
-      Sym('105', ('Earth bank', 'Escarpa de terra', 'Böschung', 'Земляной обрыв'),
+      Sym('104', ('Earth bank', 'Escarpa de terra', 'Böschung', 'Земляной обрыв'),
           ('Steep earth step, ticks point down', 'Degrau de terra, traços para baixo', 'Steile Erdstufe, Striche zeigen hinab', 'Крутой уступ, штрихи вниз'),
           (c, s) {
             c.drawPath(_line(s), _st(_brown, 1.8));
@@ -187,25 +187,25 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('107', ('Erosion gully', 'Ravina', 'Erosionsrinne', 'Промоина'),
           ('Dry ditch cut by water', 'Vala seca aberta pela água', 'Vom Wasser ausgewaschener Graben', 'Сухая канава, промытая водой'),
           (c, s) => c.drawLine(Offset(12, s.height * .7), Offset(s.width - 12, s.height * .3), _st(_brown, 3)..strokeCap = StrokeCap.round)),
-      Sym('112', ('Small knoll', 'Monte, cota', 'Kuppe', 'Бугор'),
+      Sym('109', ('Small knoll', 'Pequeno cabeço', 'Kuppe', 'Бугор'),
           ('Hill too small for a contour', 'Elevação pequena demais para curva', 'Hügel, zu klein für eine Höhenlinie', 'Холмик меньше сечения рельефа'),
           (c, s) => c.drawCircle(_mid(s), 3.5, _fi(_brown))),
-      Sym('113', ('Elongated knoll', 'Cabeço alongado', 'Längliche Kuppe', 'Вытянутый бугор'),
+      Sym('110', ('Elongated knoll', 'Cabeço alongado', 'Längliche Kuppe', 'Вытянутый бугор'),
           ('Small long hump', 'Pequena lomba comprida', 'Kleiner länglicher Rücken', 'Небольшая продолговатая горка'),
           (c, s) => c.drawOval(Rect.fromCenter(center: _mid(s), width: 14, height: 6), _fi(_brown))),
-      Sym('114', ('Small depression', 'Pequena depressão', 'Kleine Senke', 'Западина'),
+      Sym('111', ('Small depression', 'Pequena depressão', 'Kleine Senke', 'Западина'),
           ('Shallow hollow without steep sides', 'Concavidade suave', 'Flache Mulde ohne steile Ränder', 'Неглубокое понижение'),
           (c, s) => c.drawArc(Rect.fromCenter(center: _mid(s) - const Offset(0, 4), width: 14, height: 14), 0, math.pi, false, _st(_brown, 1.8))),
-      Sym('115', ('Pit', 'Buraco', 'Loch', 'Яма'),
+      Sym('112', ('Pit', 'Buraco', 'Grube', 'Яма'),
           ('Hole with steep sides', 'Buraco de lados íngremes', 'Grube mit steilen Rändern', 'Яма с крутыми краями'),
           (c, s) {
             final m = _mid(s);
             c.drawPath(Path()..moveTo(m.dx - 7, m.dy - 6)..lineTo(m.dx, m.dy + 6)..lineTo(m.dx + 7, m.dy - 6), _st(_brown, 1.8));
           }),
-      Sym('116', ('Broken ground', 'Terreno irregular', 'Unruhiger Boden', 'Неровная поверхность'),
+      Sym('113', ('Broken ground', 'Terreno irregular', 'Unruhiger Boden', 'Неровная поверхность'),
           ('Many small pits and humps: slower', 'Muitas covas e lombas: mais lento', 'Viele kleine Löcher und Buckel: langsamer', 'Много мелких ям и бугров: медленнее'),
           (c, s) => _scatter(c, s, _fi(_brown), 1.6, n: 12)),
-      Sym('118', ('Special land feature', 'Objeto de relevo especial', 'Besondere Geländeform', 'Особый объект рельефа'),
+      Sym('115', ('Special land feature', 'Objeto de relevo especial', 'Besondere Geländeform', 'Особый объект рельефа'),
           ('Explained in the map legend', 'Explicado na legenda do mapa', 'In der Kartenlegende erklärt', 'Пояснён в легенде карты'),
           (c, s) => _x(c, _mid(s), 5, _st(_brown, 1.8))),
     ]
@@ -234,9 +234,9 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('204', ('Boulder', 'Rocha', 'Stein', 'Камень'),
           ('Rock taller than about 1 m', 'Pedra com mais de cerca de 1 m', 'Fels höher als etwa 1 m', 'Камень выше примерно 1 м'),
           (c, s) => c.drawCircle(_mid(s), 2.8, _fi(_black))),
-      Sym('206', ('Large boulder', 'Pedra grande', 'Großer Felsblock', 'Большой камень'),
+      Sym('205', ('Large boulder', 'Pedra grande', 'Großer Felsblock', 'Большой камень'),
           ('Very big rock, a clear landmark', 'Rocha muito grande, bom ponto de referência', 'Sehr großer Fels, klarer Anhaltspunkt', 'Очень большой камень, явный ориентир'),
-          (c, s) => _tri(c, _mid(s), 8, _fi(_black))),
+          (c, s) => c.drawCircle(_mid(s), 4.6, _fi(_black))),
       Sym('208', ('Boulder field', 'Zona de pedras', 'Blockfeld', 'Каменное поле'),
           ('Many boulders together: slow', 'Muitas pedras juntas: lento', 'Viele Blöcke beisammen: langsam', 'Россыпь камней: медленно'),
           (c, s) {
@@ -301,7 +301,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('401', ('Open land', 'Área aberta', 'Offenes Gelände', 'Открытая местность'),
           ('Meadow or field: fast', 'Prado ou campo: rápido', 'Wiese oder Feld: schnell', 'Луг или поле: быстро'),
           (c, s) => c.drawRect(_area(s), _fi(_yellow))),
-      Sym('402', ('Semi-open land', 'Área semi-aberta', 'Halboffenes Gelände', 'Поляна с деревьями'),
+      Sym('402', ('Semi-open land', 'Área semi-aberta', 'Halboffenes Gelände', 'Открытая местность с отдельными деревьями'),
           ('Open, with scattered trees', 'Aberto, com árvores dispersas', 'Offen, vereinzelte Bäume', 'Открыто, редкие деревья'),
           (c, s) {
             c.drawRect(_area(s), _fi(_yellow));
@@ -329,7 +329,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
               c.drawLine(Offset(x, 8), Offset(x, s.height - 8), _st(_green2, 2.4));
             }
           }),
-      Sym('412', ('Orchard', 'Pomar', 'Obstgarten', 'Сад'),
+      Sym('413', ('Orchard', 'Pomar', 'Obstgarten', 'Сад'),
           ('Trees in rows', 'Árvores em filas', 'Bäume in Reihen', 'Деревья рядами'),
           (c, s) {
             c.drawRect(_area(s), _fi(_yellow));
@@ -339,8 +339,8 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
               }
             }
           }),
-      Sym('413', ('Vineyard', 'Vinha', 'Weinberg', 'Виноградник'),
-          ('Rows of vines on terraces: run along them', 'Filas de vinha em poios: corre ao longo', 'Rebzeilen auf Terrassen: entlang laufen', 'Ряды лозы на террасах: беги вдоль'),
+      Sym('414', ('Vineyard', 'Vinha', 'Weinberg', 'Виноградник'),
+          ('Rows of vines on terraces: run along them', 'Filas de vinha em poios: corre ao longo delas', 'Rebzeilen auf Terrassen: entlang laufen', 'Ряды лозы на террасах: беги вдоль'),
           (c, s) {
             c.drawRect(_area(s), _fi(_yellow));
             for (var x = 13.0; x < s.width - 8; x += 7) {
@@ -350,7 +350,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('', ('Hedge', 'Sebe', 'Hecke', 'Живая изгородь'),
           ('Line of dense bushes: usually cannot pass', 'Linha de arbustos densos: em geral não se passa', 'Dichte Buschreihe: meist nicht passierbar', 'Ряд плотных кустов: обычно не пройти'),
           (c, s) => c.drawPath(_line(s), _st(_green3, 4)..strokeCap = StrokeCap.round)),
-      Sym('415', ('Cultivated land', 'Terreno cultivado', 'Kulturland', 'Сельхозугодья'),
+      Sym('412', ('Cultivated land', 'Terreno cultivado', 'Kulturland', 'Сельхозугодья'),
           ('Crops: usually do not cross', 'Culturas: em geral não atravessar', 'Feldfrüchte: meist nicht betreten', 'Посевы: обычно не пересекать'),
           (c, s) {
             c.drawRect(_area(s), _fi(_yellow));
@@ -363,10 +363,10 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
               c.drawCircle(Offset(x, s.height / 2), 1.2, _fi(_black));
             }
           }),
-      Sym('418', ('Prominent tree', 'Árvore notável', 'Markanter Baum', 'Отдельное дерево'),
+      Sym('417', ('Prominent tree', 'Árvore notável', 'Markanter Baum', 'Отдельное дерево'),
           ('A tree you will notice', 'Árvore que se destaca', 'Auffälliger Baum', 'Заметное дерево'),
           (c, s) => c.drawCircle(_mid(s), 5.5, _st(_green3, 2))),
-      Sym('419', ('Prominent bush', 'Arbusto notável', 'Markanter Busch', 'Отдельный куст'),
+      Sym('418', ('Prominent bush', 'Arbusto notável', 'Markanter Busch', 'Отдельный куст'),
           ('A bush you will notice', 'Arbusto que se destaca', 'Auffälliger Busch', 'Заметный куст'),
           (c, s) => c.drawCircle(_mid(s), 3, _fi(_green3))),
     ]
@@ -388,13 +388,13 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
             c.drawLine(Offset(6, m - 5), Offset(s.width - 6, m - 5), _st(_black, 1.2));
             c.drawLine(Offset(6, m + 5), Offset(s.width - 6, m + 5), _st(_black, 1.2));
           }),
-      Sym('505', ('Vehicle track', 'Caminho de terra', 'Fahrweg', 'Грунтовая дорога'),
+      Sym('504', ('Vehicle track', 'Caminho de terra', 'Fahrweg', 'Грунтовая дорога'),
           ('Dirt road for cars', 'Estradão para carros', 'Unbefestigter Weg für Autos', 'Грунтовка для машин'),
           (c, s) => _dashPath(c, _line(s), _st(_black, 2.2), 12, 3)),
-      Sym('506', ('Footpath', 'Caminho, carreiro', 'Pfad', 'Тропа'),
+      Sym('505', ('Footpath', 'Caminho, carreiro', 'Pfad', 'Тропа'),
           ('Clear path', 'Trilho bem visível', 'Deutlicher Pfad', 'Хорошо заметная тропа'),
           (c, s) => _dashPath(c, _line(s), _st(_black, 1.5), 7, 3)),
-      Sym('507', ('Small path', 'Vereda', 'Kleiner Pfad', 'Малая тропа'),
+      Sym('506', ('Small path', 'Vereda', 'Kleiner Pfad', 'Малая тропа'),
           ('Faint path, easy to lose', 'Vereda ténue, fácil de perder', 'Schwacher Pfad, leicht zu verlieren', 'Слабая тропа, легко потерять'),
           (c, s) => _dashPath(c, _line(s), _st(_black, 1), 4, 3)),
       Sym('509', ('Railway', 'Via férrea', 'Eisenbahn', 'Железная дорога'),
@@ -493,7 +493,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
     ('Special features and map lines', 'Elementos especiais e linhas do mapa', 'Sonderzeichen und Kartenlinien', 'Особые знаки и линии карты'),
     [
       Sym('', ('Special features', 'Elementos especiais', 'Sonderzeichen', 'Особые объекты'),
-          ('Brown △ landform, green × vegetation, black ×/○ man-made, blue □/★ water: the map legend says what', 'Triângulo castanho relevo, × verde vegetação, ×/○ preto artificial, □/★ azul água: a legenda diz o quê', 'Braunes △ Gelände, grünes × Vegetation, schwarzes ×/○ Bauwerk, blaues □/★ Wasser: die Legende sagt was', 'Коричневый △ — рельеф, зелёный × — растительность, чёрные ×/○ — постройки, синие □/★ — вода: что именно, скажет легенда'),
+          ('Brown △ landform, green × vegetation, black ×/○ man-made, blue □/× water: the map legend says what', 'Triângulo castanho relevo, × verde vegetação, ×/○ preto artificial, □/× azul água: a legenda diz o quê', 'Braunes △ Gelände, grünes × Vegetation, schwarzes ×/○ Bauwerk, blaues □/× Wasser: die Legende sagt was', 'Коричневый △ — рельеф, зелёный × — растительность, чёрные ×/○ — постройки, синие □/× — вода: что именно, скажет легенда'),
           (c, s) {
             final m = _mid(s);
             _tri(c, m + const Offset(-16, -5), 5, _st(_brown, 1.6));
@@ -509,7 +509,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
               c.drawLine(Offset(x, 6), Offset(x, s.height - 6), _st(_blue, 1.2));
             }
           }),
-      Sym('', ('Dangerous or forbidden area', 'Zona perigosa ou proibida', 'Gefährliches oder verbotenes Gebiet', 'Опасная или запретная зона'),
+      Sym('714', ('Dangerous or forbidden area', 'Zona perigosa ou proibida', 'Gefährliches oder verbotenes Gebiet', 'Опасная или запретная зона'),
           ('Red-purple cross-hatching, often a busy road: do not cross', 'Grelha vermelha-roxa, muitas vezes estrada com trânsito: não atravessar', 'Rot-violettes Gitter, oft eine befahrene Straße: nicht queren', 'Красно-пурпурная сетка, часто оживлённая дорога: не пересекать'),
           (c, s) {
             final r = _area(s);
@@ -577,7 +577,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('710', ('Crossing point', 'Ponto de passagem', 'Übergangsstelle', 'Пункт перехода'),
           ('Cross only here', 'Atravessar só aqui', 'Nur hier queren', 'Переходить только здесь'),
           (c, s) => _crossing(c, s, _purple)),
-      Sym('714', ('First aid', 'Primeiros socorros', 'Erste Hilfe', 'Медпункт'),
+      Sym('712', ('First aid', 'Primeiros socorros', 'Erste Hilfe', 'Медпункт'),
           ('Help is here', 'Aqui há ajuda', 'Hier gibt es Hilfe', 'Здесь помогут'),
           (c, s) {
             final m = _mid(s);
@@ -622,6 +622,7 @@ class _SymbolsTab extends StatefulWidget {
 
 class _SymbolsTabState extends State<_SymbolsTab> {
   String _q = '';
+  final _field = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -641,14 +642,29 @@ class _SymbolsTabState extends State<_SymbolsTab> {
           style: TextStyle(fontSize: 13, color: context.cSubtle, height: 1.35)),
       const SizedBox(height: 10),
       TextField(
+        controller: _field,
         decoration: InputDecoration(
           isDense: true,
           prefixIcon: const Icon(Icons.search, size: 20),
+          suffixIcon: _q.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () => setState(() {
+                        _field.clear();
+                        _q = '';
+                      })),
           hintText: tr(('Find a symbol: stairs, wall, marsh…', 'Procurar: escadas, muro, pântano…', 'Suchen: Treppe, Mauer, Sumpf…', 'Найти знак: лестница, стена, болото…')),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onChanged: (v) => setState(() => _q = v),
       ),
+      if (!kSymbolGroups.any((g) => g.$2.any(hit)))
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Text(tr(('Nothing found. Try another word, or a colour: brown, blue, green.', 'Nada encontrado. Experimente outra palavra ou uma cor: castanho, azul, verde.', 'Nichts gefunden. Anderes Wort oder eine Farbe probieren: braun, blau, grün.', 'Ничего не найдено. Попробуй другое слово или цвет: коричневый, синий, зелёный.')),
+              textAlign: TextAlign.center, style: TextStyle(color: context.cSubtle)),
+        ),
       for (final (title, syms) in kSymbolGroups)
         if (syms.any(hit)) ...[
           Padding(
@@ -714,7 +730,7 @@ class _RaceTabState extends State<_RaceTab> {
     (Icons.how_to_reg_outlined, ('Sign up', 'Inscrição', 'Anmelden', 'Заявка'),
         ('Pick a class by age and level. Most races have an open or beginner course: no licence needed.', 'Escolhe o escalão por idade e nível. Quase todas as provas têm um percurso aberto ou de iniciação: sem licença.', 'Wähle eine Kategorie nach Alter und Niveau. Fast immer gibt es eine offene oder Anfängerbahn: ohne Lizenz.', 'Выбери группу по возрасту и уровню. Почти везде есть открытая или новичковая дистанция: лицензия не нужна.')),
     (Icons.credit_card, ('The chip', 'O chip', 'Der Chip', 'Чип'),
-        ('An electronic card on your finger (SPORTident). Rent one at the desk if you have none.', 'Um cartão eletrónico no dedo (SPORTident). Aluga-se no secretariado.', 'Ein elektronischer Chip am Finger (SPORTident). Am Empfang ausleihen.', 'Электронный чип на палец (SPORTident). Можно взять напрокат в секретариате.')),
+        ('An electronic card on your finger (SPORTident). Rent one at the desk if you have none.', 'Um cartão eletrónico no dedo (SPORTident). Aluga-se no secretariado.', 'Ein elektronischer Chip am Finger (SPORTident). Im Wettkampfbüro ausleihen.', 'Электронный чип на палец (SPORTident). Можно взять напрокат в секретариате.')),
     (Icons.timer_outlined, ('Start time', 'Hora de partida', 'Startzeit', 'Время старта'),
         ('Everyone starts alone, a minute or more apart. Clear and check your chip in the start boxes.', 'Cada um parte sozinho, com um minuto ou mais de intervalo. Limpa e verifica o chip nas boxes de partida.', 'Jeder startet allein, mit einer Minute Abstand oder mehr. In den Startboxen Chip löschen und prüfen.', 'Стартуют по одному, с интервалом в минуту или больше. В стартовом коридоре очисти и проверь чип.')),
     (Icons.map_outlined, ('Map at the start', 'Mapa na partida', 'Karte am Start', 'Карта на старте'),
@@ -723,17 +739,17 @@ class _RaceTabState extends State<_RaceTab> {
         ('An orange and white flag with a unit. Check the code, put the chip in until it beeps or flashes.', 'Uma baliza laranja e branca com uma estação. Confirma o código e pica até apitar ou piscar.', 'Ein orange-weißer Posten mit Station. Code prüfen, Chip hineinhalten, bis es piept oder blinkt.', 'Оранжево-белая призма со станцией. Сверь код и отметься до писка или вспышки.')),
     (Icons.alt_route, ('Your own route', 'O teu caminho', 'Deine Route', 'Свой путь'),
         ('Between controls you choose the way. Paths are longer but faster; straight is shorter but rougher.', 'Entre pontos escolhes o caminho. Trilhos são mais longos mas rápidos; a direito é mais curto mas duro.', 'Zwischen den Posten wählst du den Weg. Wege sind länger, aber schneller; gerade ist kürzer, aber rauer.', 'Путь между КП выбираешь сам. По тропам дальше, но быстрее; напрямик короче, но тяжелее.')),
-    (Icons.sports_score, ('Finish and download', 'Chegada e leitura', 'Ziel und Auslesen', 'Финиш и считывание'),
-        ('Punch the finish, then read out your chip at the desk — even if you gave up. They count everyone back in.', 'Pica a chegada e lê o chip no secretariado — mesmo se desististe. Assim sabem que voltaste.', 'Ziel stempeln, dann Chip auslesen — auch bei Aufgabe. So weiß man, dass du zurück bist.', 'Отметься на финише и считай чип — даже если сошёл. Так знают, что ты вернулся.')),
+    (Icons.sports_score, ('Finish and download', 'Chegada e descarga', 'Ziel und Auslesen', 'Финиш и считывание'),
+        ('Punch the finish, then read out your chip at the desk — even if you gave up. They count everyone back in.', 'Pica a chegada e descarrega o chip no secretariado — mesmo se desististe. Assim sabem que voltaste.', 'Ziel stempeln, dann Chip auslesen — auch bei Aufgabe. So weiß man, dass du zurück bist.', 'Отметься на финише и считай чип — даже если сошёл. Так знают, что ты вернулся.')),
   ];
 
   // What the Madeira sheets Kirill photographed print around the map.
   static const List<T4> _sheetNotes = [
-    ('Escala 1:6000 — 1 cm on the map is 60 m. Town sprints use 1:4000 or 1:5000, forest races 1:10000 or 1:15000.', 'Escala 1:6000 — 1 cm no mapa são 60 m. Sprints urbanos usam 1:4000 ou 1:5000, floresta 1:10000 ou 1:15000.', 'Maßstab 1:6000 — 1 cm auf der Karte sind 60 m. Stadtsprints 1:4000 oder 1:5000, Wald 1:10000 oder 1:15000.', 'Масштаб 1:6000 — 1 см на карте = 60 м. В городском спринте 1:4000 или 1:5000, в лесу 1:10000 или 1:15000.'),
-    ('Equidistância 10 m — the contour interval: each brown line is 10 m higher or lower than the next. Lines close together mean steep.', 'Equidistância 10 m — cada curva castanha fica 10 m acima ou abaixo da seguinte. Curvas juntas = íngreme.', 'Äquidistanz 10 m — jede braune Linie liegt 10 m höher oder tiefer als die nächste. Enge Linien = steil.', 'Сечение 10 м — каждая коричневая линия на 10 м выше или ниже соседней. Частые линии — круто.'),
+    ('Scale 1:6000 (printed «Escala») — 1 cm on the map is 60 m. Sprint maps are 1:4000 (sometimes 1:3000); local town races also use 1:5000 or 1:6000 like this one; forest races 1:15000 or 1:10000.', 'Escala 1:6000 — 1 cm no mapa são 60 m. Mapas de sprint 1:4000 (às vezes 1:3000); provas urbanas locais também usam 1:5000 ou 1:6000, como esta; floresta 1:15000 ou 1:10000.', 'Maßstab 1:6000 (auf dem Blatt «Escala») — 1 cm auf der Karte sind 60 m. Sprintkarten 1:4000 (manchmal 1:3000); lokale Stadtläufe auch 1:5000 oder 1:6000 wie hier; Wald 1:15000 oder 1:10000.', 'Масштаб 1:6000 — 1 см на карте = 60 м. Спринт — 1:4000 (иногда 1:3000); местные городские старты — также 1:5000 или 1:6000, как здесь; лес — 1:15000 или 1:10000.'),
+    ('Contour interval 10 m (printed «Equidistância»): each brown line is 10 m higher or lower than the next. Lines close together mean steep.', 'Equidistância 10 m — cada curva castanha fica 10 m acima ou abaixo da seguinte. Curvas juntas = íngreme.', 'Äquidistanz 10 m (auf dem Blatt «Equidistância»): jede braune Linie liegt 10 m höher oder tiefer als die nächste. Enge Linien = steil.', 'Сечение 10 м (на листе «Equidistância») — каждая коричневая линия на 10 м выше или ниже соседней. Частые линии — круто.'),
     ('The blue lines point to magnetic north; hold the map so they match the compass.', 'As linhas azuis apontam o norte magnético; segura o mapa alinhado com a bússola.', 'Die blauen Linien zeigen nach magnetisch Nord; Karte nach dem Kompass ausrichten.', 'Синие линии показывают магнитный север; держи карту по компасу.'),
-    ('Boxes R1, R2, R3: if a SPORTident unit does not beep, punch the pin punch hanging at the control into the next free box.', 'Quadrados R1, R2, R3: se a estação SPORTident não apitar, pica com o alicate do ponto no quadrado livre seguinte.', 'Felder R1, R2, R3: piept die SPORTident-Station nicht, mit der Stiftzange am Posten ins nächste freie Feld stanzen.', 'Клетки R1, R2, R3: если станция SPORTident не пищит, пробей компостером на КП следующую свободную клетку.'),
-    ('Rogaine: no order and no fixed course. The first digit of the code is the points (300 = 30 points); collect as many as you can before the time is up.', 'Rogaine: sem ordem nem percurso fixo. O primeiro algarismo do código são os pontos (300 = 30 pontos); junta o máximo antes do fim do tempo.', 'Rogaine: keine Reihenfolge, keine feste Bahn. Die erste Ziffer des Codes sind die Punkte (300 = 30 Punkte); so viele wie möglich in der Zeit sammeln.', 'Рогейн: без порядка и без заданной дистанции. Первая цифра кода — очки (300 = 30 очков); набери как можно больше до конца времени.'),
+    ('Boxes R1, R2, R3: if a SPORTident unit does not beep, punch the pin punch hanging at the control into the next free box.', 'Quadrados R1, R2, R3: se a estação SPORTident não apitar, pica com o picotador do ponto no quadrado livre seguinte.', 'Felder R1, R2, R3: piept die SPORTident-Station nicht, mit der Stiftzange am Posten ins nächste freie Feld stanzen.', 'Клетки R1, R2, R3: если станция SPORTident не пищит, пробей компостером на КП следующую свободную клетку.'),
+    ('Rogaine: no order and no fixed course. Column A shows the points: the code without its last digit (code 152 = 15 points). Collect as many as you can before the time is up.', 'Rogaine: sem ordem nem percurso fixo. A coluna A mostra os pontos: o código sem o último algarismo (código 152 = 15 pontos). Junta o máximo antes do fim do tempo.', 'Rogaine: keine Reihenfolge, keine feste Bahn. Spalte A zeigt die Punkte: der Code ohne die letzte Ziffer (Code 152 = 15 Punkte). So viele wie möglich in der Zeit sammeln.', 'Рогейн: без порядка и без заданной дистанции. В столбце A — очки: код без последней цифры (код 152 = 15 очков). Набери как можно больше до конца времени.'),
   ];
 
   static const List<T4> _rules = [
@@ -741,7 +757,7 @@ class _RaceTabState extends State<_RaceTab> {
     ('Purple stripes and olive green are out of bounds: entering means disqualification.', 'Riscas roxas e verde-oliva são interditos: entrar dá desclassificação.', 'Violette Streifen und Olivgrün sind gesperrt: Betreten heißt Disqualifikation.', 'Пурпурные полосы и оливковый — запрет: зашёл — дисквалификация.'),
     ('Miss a control or punch in the wrong order and you get no result (mispunch).', 'Falhar um ponto ou a ordem dá desclassificação.', 'Ein fehlender Posten oder falsche Reihenfolge: keine Wertung.', 'Пропуск КП или нарушение порядка — без результата.'),
     ('Carry a whistle on long forest courses. Someone hurt always comes before your time.', 'Leva um apito nos percursos longos. Um ferido vem sempre antes do teu tempo.', 'Auf langen Waldbahnen eine Pfeife mitnehmen. Verletzte gehen immer vor.', 'На длинных лесных дистанциях бери свисток. Помочь пострадавшему важнее результата.'),
-    ('Do not lead or follow others on purpose.', 'Não guies nem sigas os outros de propósito.', 'Nicht absichtlich führen oder folgen.', 'Не веди и не преследуй других специально.'),
+    ('Do not lead or follow others on purpose.', 'Não guies nem sigas os outros de propósito.', 'Nicht absichtlich führen oder folgen.', 'Не веди других и не иди за другими специально.'),
   ];
 
   @override
@@ -918,7 +934,7 @@ class _CompassTabState extends State<_CompassTab> {
         child: SizedBox(
           width: 260,
           height: 260,
-          child: CustomPaint(painter: _DialPainter(heading: h ?? 0, locked: _locked, dark: context.dark)),
+          child: CustomPaint(painter: _DialPainter(heading: h ?? 0, locked: _locked, dark: context.dark, letters: tr(('NESW', 'NESO', 'NOSW', 'СВЮЗ')))),
         ),
       ),
       const SizedBox(height: 12),
@@ -941,12 +957,12 @@ class _CompassTabState extends State<_CompassTab> {
       const SizedBox(height: 12),
       Center(
         child: FilledButton.icon(
-          style: FilledButton.styleFrom(backgroundColor: kGreen),
+          style: FilledButton.styleFrom(backgroundColor: kGreen, foregroundColor: Colors.white),
           onPressed: h == null ? null : () => setState(() => _locked = _locked == null ? h : null),
           icon: Icon(_locked == null ? Icons.lock_outline : Icons.lock_open, size: 18),
           label: Text(_locked == null
               ? tr(('Lock this bearing', 'Fixar este rumo', 'Kurs festhalten', 'Запомнить азимут'))
-              : '${tr(('Release', 'Soltar', 'Lösen', 'Сбросить'))} ${_locked!.round()}°'),
+              : '${tr(('Release', 'Soltar', 'Lösen', 'Сбросить'))} ${_locked!.round() % 360}°'),
         ),
       ),
       if (_available == true && _accuracy > 15)
@@ -977,10 +993,10 @@ class _CompassTabState extends State<_CompassTab> {
       const SizedBox(height: 14),
       Text(
           tr((
-            'Orienteering maps are drawn to magnetic north, so this compass shows magnetic bearings and you need no correction. On Madeira true north is about 5° to the right of magnetic north: on an ordinary topographic map, add 5° to the map angle… or simply trust the orienteering map.',
-            'Os mapas de orientação são desenhados para o norte magnético, por isso esta bússola mostra rumos magnéticos e não precisas de correção. Na Madeira o norte verdadeiro fica cerca de 5° à direita do magnético: num mapa topográfico comum, soma 5° ao ângulo do mapa.',
-            'OL-Karten sind nach magnetisch Nord ausgerichtet, daher zeigt dieser Kompass magnetische Kurse — keine Korrektur nötig. Auf Madeira liegt geografisch Nord etwa 5° rechts von magnetisch Nord: bei einer normalen topografischen Karte 5° zum Kartenwinkel addieren.',
-            'Карты для ориентирования рисуют по магнитному северу, поэтому компас показывает магнитный азимут и поправка не нужна. На Мадейре истинный север примерно на 5° правее магнитного: для обычной топокарты прибавь 5° к углу по карте.'
+            'Orienteering maps are drawn to magnetic north, so this compass shows magnetic bearings and you need no correction. On Madeira true north is about 4° to the right of magnetic north: on an ordinary topographic map, add 4° to the map angle.',
+            'Os mapas de orientação são desenhados para o norte magnético, por isso esta bússola mostra rumos magnéticos e não precisas de correção. Na Madeira o norte verdadeiro fica cerca de 4° à direita do magnético: num mapa topográfico comum, soma 4° ao ângulo do mapa.',
+            'OL-Karten sind nach magnetisch Nord ausgerichtet, daher zeigt dieser Kompass magnetische Kurse — keine Korrektur nötig. Auf Madeira liegt geografisch Nord etwa 4° rechts von magnetisch Nord: bei einer normalen topografischen Karte 4° zum Kartenwinkel addieren.',
+            'Карты для ориентирования рисуют по магнитному северу, поэтому компас показывает магнитный азимут и поправка не нужна. На Мадейре истинный север примерно на 4° правее магнитного: для обычной топокарты прибавь 4° к углу по карте.'
           )),
           style: sub),
     ]);
@@ -988,7 +1004,8 @@ class _CompassTabState extends State<_CompassTab> {
 }
 
 class _DialPainter extends CustomPainter {
-  _DialPainter({required this.heading, required this.locked, required this.dark});
+  _DialPainter({required this.heading, required this.locked, required this.dark, required this.letters});
+  final String letters;
   final double heading;
   final double? locked;
   final bool dark;
@@ -1009,7 +1026,7 @@ class _DialPainter extends CustomPainter {
       final v = Offset(math.sin(a), -math.cos(a));
       c.drawLine(v * (r - (major ? 16 : 8)), v * (r - 2), _st(ink, major ? 2 : 1));
     }
-    const labels = {0: 'N', 90: 'E', 180: 'S', 270: 'W'};
+    final labels = {0: letters[0], 90: letters[1], 180: letters[2], 270: letters[3]};
     for (final e in labels.entries) {
       final a = e.key * math.pi / 180;
       final v = Offset(math.sin(a), -math.cos(a)) * (r - 32);
@@ -1026,7 +1043,7 @@ class _DialPainter extends CustomPainter {
     if (locked != null) {
       final a = locked! * math.pi / 180;
       final v = Offset(math.sin(a), -math.cos(a));
-      c.drawLine(v * (r - 46), v * (r - 2), _st(_purple, 4)..strokeCap = StrokeCap.round);
+      c.drawLine(v * (r - 18), v * (r - 2), _st(_purple, 5)..strokeCap = StrokeCap.round);
     }
     c.restore();
     // The phone's own direction: always straight up.

@@ -22,7 +22,12 @@ Future<void> initNotify() async {
     tz.setLocalLocation(tz.getLocation('Atlantic/Madeira'));
   }
   const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const ios = DarwinInitializationSettings();
+  // No prompt at launch: the plugin's defaults asked for notification
+  // permission the moment the app first opened, before anyone had turned an
+  // alert on. Permission is requested in _ensurePermission, when a reminder or
+  // an alert is switched on (found while scripting store videos, 22.10.2026).
+  const ios = DarwinInitializationSettings(
+      requestAlertPermission: false, requestBadgePermission: false, requestSoundPermission: false);
   await _plugin.initialize(
       settings:
           const InitializationSettings(android: android, iOS: ios));

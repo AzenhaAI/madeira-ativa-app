@@ -64,11 +64,28 @@ void _wavy(Canvas c, Size s, {bool dashed = false}) {
 }
 
 void _beads(Canvas c, Size s, {bool hollow = false}) {
-  _diag(c, s);
-  for (final t in [.3, .5, .7]) {
-    final o = Offset(s.width * (.2 + .6 * t), s.height * (.8 - .6 * t));
-    hollow ? c.drawCircle(o, 2.6, _s(1.2)..color = _ink) : c.drawCircle(o, 2.4, _f);
+  final a = Offset(s.width * .2, s.height * .8), b = Offset(s.width * .8, s.height * .2);
+  if (!hollow) {
+    _diag(c, s);
+    for (final t in [.3, .5, .7]) {
+      c.drawCircle(Offset.lerp(a, b, t)!, 2.4, _f);
+    }
+    return;
   }
+  // IOF 4.6 linear thicket / hedge: a chain of open rings.
+  const r = 3.8;
+  final len = (b - a).distance;
+  final pts = [for (final t in [.28, .5, .72]) Offset.lerp(a, b, t)!];
+  for (final p in pts) {
+    c.drawCircle(p, r, _s(1.3));
+  }
+  final u = (b - a) / len;
+  var prev = a;
+  for (final p in pts) {
+    c.drawLine(prev, p - u * r, _s(1.3));
+    prev = p + u * r;
+  }
+  c.drawLine(prev, b, _s(1.3));
 }
 
 void _ticksOnDiag(Canvas c, Size s) {
@@ -82,7 +99,7 @@ void _ticksOnDiag(Canvas c, Size s) {
 void _circleDot(Canvas c, Size s, Offset dot, {bool inside = false}) {
   final m = Offset(s.width / 2, s.height / 2);
   c.drawCircle(m, s.width * .24, _s(1.5));
-  c.drawCircle(m + dot * s.width * (inside ? .12 : .34), 2, _f);
+  c.drawCircle(m + dot * s.width * (inside ? .12 : .42), 2, _f);
 }
 
 void _chevron(Canvas c, Size s, double deg, {required bool inside, double open = 45}) {
@@ -148,7 +165,7 @@ final Map<String, CdDraw> _d = {
   'terrace': (c, s) {
     final m = _c(s);
     c.drawLine(m + const Offset(-8, -10), m + const Offset(-8, 10), _s(1.6));
-    c.drawPath(Path()..moveTo(m.dx - 2, m.dy - 10)..quadraticBezierTo(m.dx + 12, m.dy - 9, m.dx + 4, m.dy)..quadraticBezierTo(m.dx + 12, m.dy + 9, m.dx - 2, m.dy + 10), _s(1.6));
+    c.drawPath(Path()..moveTo(m.dx - 2, m.dy - 10)..quadraticBezierTo(m.dx + 10, m.dy - 10, m.dx + 10, m.dy - 3)..quadraticBezierTo(m.dx + 10, m.dy + 3, m.dx - 2, m.dy + 4)..lineTo(m.dx - 4, m.dy + 10), _s(1.6));
   },
   'spur': (c, s) {
     final m = _c(s);
@@ -187,9 +204,7 @@ final Map<String, CdDraw> _d = {
   'depression': (c, s) {
     final m = _c(s);
     c.drawOval(Rect.fromCenter(center: m, width: 22, height: 14), _s(1.6));
-    c.drawLine(m + const Offset(-11, 0), m + const Offset(4, 0), _s(1.4));
-    c.drawLine(m + const Offset(4, 0), m + const Offset(0, -3), _s(1.4));
-    c.drawLine(m + const Offset(4, 0), m + const Offset(0, 3), _s(1.4));
+    c.drawLine(m + const Offset(-11, 0), m + const Offset(11, 0), _s(1.4));
   },
   'smalldep': (c, s) => c.drawArc(Rect.fromCenter(center: _c(s) - const Offset(0, 4), width: 16, height: 18), 0, math.pi, false, _s(1.7)),
   'pit': (c, s) {
@@ -206,9 +221,10 @@ final Map<String, CdDraw> _d = {
   },
   'boulder': (c, s) => c.drawCircle(_c(s), 3.4, _f),
   'boulderfield': (c, s) {
+    // IOF 2.5: five small triangles, 2-1-2 (three are 8.6 Rocky).
     final m = _c(s);
-    for (final o in [const Offset(-6, -5), const Offset(6, -5), const Offset(0, 5)]) {
-      c.drawPath(Path()..moveTo(m.dx + o.dx, m.dy + o.dy - 4)..lineTo(m.dx + o.dx + 4, m.dy + o.dy + 3)..lineTo(m.dx + o.dx - 4, m.dy + o.dy + 3)..close(), _f);
+    for (final o in [const Offset(-7, -7), const Offset(7, -7), const Offset(0, 0), const Offset(-7, 7), const Offset(7, 7)]) {
+      c.drawPath(Path()..moveTo(m.dx + o.dx, m.dy + o.dy - 3)..lineTo(m.dx + o.dx + 3, m.dy + o.dy + 2.4)..lineTo(m.dx + o.dx - 3, m.dy + o.dy + 2.4)..close(), _f);
     }
   },
   'boulders': (c, s) {
@@ -224,10 +240,13 @@ final Map<String, CdDraw> _d = {
     }
   },
   'barerock': (c, s) {
+    // IOF 2.8: rays with an open centre (closed in the middle it is an ant hill).
     final m = _c(s);
     for (var i = 0; i < 4; i++) {
       final a = i * math.pi / 4;
-      c.drawLine(m + Offset(math.cos(a), math.sin(a)) * 9, m - Offset(math.cos(a), math.sin(a)) * 9, _s(1.4));
+      final v = Offset(math.cos(a), math.sin(a));
+      c.drawLine(m + v * 3, m + v * 9, _s(1.4));
+      c.drawLine(m - v * 3, m - v * 9, _s(1.4));
     }
   },
   'trench': (c, s) {
@@ -241,14 +260,21 @@ final Map<String, CdDraw> _d = {
     c.drawPath(Path()..moveTo(m.dx - 6, m.dy)..quadraticBezierTo(m.dx - 3, m.dy - 4, m.dx, m.dy)..quadraticBezierTo(m.dx + 3, m.dy + 4, m.dx + 6, m.dy), _s(1.3));
   },
   'watercourse': (c, s) => _wavy(c, s),
-  'ditch': (c, s) => _wavy(c, s, dashed: true),
-  'marsh': (c, s) {
-    final m = _c(s);
-    for (final y in [-6.0, -1.0, 4.0]) {
-      c.drawLine(m + Offset(-9, y), m + Offset(9, y), _s(1.4));
+  'ditch': (c, s) {
+    // IOF 3.5: a wave between two dashed lines, so it cannot read as a path.
+    _wavy(c, s);
+    for (final k in [-4.5, 4.5]) {
+      final a = Offset(s.width * .2 + k * .7, s.height * .8 + k * .7), b = Offset(s.width * .8 + k * .7, s.height * .2 + k * .7);
+      for (var i = 0; i < 4; i++) {
+        c.drawLine(Offset.lerp(a, b, i / 4)!, Offset.lerp(a, b, i / 4 + .12)!, _s(1.2));
+      }
     }
-    for (final x in [-4.0, 0.0, 4.0]) {
-      c.drawLine(m + Offset(x, 4), m + Offset(x, 9), _s(1.2));
+  },
+  'marsh': (c, s) {
+    // IOF 3.7: stacked lines of different length, no ticks.
+    final m = _c(s);
+    for (final (y, w) in [(-6.0, 5.0), (-2.0, 9.0), (2.0, 9.0), (6.0, 5.0)]) {
+      c.drawLine(m + Offset(-w, y), m + Offset(w, y), _s(1.4));
     }
   },
   'well': (c, s) {
@@ -309,7 +335,15 @@ final Map<String, CdDraw> _d = {
   // man-made
   'road': (c, s) => _diag(c, s),
   'path': (c, s) => _diag(c, s, dashed: true),
-  'ride': (c, s) => _diag(c, s, dotted: true),
+  'ride': (c, s) {
+    // IOF 5.3: two rows of dots.
+    for (final k in [-2.5, 2.5]) {
+      final a = Offset(s.width * .2 + k, s.height * .8 + k), b = Offset(s.width * .8 + k, s.height * .2 + k);
+      for (var i = 0; i < 9; i++) {
+        c.drawCircle(Offset.lerp(a, b, i / 8)!, .9, _f);
+      }
+    }
+  },
   'bridge': (c, s) {
     _diag(c, s);
     final m = _c(s);
@@ -420,7 +454,7 @@ final Map<String, CdDraw> _d = {
   },
   'rocky': (c, s) {
     final m = _c(s);
-    for (final o in [const Offset(-5, 3), const Offset(5, 3), const Offset(0, -5)]) {
+    for (final o in [const Offset(-5, -3), const Offset(5, -3), const Offset(0, 5)]) {
       c.drawPath(Path()..moveTo(m.dx + o.dx, m.dy + o.dy - 4)..lineTo(m.dx + o.dx + 4, m.dy + o.dy + 3)..lineTo(m.dx + o.dx - 4, m.dy + o.dy + 3)..close(), _f);
     }
   },
@@ -522,7 +556,7 @@ final Map<String, CdDraw> _d = {
   // start triangle used on the sheet
   'start': (c, s) {
     final m = _c(s);
-    c.drawPath(Path()..moveTo(m.dx - 7, m.dy - 9)..lineTo(m.dx + 9, m.dy)..lineTo(m.dx - 7, m.dy + 9)..close(), _s(1.6));
+    c.drawPath(Path()..moveTo(m.dx, m.dy - 10)..lineTo(m.dx + 9, m.dy + 7)..lineTo(m.dx - 9, m.dy + 7)..close(), _s(1.6));
   },
 };
 
@@ -557,7 +591,7 @@ const List<(String, T4, T4, List<CdItem>)> kCdGroups = [
   (
     'C',
     ('Which of several similar features', 'Qual de vários objetos iguais', 'Welches von mehreren gleichen Objekten', 'Какой из похожих объектов'),
-    ('Only when several alike are inside the circle. Arrows point to the side of the world: ↘ means "the south-eastern one".', 'Só quando há vários iguais no círculo. A seta aponta o rumo: ↘ quer dizer «o mais a sudeste».', 'Nur wenn mehrere gleiche im Kreis liegen. Der Pfeil zeigt die Himmelsrichtung: ↘ heißt „der südöstlichste“.', 'Только если в круге несколько похожих. Стрелка показывает сторону света: ↘ — «юго-восточный».'),
+    ('Only when several alike are inside the circle. The arrow shows the compass direction: ↘︎ means "the south-eastern one".', 'Só quando há vários iguais no círculo. A seta aponta o rumo: ↘︎ quer dizer «o mais a sudeste».', 'Nur wenn mehrere gleiche im Kreis liegen. Der Pfeil zeigt die Himmelsrichtung: ↘︎ heißt „der südöstlichste“.', 'Только если в круге несколько похожих. Стрелка показывает сторону света: ↘︎ — «юго-восточный».'),
     [
       CdItem('n', ('Northern', 'O mais a norte', 'Nördlicher', 'Северный')),
       CdItem('se', ('South-eastern', 'O mais a sudeste', 'Südöstlicher', 'Юго-восточный')),
@@ -583,7 +617,7 @@ const List<(String, T4, T4, List<CdItem>)> kCdGroups = [
       CdItem('saddle', ('Saddle', 'Colo', 'Sattel', 'Седловина')),
       CdItem('depression', ('Depression', 'Depressão', 'Senke', 'Котловина')),
       CdItem('smalldep', ('Small depression', 'Pequena depressão', 'Kleine Senke', 'Западина')),
-      CdItem('pit', ('Pit', 'Buraco', 'Loch', 'Яма')),
+      CdItem('pit', ('Pit', 'Buraco', 'Grube', 'Яма')),
     ]
   ),
   (
@@ -600,7 +634,7 @@ const List<(String, T4, T4, List<CdItem>)> kCdGroups = [
       CdItem('trench', ('Trench', 'Trincheira', 'Graben', 'Траншея')),
       CdItem('lake', ('Lake', 'Lago', 'See', 'Озеро')),
       CdItem('watercourse', ('Stream, levada, watercourse', 'Ribeira, levada, linha de água', 'Bach, Levada', 'Ручей, левада')),
-      CdItem('ditch', ('Ditch, minor water channel', 'Vala', 'Graben', 'Канава')),
+      CdItem('ditch', ('Ditch, minor water channel', 'Vala', 'Wassergraben', 'Канава')),
       CdItem('marsh', ('Marsh', 'Pântano', 'Sumpf', 'Болото')),
       CdItem('well', ('Well', 'Poço', 'Brunnen', 'Колодец')),
       CdItem('spring', ('Spring', 'Nascente', 'Quelle', 'Родник')),
@@ -643,10 +677,10 @@ const List<(String, T4, T4, List<CdItem>)> kCdGroups = [
       CdItem('monument', ('Monument, statue', 'Monumento, estátua', 'Denkmal, Statue', 'Памятник, статуя')),
       CdItem('canopy', ('Canopy, covered passage', 'Coberto, passagem coberta', 'Überdachung, Durchgang', 'Навес, крытый проход')),
       CdItem('stairway', ('Stairway', 'Escadas', 'Treppe', 'Лестница')),
-      CdItem('oob', ('Out of bounds: flower bed', 'Interdito: canteiro', 'Verboten: Blumenbeet', 'Нельзя: клумба')),
-      CdItem('specialx', ('Special item X: see the event notes', 'Objeto especial X: ver as instruções', 'Spezialobjekt X: siehe Ausschreibung', 'Особый объект X: см. информацию к старту'),
-          ('On Madeira sheets often a bench, post or bin', 'Nas provas da Madeira muitas vezes banco, poste ou caixote', 'Auf Madeira oft Bank, Pfosten oder Mülleimer', 'На Мадейре часто скамейка, столб или урна')),
-      CdItem('specialo', ('Special item O: see the event notes', 'Objeto especial O: ver as instruções', 'Spezialobjekt O: siehe Ausschreibung', 'Особый объект O: см. информацию к старту')),
+      CdItem('oob', ('Out of bounds: flower bed', 'Interdito: canteiro', 'Sperrgebiet: Blumenbeet', 'Запретная зона: клумба')),
+      CdItem('specialx', ('Special item X: see the event notes', 'Objeto especial X: ver as instruções', 'Spezialobjekt X: siehe Wettkampfinformation', 'Особый объект X: см. информацию к старту'),
+          ('On Madeira sheets often a bench, post or bin', 'Nas provas da Madeira muitas vezes banco, poste ou caixote do lixo', 'Auf Madeira oft Bank, Pfosten oder Mülleimer', 'На Мадейре часто скамейка, столб или урна')),
+      CdItem('specialo', ('Special item O: see the event notes', 'Objeto especial O: ver as instruções', 'Spezialobjekt O: siehe Wettkampfinformation', 'Особый объект O: см. информацию к старту')),
     ]
   ),
   (
@@ -677,7 +711,7 @@ const List<(String, T4, T4, List<CdItem>)> kCdGroups = [
   (
     'G',
     ('Where the flag is', 'Onde está a baliza', 'Wo der Posten hängt', 'Где стоит призма'),
-    ('Empty means the centre. The symbol turns to show the side: on Madeira sheets a right angle with a dot is a corner pointing NE, SE, SW or NW; a dot inside the angle is the inside corner, outside it the outside corner.', 'Vazio quer dizer o centro. O símbolo roda para mostrar o lado: nas folhas da Madeira um ângulo reto com ponto é um canto virado a NE, SE, SO ou NO; ponto dentro do ângulo = canto interior, fora = canto exterior.', 'Leer heißt Mitte. Das Zeichen dreht sich zur Seite: auf Madeira-Blättern ist ein rechter Winkel mit Punkt eine Ecke nach NO, SO, SW oder NW; Punkt im Winkel = Innenecke, außen = Außenecke.', 'Пусто — центр объекта. Знак поворачивается в нужную сторону: на мадейрских листах прямой угол с точкой — угол, смотрящий на СВ, ЮВ, ЮЗ или СЗ; точка внутри угла — внутренний угол, снаружи — внешний.'),
+    ('Empty means the centre (for a cliff: its foot). The symbol turns to show the side: on Madeira sheets a right angle with a dot is a corner pointing NE, SE, SW or NW; a dot inside the angle is the inside corner, outside it the outside corner.', 'Vazio quer dizer o centro (numa falésia: a base). O símbolo roda para mostrar o lado: nas folhas da Madeira um ângulo reto com ponto é um canto virado a NE, SE, SO ou NO; ponto dentro do ângulo = canto interior, fora = canto exterior.', 'Leer heißt Mitte (bei einer Felswand: der Fuß). Das Zeichen dreht sich zur Seite: auf Madeira-Blättern ist ein rechter Winkel mit Punkt eine Ecke nach NO, SO, SW oder NW; Punkt im Winkel = Innenecke, außen = Außenecke.', 'Пусто — центр объекта (у скалы — подножие). Знак поворачивается в нужную сторону: на мадейрских листах прямой угол с точкой — угол, смотрящий на СВ, ЮВ, ЮЗ или СЗ; точка внутри угла — внутренний угол, снаружи — внешний.'),
     [
       CdItem('side', ('Side (here north-east side)', 'Lado (aqui nordeste)', 'Seite (hier Nordost)', 'Сторона (здесь северо-восточная)')),
       CdItem('edge', ('Edge (here south-east edge)', 'Borda (aqui sudeste)', 'Rand (hier Südost)', 'Край (здесь юго-восточный)')),
@@ -691,7 +725,7 @@ const List<(String, T4, T4, List<CdItem>)> kCdGroups = [
       CdItem('lowerpart', ('Lower part', 'Parte inferior', 'Unterer Teil', 'Нижняя часть')),
       CdItem('top', ('Top', 'Topo', 'Oben', 'Верх, вершина')),
       CdItem('foot', ('Foot', 'Base, pé', 'Fuß', 'Подножие')),
-      CdItem('beneath', ('Beneath', 'Por baixo', 'Unter', 'Под объектом')),
+      CdItem('beneath', ('Beneath', 'Por baixo', 'Darunter', 'Под объектом')),
       CdItem('between', ('Between the two features in D and E', 'Entre os dois objetos de D e E', 'Zwischen den Objekten in D und E', 'Между объектами из D и E')),
     ]
   ),
@@ -701,7 +735,7 @@ const List<(String, T4, T4, List<CdItem>)> kCdGroups = [
     ('', '', '', ''),
     [
       CdItem('firstaid', ('First aid', 'Primeiros socorros', 'Erste Hilfe', 'Медпомощь')),
-      CdItem('refresh', ('Drinks', 'Abastecimento', 'Verpflegung', 'Питьё')),
+      CdItem('refresh', ('Refreshments', 'Abastecimento', 'Verpflegung', 'Пункт питания')),
       CdItem('manned', ('Manned control', 'Ponto com controlador', 'Besetzter Posten', 'КП с судьёй')),
     ]
   ),
@@ -771,10 +805,10 @@ class DescriptionsTab extends StatelessWidget {
       const SizedBox(height: 10),
       Text(
           tr((
-            'Header line "10 | 2,8 km | 30": course, length, climb in metres. "– – 40 m – → △": walk 40 m from the timed start to the start triangle. "○ – – 85 m – → ◎": follow the tapes 85 m from the last control to the finish.',
-            'Cabeçalho «10 | 2,8 km | 30»: percurso, distância, desnível em metros. «– – 40 m – → △»: 40 m da partida cronometrada até ao triângulo. «○ – – 85 m – → ◎»: seguir as fitas 85 m do último ponto até à chegada.',
-            'Kopfzeile „10 | 2,8 km | 30“: Bahn, Länge, Steigung in Metern. „– – 40 m – → △“: 40 m vom Zeitstart zum Startdreieck. „○ – – 85 m – → ◎“: 85 m den Bändern vom letzten Posten ins Ziel folgen.',
-            'Шапка «10 | 2,8 km | 30»: дистанция, длина, набор высоты в метрах. «– – 40 m – → △»: от старта по времени 40 м до треугольника. «○ – – 85 m – → ◎»: от последнего КП 85 м по разметке до финиша.'
+            'On a real sheet, above and below the table: the header "10 | 2,8 km | 30" is course, length and climb in metres. "– – 40 m – → △": walk 40 m from the timed start to the start triangle. "○ – – 85 m – → ◎": follow the tapes 85 m from the last control to the finish.',
+            'Numa folha real, acima e abaixo da tabela: o cabeçalho «10 | 2,8 km | 30» é percurso, distância, desnível em metros. «– – 40 m – → △»: 40 m da partida cronometrada até ao triângulo. «○ – – 85 m – → ◎»: seguir as fitas 85 m do último ponto até à chegada.',
+            'Auf einem echten Blatt über und unter der Tabelle: die Kopfzeile „10 | 2,8 km | 30“ ist Bahn, Länge, Steigung in Metern. „– – 40 m – → △“: 40 m vom Zeitstart zum Startdreieck. „○ – – 85 m – → ◎“: 85 m den Bändern vom letzten Posten ins Ziel folgen.',
+            'На настоящем листе над и под таблицей: шапка «10 | 2,8 km | 30» — это дистанция, длина, набор высоты в метрах. «– – 40 m – → △»: от старта по времени 40 м до треугольника. «○ – – 85 m – → ◎»: от последнего КП 85 м по разметке до финиша.'
           )),
           style: sub),
       for (final (col, title, note, items) in kCdGroups) ...[
