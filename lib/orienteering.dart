@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'island_now.dart';
 import 'main.dart';
+import 'orienteering_cd.dart';
 
 /// Orienteering basics: what the map symbols mean (forest ISOM 2017 and
 /// sprint ISSprOM 2019 — the common ones, drawn here from the published
@@ -59,7 +60,7 @@ class OrienteeringPage extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(children: [_SymbolsTab(), _DescriptionsTab(), _RaceTab(), _CompassTab()]),
+        body: const TabBarView(children: [_SymbolsTab(), DescriptionsTab(), _RaceTab(), _CompassTab()]),
       ),
     );
   }
@@ -177,7 +178,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
             final t = _wave(s).computeMetrics().first.getTangentForOffset(26)!;
             c.drawLine(t.position, t.position + Offset(-t.vector.dy, t.vector.dx) * 7, _st(_brown, 1.4));
           }),
-      Sym('105', ('Earth bank', 'Talude', 'Böschung', 'Земляной обрыв'),
+      Sym('105', ('Earth bank', 'Escarpa de terra', 'Böschung', 'Земляной обрыв'),
           ('Steep earth step, ticks point down', 'Degrau de terra, traços para baixo', 'Steile Erdstufe, Striche zeigen hinab', 'Крутой уступ, штрихи вниз'),
           (c, s) {
             c.drawPath(_line(s), _st(_brown, 1.8));
@@ -186,7 +187,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('107', ('Erosion gully', 'Ravina', 'Erosionsrinne', 'Промоина'),
           ('Dry ditch cut by water', 'Vala seca aberta pela água', 'Vom Wasser ausgewaschener Graben', 'Сухая канава, промытая водой'),
           (c, s) => c.drawLine(Offset(12, s.height * .7), Offset(s.width - 12, s.height * .3), _st(_brown, 3)..strokeCap = StrokeCap.round)),
-      Sym('112', ('Small knoll', 'Pequeno cabeço', 'Kuppe', 'Бугор'),
+      Sym('112', ('Small knoll', 'Monte, cota', 'Kuppe', 'Бугор'),
           ('Hill too small for a contour', 'Elevação pequena demais para curva', 'Hügel, zu klein für eine Höhenlinie', 'Холмик меньше сечения рельефа'),
           (c, s) => c.drawCircle(_mid(s), 3.5, _fi(_brown))),
       Sym('113', ('Elongated knoll', 'Cabeço alongado', 'Längliche Kuppe', 'Вытянутый бугор'),
@@ -195,7 +196,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('114', ('Small depression', 'Pequena depressão', 'Kleine Senke', 'Западина'),
           ('Shallow hollow without steep sides', 'Concavidade suave', 'Flache Mulde ohne steile Ränder', 'Неглубокое понижение'),
           (c, s) => c.drawArc(Rect.fromCenter(center: _mid(s) - const Offset(0, 4), width: 14, height: 14), 0, math.pi, false, _st(_brown, 1.8))),
-      Sym('115', ('Pit', 'Cova', 'Loch', 'Яма'),
+      Sym('115', ('Pit', 'Buraco', 'Loch', 'Яма'),
           ('Hole with steep sides', 'Buraco de lados íngremes', 'Grube mit steilen Rändern', 'Яма с крутыми краями'),
           (c, s) {
             final m = _mid(s);
@@ -230,7 +231,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
             final m = _mid(s);
             c.drawPath(Path()..moveTo(m.dx - 7, m.dy - 6)..lineTo(m.dx, m.dy + 6)..lineTo(m.dx + 7, m.dy - 6), _st(_black, 1.8));
           }),
-      Sym('204', ('Boulder', 'Pedra', 'Stein', 'Камень'),
+      Sym('204', ('Boulder', 'Rocha', 'Stein', 'Камень'),
           ('Rock taller than about 1 m', 'Pedra com mais de cerca de 1 m', 'Fels höher als etwa 1 m', 'Камень выше примерно 1 м'),
           (c, s) => c.drawCircle(_mid(s), 2.8, _fi(_black))),
       Sym('206', ('Large boulder', 'Pedra grande', 'Großer Felsblock', 'Большой камень'),
@@ -246,7 +247,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('210', ('Stony ground', 'Terreno pedregoso', 'Steiniger Boden', 'Каменистая поверхность'),
           ('Loose stones: watch your ankles', 'Pedras soltas: cuidado com os tornozelos', 'Lose Steine: Knöchel beachten', 'Мелкие камни: береги щиколотки'),
           (c, s) => _scatter(c, s, _fi(_black), 1.1, n: 14, seed: 7)),
-      Sym('214', ('Bare rock', 'Rocha nua', 'Offener Fels', 'Открытая скала'),
+      Sym('214', ('Bare rock', 'Afloramento rochoso', 'Offener Fels', 'Открытая скала'),
           ('Rock surface without soil', 'Rocha sem terra', 'Fels ohne Erdschicht', 'Скальная поверхность без почвы'),
           (c, s) => c.drawRect(_area(s), _fi(_grey))),
     ]
@@ -297,10 +298,10 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
   (
     ('Vegetation (yellow, white, green)', 'Vegetação (amarelo, branco, verde)', 'Vegetation (gelb, weiß, grün)', 'Растительность (жёлтый, белый, зелёный)'),
     [
-      Sym('401', ('Open land', 'Terreno aberto', 'Offenes Gelände', 'Открытая местность'),
+      Sym('401', ('Open land', 'Área aberta', 'Offenes Gelände', 'Открытая местность'),
           ('Meadow or field: fast', 'Prado ou campo: rápido', 'Wiese oder Feld: schnell', 'Луг или поле: быстро'),
           (c, s) => c.drawRect(_area(s), _fi(_yellow))),
-      Sym('402', ('Open land with trees', 'Aberto com árvores', 'Offen mit Einzelbäumen', 'Поляна с деревьями'),
+      Sym('402', ('Semi-open land', 'Área semi-aberta', 'Halboffenes Gelände', 'Поляна с деревьями'),
           ('Open, with scattered trees', 'Aberto, com árvores dispersas', 'Offen, vereinzelte Bäume', 'Открыто, редкие деревья'),
           (c, s) {
             c.drawRect(_area(s), _fi(_yellow));
@@ -321,7 +322,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('410', ('Fight', 'Passagem difícil', 'Dickicht', 'Продирание'),
           ('Dark green: go round. On sprint maps: no entry', 'Verde escuro: contornar. No sprint: proibido', 'Dunkelgrün: umlaufen. Im Sprint: verboten', 'Тёмно-зелёный: обходи. В спринте: нельзя'),
           (c, s) => c.drawRect(_area(s), _fi(_green3))),
-      Sym('407', ('Undergrowth', 'Mato rasteiro', 'Unterholz', 'Подлесок'),
+      Sym('407', ('Undergrowth', 'Vegetação rasteira', 'Unterholz', 'Подлесок'),
           ('Stripes: low bushes slow you down', 'Riscas: arbustos baixos atrasam', 'Streifen: niedriges Gestrüpp bremst', 'Полосы: низкий кустарник тормозит'),
           (c, s) {
             for (var x = 12.0; x < s.width - 8; x += 7) {
@@ -338,6 +339,17 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
               }
             }
           }),
+      Sym('413', ('Vineyard', 'Vinha', 'Weinberg', 'Виноградник'),
+          ('Rows of vines on terraces: run along them', 'Filas de vinha em poios: corre ao longo', 'Rebzeilen auf Terrassen: entlang laufen', 'Ряды лозы на террасах: беги вдоль'),
+          (c, s) {
+            c.drawRect(_area(s), _fi(_yellow));
+            for (var x = 13.0; x < s.width - 8; x += 7) {
+              _dashPath(c, Path()..moveTo(x, 9)..lineTo(x, s.height - 9), _st(_green3, 1.8), 4, 3);
+            }
+          }),
+      Sym('', ('Hedge', 'Sebe', 'Hecke', 'Живая изгородь'),
+          ('Line of dense bushes: usually cannot pass', 'Linha de arbustos densos: em geral não se passa', 'Dichte Buschreihe: meist nicht passierbar', 'Ряд плотных кустов: обычно не пройти'),
+          (c, s) => c.drawPath(_line(s), _st(_green3, 4)..strokeCap = StrokeCap.round)),
       Sym('415', ('Cultivated land', 'Terreno cultivado', 'Kulturland', 'Сельхозугодья'),
           ('Crops: usually do not cross', 'Culturas: em geral não atravessar', 'Feldfrüchte: meist nicht betreten', 'Посевы: обычно не пересекать'),
           (c, s) {
@@ -362,7 +374,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
   (
     ('Man-made features and sprint (black, grey, olive)', 'Construções e sprint (preto, cinza, oliva)', 'Bauwerke und Sprint (schwarz, grau, oliv)', 'Постройки и спринт (чёрный, серый, оливковый)'),
     [
-      Sym('501', ('Paved area', 'Área pavimentada', 'Befestigte Fläche', 'Площадка с покрытием'),
+      Sym('501', ('Paved area', 'Alcatrão, área pavimentada', 'Befestigte Fläche', 'Площадка с покрытием'),
           ('Square, car park, asphalt', 'Praça, parque, asfalto', 'Platz, Parkplatz, Asphalt', 'Площадь, парковка, асфальт'),
           (c, s) {
             c.drawRect(_area(s), _fi(_paved));
@@ -379,7 +391,7 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('505', ('Vehicle track', 'Caminho de terra', 'Fahrweg', 'Грунтовая дорога'),
           ('Dirt road for cars', 'Estradão para carros', 'Unbefestigter Weg für Autos', 'Грунтовка для машин'),
           (c, s) => _dashPath(c, _line(s), _st(_black, 2.2), 12, 3)),
-      Sym('506', ('Footpath', 'Trilho', 'Pfad', 'Тропа'),
+      Sym('506', ('Footpath', 'Caminho, carreiro', 'Pfad', 'Тропа'),
           ('Clear path', 'Trilho bem visível', 'Deutlicher Pfad', 'Хорошо заметная тропа'),
           (c, s) => _dashPath(c, _line(s), _st(_black, 1.5), 7, 3)),
       Sym('507', ('Small path', 'Vereda', 'Kleiner Pfad', 'Малая тропа'),
@@ -399,19 +411,19 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
               c.drawLine(Offset(x, s.height / 2 - 4), Offset(x, s.height / 2 + 4), _st(_black, 1.4));
             }
           }),
-      Sym('513', ('Wall', 'Muro', 'Mauer', 'Стена'),
+      Sym('513', ('Wall', 'Muro transponível', 'Mauer', 'Стена'),
           ('Low wall you may cross', 'Muro baixo que se pode passar', 'Niedrige, passierbare Mauer', 'Низкая стенка, можно перелезть'),
           (c, s) => c.drawPath(_line(s), _st(_black, 1.6))),
       Sym('515', ('Impassable wall', 'Muro intransponível', 'Unpassierbare Mauer', 'Непреодолимая стена'),
           ('Thick line: forbidden to cross', 'Linha grossa: proibido passar', 'Dicke Linie: nicht überqueren', 'Толстая линия: пересекать нельзя'),
           (c, s) => c.drawPath(_line(s), _st(_black, 3.4))),
-      Sym('516', ('Fence', 'Vedação', 'Zaun', 'Забор'),
+      Sym('516', ('Fence', 'Cerca transponível', 'Zaun', 'Забор'),
           ('Fence you may climb', 'Vedação que se pode transpor', 'Überkletterbarer Zaun', 'Забор, можно перелезть'),
           (c, s) {
             c.drawPath(_line(s), _st(_black, 1.2));
             _ticks(c, _line(s), _st(_black, 1.2), 9, 5);
           }),
-      Sym('518', ('Impassable fence', 'Vedação intransponível', 'Unpassierbarer Zaun', 'Непреодолимый забор'),
+      Sym('518', ('Impassable fence', 'Cerca intransponível', 'Unpassierbarer Zaun', 'Непреодолимый забор'),
           ('Forbidden to cross', 'Proibido transpor', 'Nicht überqueren', 'Пересекать нельзя'),
           (c, s) {
             c.drawPath(_line(s), _st(_black, 2.2));
@@ -420,24 +432,24 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
       Sym('519', ('Crossing point', 'Passagem', 'Durchgang', 'Проход'),
           ('Gate or gap in a wall or fence', 'Portão ou abertura', 'Tor oder Lücke', 'Калитка или проём'),
           (c, s) => _crossing(c, s, _black)),
-      Sym('520', ('Out of bounds', 'Área interdita', 'Sperrgebiet', 'Запрещённая территория'),
+      Sym('520', ('Private area', 'Zona privada', 'Privatgelände', 'Частная территория'),
           ('Olive: gardens, private land, no entry', 'Oliva: jardins, privado, proibido', 'Oliv: Gärten, Privatgrund, verboten', 'Оливковый: сады, частная земля, нельзя'),
           (c, s) => c.drawRect(_area(s), _fi(_olive))),
-      Sym('521', ('Building', 'Edifício', 'Gebäude', 'Здание'),
+      Sym('521', ('Building', 'Casa', 'Gebäude', 'Здание'),
           ('You cannot pass through', 'Não se atravessa', 'Nicht durchlaufbar', 'Насквозь не пройти'),
           (c, s) {
             final r = Rect.fromCenter(center: _mid(s), width: 30, height: 20);
             c.drawRect(r, _fi(const Color(0xFF6A6A6A)));
             c.drawRect(r, _st(_black, 1.4));
           }),
-      Sym('522', ('Canopy, passage', 'Zona coberta, passagem', 'Überdachung, Durchgang', 'Навес, проход'),
+      Sym('522', ('Canopy, passage', 'Coberto', 'Überdachung, Durchgang', 'Навес, проход'),
           ('Light grey: you can run under it', 'Cinza claro: pode-se passar por baixo', 'Hellgrau: darunter laufen erlaubt', 'Светло-серый: можно пробежать под ним'),
           (c, s) {
             final r = Rect.fromCenter(center: _mid(s), width: 30, height: 20);
             c.drawRect(r, _fi(const Color(0xFFCFCFCF)));
             c.drawRect(r, _st(_black, 1));
           }),
-      Sym('532', ('Stairway', 'Escadaria', 'Treppe', 'Лестница'),
+      Sym('532', ('Stairway', 'Escadas', 'Treppe', 'Лестница'),
           ('Steps; the long lines are its sides', 'Degraus; as linhas longas são os lados', 'Stufen; die langen Linien sind die Ränder', 'Ступени; длинные линии — края'),
           (c, s) {
             final m = _mid(s);
@@ -448,9 +460,67 @@ final List<(T4, List<Sym>)> kSymbolGroups = [
               c.drawLine(Offset(x, r.top), Offset(x, r.bottom), _st(_black, 1));
             }
           }),
+      Sym('', ('Tunnel', 'Túnel', 'Tunnel', 'Тоннель'),
+          ('A way under a road or building', 'Passagem por baixo de estrada ou casa', 'Weg unter Straße oder Gebäude', 'Проход под дорогой или домом'),
+          (c, s) {
+            final r = Rect.fromCenter(center: _mid(s), width: 34, height: 12);
+            c.drawRect(r, _fi(const Color(0xFFD9C3A0)));
+            _dashPath(c, Path()..moveTo(r.left, r.top)..lineTo(r.right, r.top), _st(_black, 1.4), 4, 2);
+            _dashPath(c, Path()..moveTo(r.left, r.bottom)..lineTo(r.right, r.bottom), _st(_black, 1.4), 4, 2);
+          }),
+      Sym('524', ('High tower', 'Torre grande', 'Hoher Turm', 'Высокая башня'),
+          ('Seen from far: a good landmark', 'Vê-se de longe: boa referência', 'Weit sichtbar: guter Anhaltspunkt', 'Видна издалека: хороший ориентир'),
+          (c, s) {
+            final m = _mid(s);
+            c.drawCircle(m, 3.2, _fi(_black));
+            for (final d in [const Offset(0, -9), const Offset(0, 9), const Offset(-9, 0), const Offset(9, 0)]) {
+              c.drawLine(m, m + d, _st(_black, 1.6));
+            }
+          }),
+      Sym('525', ('Small tower', 'Torre pequena', 'Kleiner Turm', 'Малая вышка'),
+          ('Hunting stand, small mast', 'Posto de caça, pequeno mastro', 'Hochsitz, kleiner Mast', 'Охотничья вышка, мачта'),
+          (c, s) {
+            final m = _mid(s);
+            c.drawLine(m + const Offset(-7, -8), m + const Offset(7, -8), _st(_black, 2));
+            c.drawLine(m + const Offset(0, -8), m + const Offset(0, 9), _st(_black, 2));
+          }),
       Sym('531', ('Special man-made feature', 'Objeto artificial especial', 'Besonderes Bauwerk', 'Особый искусственный объект'),
           ('Explained in the map legend', 'Explicado na legenda do mapa', 'In der Kartenlegende erklärt', 'Пояснён в легенде карты'),
           (c, s) => _x(c, _mid(s), 5, _st(_black, 1.8))),
+    ]
+  ),
+  (
+    ('Special features and map lines', 'Elementos especiais e linhas do mapa', 'Sonderzeichen und Kartenlinien', 'Особые знаки и линии карты'),
+    [
+      Sym('', ('Special features', 'Elementos especiais', 'Sonderzeichen', 'Особые объекты'),
+          ('Brown △ landform, green × vegetation, black ×/○ man-made, blue □/★ water: the map legend says what', 'Triângulo castanho relevo, × verde vegetação, ×/○ preto artificial, □/★ azul água: a legenda diz o quê', 'Braunes △ Gelände, grünes × Vegetation, schwarzes ×/○ Bauwerk, blaues □/★ Wasser: die Legende sagt was', 'Коричневый △ — рельеф, зелёный × — растительность, чёрные ×/○ — постройки, синие □/★ — вода: что именно, скажет легенда'),
+          (c, s) {
+            final m = _mid(s);
+            _tri(c, m + const Offset(-16, -5), 5, _st(_brown, 1.6));
+            _x(c, m + const Offset(-3, -5), 4, _st(_green3, 1.8));
+            c.drawCircle(m + const Offset(10, -5), 3.6, _st(_black, 1.6));
+            c.drawRect(Rect.fromCenter(center: m + const Offset(-8, 8), width: 7, height: 7), _st(_blue, 1.6));
+            _x(c, m + const Offset(6, 8), 4, _st(_blue, 1.6));
+          }),
+      Sym('601', ('Magnetic north lines', 'Linhas do norte magnético', 'Nordlinien', 'Линии магнитного севера'),
+          ('Blue or black lines; the top of the map is magnetic north', 'Linhas azuis ou pretas; o topo do mapa é o norte magnético', 'Blaue oder schwarze Linien; oben ist magnetisch Nord', 'Синие или чёрные линии; верх карты — магнитный север'),
+          (c, s) {
+            for (final x in [16.0, 32.0, 48.0]) {
+              c.drawLine(Offset(x, 6), Offset(x, s.height - 6), _st(_blue, 1.2));
+            }
+          }),
+      Sym('', ('Dangerous or forbidden area', 'Zona perigosa ou proibida', 'Gefährliches oder verbotenes Gebiet', 'Опасная или запретная зона'),
+          ('Red-purple cross-hatching, often a busy road: do not cross', 'Grelha vermelha-roxa, muitas vezes estrada com trânsito: não atravessar', 'Rot-violettes Gitter, oft eine befahrene Straße: nicht queren', 'Красно-пурпурная сетка, часто оживлённая дорога: не пересекать'),
+          (c, s) {
+            final r = _area(s);
+            c.save();
+            c.clipRect(r);
+            for (var k = -40.0; k < 80; k += 7) {
+              c.drawLine(Offset(r.left + k, r.top), Offset(r.left + k + 30, r.bottom), _st(_purple, 1.2));
+              c.drawLine(Offset(r.left + k + 30, r.top), Offset(r.left + k, r.bottom), _st(_purple, 1.2));
+            }
+            c.restore();
+          }),
     ]
   ),
   (
@@ -616,166 +686,6 @@ class _SymbolsTabState extends State<_SymbolsTab> {
   }
 }
 
-// ------------------------------------------------- control descriptions
-
-enum _Spot { north, east, south, west, top, foot, between, inside }
-
-class _SpotPainter extends CustomPainter {
-  _SpotPainter(this.spot);
-  final _Spot spot;
-  @override
-  void paint(Canvas c, Size s) {
-    final m = Offset(s.width / 2, s.height / 2);
-    final line = _st(_black, 1.4);
-    final dot = _fi(_black);
-    switch (spot) {
-      case _Spot.north || _Spot.east || _Spot.south || _Spot.west:
-        c.drawCircle(m, 8, line);
-        final d = switch (spot) {
-          _Spot.north => const Offset(0, -8),
-          _Spot.east => const Offset(8, 0),
-          _Spot.south => const Offset(0, 8),
-          _ => const Offset(-8, 0),
-        };
-        c.drawCircle(m + d, 2.6, dot);
-      case _Spot.top:
-        c.drawCircle(m, 8, line);
-        c.drawCircle(m, 2.6, dot);
-      case _Spot.foot:
-        c.drawPath(Path()..moveTo(m.dx - 10, m.dy + 7)..lineTo(m.dx, m.dy - 7)..lineTo(m.dx + 10, m.dy + 7), line);
-        c.drawLine(Offset(m.dx - 12, m.dy + 7), Offset(m.dx + 12, m.dy + 7), _st(_black, 2.6));
-      case _Spot.between:
-        c.drawCircle(m - const Offset(9, 0), 4, line);
-        c.drawCircle(m + const Offset(9, 0), 4, line);
-        c.drawCircle(m, 2.2, dot);
-      case _Spot.inside:
-        c.drawRect(Rect.fromCenter(center: m, width: 20, height: 16), line);
-        c.drawCircle(m + const Offset(4, 2), 2.4, dot);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SpotPainter old) => old.spot != spot;
-}
-
-class _DescriptionsTab extends StatelessWidget {
-  const _DescriptionsTab();
-
-  static const List<(String, T4, T4)> _cols = [
-    ('A', ('Control number', 'Número do ponto', 'Postennummer', 'Номер КП'), ('The order on your course', 'A ordem no teu percurso', 'Reihenfolge auf deiner Bahn', 'Порядок на дистанции')),
-    ('B', ('Control code', 'Código', 'Postencode', 'Код КП'), ('Printed on the flag unit: check it before you punch', 'Está na estação: confirma antes de picar', 'Steht an der Station: vor dem Stempeln prüfen', 'Написан на станции: сверь перед отметкой')),
-    ('C', ('Which feature', 'Qual objeto', 'Welches Objekt', 'Какой из похожих'), ('When there are several alike: N, upper, middle…', 'Se há vários iguais: N, superior, do meio…', 'Bei mehreren gleichen: N, obere, mittlere…', 'Если похожих несколько: северный, верхний, средний…')),
-    ('D', ('Control feature', 'Objeto', 'Postenobjekt', 'Объект'), ('The thing the flag is at: knoll, boulder, path junction', 'Onde está a baliza: cabeço, pedra, cruzamento', 'Woran der Posten steht: Kuppe, Stein, Wegkreuzung', 'У чего стоит КП: бугор, камень, перекрёсток троп')),
-    ('E', ('Appearance', 'Aspeto', 'Aussehen', 'Особенности'), ('Detail: rocky, overgrown, ruined…', 'Detalhe: rochoso, com mato, em ruínas…', 'Detail: felsig, überwachsen, verfallen…', 'Деталь: каменистый, заросший, разрушенный…')),
-    ('F', ('Size', 'Dimensão', 'Größe', 'Размер'), ('Height or size, e.g. 2 m; or two features combined', 'Altura ou tamanho, p. ex. 2 m; ou dois objetos', 'Höhe oder Größe, z. B. 2 m; oder zwei Objekte', 'Высота или размер, напр. 2 м; или пересечение двух объектов')),
-    ('G', ('Where the flag is', 'Onde está a baliza', 'Wo der Posten steht', 'Где стоит призма'), ('North side, foot, top, between…: see below', 'Lado norte, base, topo, entre…: ver abaixo', 'Nordseite, Fuß, Spitze, zwischen…: siehe unten', 'Северная сторона, подножие, вершина, между…: ниже')),
-    ('H', ('Other', 'Outros', 'Sonstiges', 'Прочее'), ('Water, first aid, a manned control', 'Água, primeiros socorros, ponto com controlador', 'Wasser, Erste Hilfe, besetzter Posten', 'Вода, медпомощь, КП с судьёй')),
-  ];
-
-  static const List<(_Spot, T4)> _spots = [
-    (_Spot.north, ('North side', 'Lado norte', 'Nordseite', 'Северная сторона')),
-    (_Spot.east, ('East side', 'Lado este', 'Ostseite', 'Восточная сторона')),
-    (_Spot.south, ('South side', 'Lado sul', 'Südseite', 'Южная сторона')),
-    (_Spot.west, ('West side', 'Lado oeste', 'Westseite', 'Западная сторона')),
-    (_Spot.top, ('Top', 'Topo', 'Spitze', 'Вершина')),
-    (_Spot.foot, ('Foot (at the base)', 'Base', 'Fuß', 'Подножие')),
-    (_Spot.between, ('Between', 'Entre', 'Zwischen', 'Между')),
-    (_Spot.inside, ('Inside the corner', 'Canto interior', 'Innere Ecke', 'Внутренний угол')),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final sub = TextStyle(fontSize: 12.5, color: context.cSubtle);
-    Widget cell(Widget child, {double w = 34}) => Container(
-          width: w,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(border: Border.all(color: _black, width: .6), color: Colors.white),
-          child: DefaultTextStyle(style: const TextStyle(color: _black, fontSize: 12, fontWeight: FontWeight.w600), child: child),
-        );
-    Widget paint(Draw d) => CustomPaint(size: const Size(30, 30), painter: _SwatchPainter(d));
-    Widget spot(_Spot s) => CustomPaint(size: const Size(30, 30), painter: _SpotPainter(s));
-    final rows = <List<Widget>>[
-      [cell(const Text('1')), cell(const Text('31')), cell(const Text('')), cell(paint((c, s) => c.drawCircle(_mid(s), 3.5, _fi(_brown)))), cell(const Text('')), cell(const Text('')), cell(spot(_Spot.north)), cell(const Text(''))],
-      [cell(const Text('2')), cell(const Text('45')), cell(const Text('')), cell(paint((c, s) => c.drawCircle(_mid(s), 2.8, _fi(_black)))), cell(const Text('')), cell(const Text('2')), cell(spot(_Spot.foot)), cell(const Text(''))],
-      [cell(const Text('3')), cell(const Text('52')), cell(const Text('')), cell(paint((c, s) => _dashPath(c, Path()..moveTo(15, 3)..lineTo(15, 27)..moveTo(3, 15)..lineTo(27, 15), _st(_black, 1.4), 4, 2))), cell(const Text('')), cell(const Text('')), cell(const Text('')), cell(const Text(''))],
-    ];
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 32), children: [
-      Text(
-          tr((
-            'Next to the map you get a sheet of little pictures: one row per control. It says exactly where the flag stands, so you know what to look for in the last 50 metres.',
-            'Junto ao mapa vem uma folha com pequenos desenhos: uma linha por ponto. Diz exatamente onde está a baliza, para saberes o que procurar nos últimos 50 metros.',
-            'Neben der Karte bekommst du ein Blatt mit kleinen Bildern: eine Zeile pro Posten. Es sagt genau, wo der Posten steht — wichtig für die letzten 50 Meter.',
-            'К карте выдают листок с картинками: строка на каждый КП. Он точно говорит, где стоит призма, чтобы знать, что искать на последних 50 метрах.'
-          )),
-          style: TextStyle(fontSize: 13, color: context.cSubtle, height: 1.35)),
-      const SizedBox(height: 14),
-      Text(tr(('An example sheet', 'Exemplo de sinalética', 'Beispielblatt', 'Пример легенды')),
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: .6, color: context.cTitle)),
-      const SizedBox(height: 6),
-      SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [for (final l in 'ABCDEFGH'.split('')) cell(Text(l, style: const TextStyle(color: Color(0xFF888888))))]),
-          for (final r in rows) Row(children: r),
-        ]),
-      ),
-      const SizedBox(height: 6),
-      Text(
-          tr((
-            '1 — code 31: knoll, north side. 2 — code 45: boulder 2 m high, at its foot. 3 — code 52: path junction.',
-            '1 — código 31: cabeço, lado norte. 2 — código 45: pedra de 2 m, na base. 3 — código 52: cruzamento de trilhos.',
-            '1 — Code 31: Kuppe, Nordseite. 2 — Code 45: Stein, 2 m hoch, am Fuß. 3 — Code 52: Wegkreuzung.',
-            '1 — код 31: бугор, северная сторона. 2 — код 45: камень высотой 2 м, у подножия. 3 — код 52: перекрёсток троп.'
-          )),
-          style: sub),
-      const SizedBox(height: 18),
-      Text(tr(('The columns', 'As colunas', 'Die Spalten', 'Столбцы')),
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: .6, color: context.cTitle)),
-      for (final (k, name, hint) in _cols)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            SizedBox(width: 26, child: Text(k, style: TextStyle(fontWeight: FontWeight.w800, color: context.cTitle))),
-            Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(tr(name), style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text(tr(hint), style: sub),
-            ])),
-          ]),
-        ),
-      const SizedBox(height: 18),
-      Text(tr(('Column G: where the flag is', 'Coluna G: onde está a baliza', 'Spalte G: wo der Posten steht', 'Столбец G: где стоит призма')),
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: .6, color: context.cTitle)),
-      const SizedBox(height: 6),
-      Wrap(spacing: 10, runSpacing: 10, children: [
-        for (final (s, name) in _spots)
-          SizedBox(
-            width: 150,
-            child: Row(children: [
-              Container(
-                  width: 40,
-                  height: 36,
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: context.cHairline)),
-                  child: CustomPaint(painter: _SpotPainter(s))),
-              const SizedBox(width: 8),
-              Expanded(child: Text(tr(name), style: const TextStyle(fontSize: 13))),
-            ]),
-          ),
-      ]),
-      const SizedBox(height: 18),
-      Text(
-          tr((
-            'Beginners often get the descriptions in words instead of pictures. Ask at the registration desk.',
-            'Os principiantes costumam receber a sinalética em texto. Pergunta no secretariado.',
-            'Anfänger bekommen die Beschreibung oft als Text. Frag bei der Anmeldung.',
-            'Новичкам часто дают легенды словами. Спроси в секретариате.'
-          )),
-          style: sub),
-    ]);
-  }
-}
-
 // ------------------------------------------------------- how a race works
 
 class _RaceTab extends StatefulWidget {
@@ -817,6 +727,15 @@ class _RaceTabState extends State<_RaceTab> {
         ('Punch the finish, then read out your chip at the desk — even if you gave up. They count everyone back in.', 'Pica a chegada e lê o chip no secretariado — mesmo se desististe. Assim sabem que voltaste.', 'Ziel stempeln, dann Chip auslesen — auch bei Aufgabe. So weiß man, dass du zurück bist.', 'Отметься на финише и считай чип — даже если сошёл. Так знают, что ты вернулся.')),
   ];
 
+  // What the Madeira sheets Kirill photographed print around the map.
+  static const List<T4> _sheetNotes = [
+    ('Escala 1:6000 — 1 cm on the map is 60 m. Town sprints use 1:4000 or 1:5000, forest races 1:10000 or 1:15000.', 'Escala 1:6000 — 1 cm no mapa são 60 m. Sprints urbanos usam 1:4000 ou 1:5000, floresta 1:10000 ou 1:15000.', 'Maßstab 1:6000 — 1 cm auf der Karte sind 60 m. Stadtsprints 1:4000 oder 1:5000, Wald 1:10000 oder 1:15000.', 'Масштаб 1:6000 — 1 см на карте = 60 м. В городском спринте 1:4000 или 1:5000, в лесу 1:10000 или 1:15000.'),
+    ('Equidistância 10 m — the contour interval: each brown line is 10 m higher or lower than the next. Lines close together mean steep.', 'Equidistância 10 m — cada curva castanha fica 10 m acima ou abaixo da seguinte. Curvas juntas = íngreme.', 'Äquidistanz 10 m — jede braune Linie liegt 10 m höher oder tiefer als die nächste. Enge Linien = steil.', 'Сечение 10 м — каждая коричневая линия на 10 м выше или ниже соседней. Частые линии — круто.'),
+    ('The blue lines point to magnetic north; hold the map so they match the compass.', 'As linhas azuis apontam o norte magnético; segura o mapa alinhado com a bússola.', 'Die blauen Linien zeigen nach magnetisch Nord; Karte nach dem Kompass ausrichten.', 'Синие линии показывают магнитный север; держи карту по компасу.'),
+    ('Boxes R1, R2, R3: if a SPORTident unit does not beep, punch the pin punch hanging at the control into the next free box.', 'Quadrados R1, R2, R3: se a estação SPORTident não apitar, pica com o alicate do ponto no quadrado livre seguinte.', 'Felder R1, R2, R3: piept die SPORTident-Station nicht, mit der Stiftzange am Posten ins nächste freie Feld stanzen.', 'Клетки R1, R2, R3: если станция SPORTident не пищит, пробей компостером на КП следующую свободную клетку.'),
+    ('Rogaine: no order and no fixed course. The first digit of the code is the points (300 = 30 points); collect as many as you can before the time is up.', 'Rogaine: sem ordem nem percurso fixo. O primeiro algarismo do código são os pontos (300 = 30 pontos); junta o máximo antes do fim do tempo.', 'Rogaine: keine Reihenfolge, keine feste Bahn. Die erste Ziffer des Codes sind die Punkte (300 = 30 Punkte); so viele wie möglich in der Zeit sammeln.', 'Рогейн: без порядка и без заданной дистанции. Первая цифра кода — очки (300 = 30 очков); набери как можно больше до конца времени.'),
+  ];
+
   static const List<T4> _rules = [
     ('Phones and GPS may not be used to navigate. A compass is allowed.', 'Telemóvel e GPS não podem ser usados para navegar. A bússola é permitida.', 'Handy und GPS dürfen nicht zur Navigation dienen. Ein Kompass ist erlaubt.', 'Телефон и GPS для навигации нельзя. Компас можно.'),
     ('Purple stripes and olive green are out of bounds: entering means disqualification.', 'Riscas roxas e verde-oliva são interditos: entrar dá desclassificação.', 'Violette Streifen und Olivgrün sind gesperrt: Betreten heißt Disqualifikation.', 'Пурпурные полосы и оливковый — запрет: зашёл — дисквалификация.'),
@@ -843,6 +762,18 @@ class _RaceTabState extends State<_RaceTab> {
               Text('${i + 1}. ${tr(_steps[i].$2)}', style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600)),
               Text(tr(_steps[i].$3), style: sub),
             ])),
+          ]),
+        ),
+      const SizedBox(height: 14),
+      Text(tr(('Reading the map sheet', 'Ler o mapa', 'Das Kartenblatt lesen', 'Как читать лист карты')).toUpperCase(),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: .6, color: context.cTitle)),
+      for (final r in _sheetNotes)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Padding(padding: EdgeInsets.only(top: 6), child: Icon(Icons.circle, size: 6, color: kGreen)),
+            const SizedBox(width: 10),
+            Expanded(child: Text(tr(r), style: const TextStyle(fontSize: 13.5))),
           ]),
         ),
       const SizedBox(height: 14),
