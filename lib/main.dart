@@ -1822,9 +1822,12 @@ void showEventActions(BuildContext context, AtivaEvent e, {bool fromOrienteering
             ),
           // Every orienteering event leads to the basics (Kirill, 21.10.2026).
           if (isOrienteeringEvent(e) && !fromOrienteering)
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              decoration: BoxDecoration(color: ctx.cGreenTint, borderRadius: BorderRadius.circular(10)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Material(
+              color: ctx.cGreenTint,
+              borderRadius: BorderRadius.circular(10),
+              clipBehavior: Clip.antiAlias,
               child: ListTile(
                 dense: true,
                 leading: Icon(Icons.explore, color: ctx.cTitle),
@@ -1837,6 +1840,7 @@ void showEventActions(BuildContext context, AtivaEvent e, {bool fromOrienteering
                   openOrienteering(context);
                 },
               ),
+              ),
             ),
           FutureBuilder<(Levada, double)?>(
             future: nearestHeritage(e.location),
@@ -1844,12 +1848,14 @@ void showEventActions(BuildContext context, AtivaEvent e, {bool fromOrienteering
               final r = snap.data;
               if (r == null) return const SizedBox.shrink();
               final (l, km) = r;
-              return Container(
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                decoration: BoxDecoration(
-                  color: ctx.cTerraTint,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              // Material, not a coloured box: a ListTile paints its ink on the
+              // nearest Material, and a decorated box hid the tap feedback.
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Material(
+                color: ctx.cTerraTint,
+                borderRadius: BorderRadius.circular(10),
+                clipBehavior: Clip.antiAlias,
                 child: ListTile(
                   dense: true,
                   leading: Icon(Icons.account_balance_outlined,
@@ -1863,6 +1869,7 @@ void showEventActions(BuildContext context, AtivaEvent e, {bool fromOrienteering
                   trailing: const Icon(Icons.chevron_right, size: 18),
                   onTap: () =>
                       openUrl(locale.value == 'pt' ? l.urlPt : l.urlEn),
+                ),
                 ),
               );
             },

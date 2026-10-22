@@ -70,7 +70,7 @@ Future<void> shotAndWait(WidgetTester t, String name) async {
 
 BuildContext ctx(WidgetTester t) => t.element(find.byType(NavigationBar, skipOffstage: false));
 
-Finder chip(String key) => find.widgetWithText(ChoiceChip, app.t(key));
+Finder chip(String key) => find.widgetWithText(FilterChip, app.t(key));
 
 final eventTiles = find.byWidgetPredicate((w) => w.runtimeType.toString() == '_EventTile');
 
