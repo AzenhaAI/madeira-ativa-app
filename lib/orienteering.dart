@@ -9,6 +9,7 @@ import 'main.dart';
 import 'orienteering_cd.dart';
 import 'orienteering_classes.dart';
 import 'orienteering_drills.dart';
+import 'orienteering_tips.dart';
 
 /// Orienteering basics: what the map symbols mean (forest ISOM 2017 and
 /// sprint ISSprOM 2019 — the common ones, drawn here from the published
@@ -44,7 +45,7 @@ class OrienteeringPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 6,
+      length: 7,
       initialIndex: initialTab,
       child: Scaffold(
         appBar: AppBar(
@@ -59,12 +60,13 @@ class OrienteeringPage extends StatelessWidget {
               Tab(text: tr(('Control descriptions', 'Sinalética', 'Postenbeschreibung', 'Легенды КП'))),
               Tab(text: tr(('Classes & entry', 'Escalões e inscrição', 'Kategorien & Anmeldung', 'Группы и заявка'))),
               Tab(text: tr(('How a race works', 'Como é uma prova', 'So läuft ein OL-Wettkampf', 'Как проходит старт'))),
+              Tab(text: tr(('Club tips', 'Dicas', 'Tipps', 'Советы'))),
               Tab(text: tr(('Drills', 'Treino', 'Übungen', 'Тренировка'))),
               Tab(text: tr(('Compass', 'Bússola', 'Kompass', 'Компас'))),
             ],
           ),
         ),
-        body: const TabBarView(children: [_SymbolsTab(), DescriptionsTab(), ClassesTab(), _RaceTab(), DrillsTab(), _CompassTab()]),
+        body: const TabBarView(children: [_SymbolsTab(), DescriptionsTab(), ClassesTab(), _RaceTab(), TipsTab(), DrillsTab(), _CompassTab()]),
       ),
     );
   }
@@ -708,6 +710,42 @@ class _SymbolsTabState extends State<_SymbolsTab> {
 
 // ------------------------------------------------------- how a race works
 
+const List<T4> kRaceRules = [
+    ('Phones and GPS may not be used to navigate. A compass is allowed.', 'Telemóvel e GPS não podem ser usados para navegar. A bússola é permitida.', 'Handy und GPS dürfen nicht zur Navigation dienen. Ein Kompass ist erlaubt.', 'Телефон и GPS для навигации нельзя. Компас можно.'),
+    ('Purple stripes and olive green are out of bounds: entering means disqualification.', 'Riscas roxas e verde-oliva são interditos: entrar dá desclassificação.', 'Violette Streifen und Olivgrün sind gesperrt: Betreten heißt Disqualifikation.', 'Пурпурные полосы и оливковый — запрет: зашёл — дисквалификация.'),
+    ('Miss a control or punch in the wrong order and you get no result (mispunch).', 'Falhar um ponto ou a ordem dá desclassificação.', 'Ein fehlender Posten oder falsche Reihenfolge: keine Wertung.', 'Пропуск КП или нарушение порядка — без результата.'),
+    ('Carry a whistle on long forest courses. Someone hurt always comes before your time.', 'Leva um apito nos percursos longos. Um ferido vem sempre antes do teu tempo.', 'Auf langen Waldbahnen eine Pfeife mitnehmen. Verletzte gehen immer vor.', 'На длинных лесных дистанциях бери свисток. Помочь пострадавшему важнее результата.'),
+    ('Do not lead or follow others on purpose.', 'Não guies nem sigas os outros de propósito.', 'Nicht absichtlich führen oder folgen.', 'Не веди других и не иди за другими специально.'),
+  ];
+
+
+const List<T4> kSheetNotes = [
+    ('Scale 1:6000 (printed «Escala») — 1 cm on the map is 60 m. Sprint maps are 1:4000 (sometimes 1:3000); local town races also use 1:5000 or 1:6000 like this one; forest races 1:15000 or 1:10000.', 'Escala 1:6000 — 1 cm no mapa são 60 m. Mapas de sprint 1:4000 (às vezes 1:3000); provas urbanas locais também usam 1:5000 ou 1:6000, como esta; floresta 1:15000 ou 1:10000.', 'Maßstab 1:6000 (auf dem Blatt «Escala») — 1 cm auf der Karte sind 60 m. Sprintkarten 1:4000 (manchmal 1:3000); lokale Stadtläufe auch 1:5000 oder 1:6000 wie hier; Wald 1:15000 oder 1:10000.', 'Масштаб 1:6000 — 1 см на карте = 60 м. Спринт — 1:4000 (иногда 1:3000); местные городские старты — также 1:5000 или 1:6000, как здесь; лес — 1:15000 или 1:10000.'),
+    ('Contour interval 10 m (printed «Equidistância»): each brown line is 10 m higher or lower than the next. Lines close together mean steep.', 'Equidistância 10 m — cada curva castanha fica 10 m acima ou abaixo da seguinte. Curvas juntas = íngreme.', 'Äquidistanz 10 m (auf dem Blatt «Equidistância»): jede braune Linie liegt 10 m höher oder tiefer als die nächste. Enge Linien = steil.', 'Сечение 10 м (на листе «Equidistância») — каждая коричневая линия на 10 м выше или ниже соседней. Частые линии — круто.'),
+    ('The blue lines point to magnetic north; hold the map so they match the compass.', 'As linhas azuis apontam o norte magnético; segura o mapa alinhado com a bússola.', 'Die blauen Linien zeigen nach magnetisch Nord; Karte nach dem Kompass ausrichten.', 'Синие линии показывают магнитный север; держи карту по компасу.'),
+    ('Boxes R1, R2, R3: if a SPORTident unit does not beep, punch the pin punch hanging at the control into the next free box.', 'Quadrados R1, R2, R3: se a estação SPORTident não apitar, pica com o picotador do ponto no quadrado livre seguinte.', 'Felder R1, R2, R3: piept die SPORTident-Station nicht, mit der Stiftzange am Posten ins nächste freie Feld stanzen.', 'Клетки R1, R2, R3: если станция SPORTident не пищит, пробей компостером на КП следующую свободную клетку.'),
+    ('Rogaine: no order and no fixed course. Column A shows the points: the code without its last digit (code 152 = 15 points). Collect as many as you can before the time is up.', 'Rogaine: sem ordem nem percurso fixo. A coluna A mostra os pontos: o código sem o último algarismo (código 152 = 15 pontos). Junta o máximo antes do fim do tempo.', 'Rogaine: keine Reihenfolge, keine feste Bahn. Spalte A zeigt die Punkte: der Code ohne die letzte Ziffer (Code 152 = 15 Punkte). So viele wie möglich in der Zeit sammeln.', 'Рогейн: без порядка и без заданной дистанции. В столбце A — очки: код без последней цифры (код 152 = 15 очков). Набери как можно больше до конца времени.'),
+  ];
+
+
+const List<(IconData, T4, T4)> kRaceSteps = [
+    (Icons.how_to_reg_outlined, ('Sign up', 'Inscrição', 'Anmelden', 'Заявка'),
+        ('Pick a class by age and level. Most races have an open or beginner course: no licence needed.', 'Escolhe o escalão por idade e nível. Quase todas as provas têm um percurso aberto ou de iniciação: sem licença.', 'Wähle eine Kategorie nach Alter und Niveau. Fast immer gibt es eine offene oder Anfängerbahn: ohne Lizenz.', 'Выбери группу по возрасту и уровню. Почти везде есть открытая или новичковая дистанция: лицензия не нужна.')),
+    (Icons.credit_card, ('The chip', 'O chip', 'Der Chip', 'Чип'),
+        ('An electronic card on your finger (SPORTident). Rent one at the desk if you have none.', 'Um cartão eletrónico no dedo (SPORTident). Aluga-se no secretariado.', 'Ein elektronischer Chip am Finger (SPORTident). Im Wettkampfbüro ausleihen.', 'Электронный чип на палец (SPORTident). Можно взять напрокат в секретариате.')),
+    (Icons.timer_outlined, ('Start time', 'Hora de partida', 'Startzeit', 'Время старта'),
+        ('Everyone starts alone, a minute or more apart. Clear and check your chip in the start boxes.', 'Cada um parte sozinho, com um minuto ou mais de intervalo. Limpa e verifica o chip nas boxes de partida.', 'Jeder startet allein, mit einer Minute Abstand oder mehr. In den Startboxen Chip löschen und prüfen.', 'Стартуют по одному, с интервалом в минуту или больше. В стартовом коридоре очисти и проверь чип.')),
+    (Icons.map_outlined, ('Map at the start', 'Mapa na partida', 'Karte am Start', 'Карта на старте'),
+        ('You see the map only when your clock starts. Find the triangle, then control 1.', 'Só vês o mapa quando o teu tempo começa. Encontra o triângulo e depois o ponto 1.', 'Die Karte siehst du erst, wenn deine Zeit läuft. Dreieck finden, dann Posten 1.', 'Карту видишь только когда пошло твоё время. Найди треугольник, потом КП 1.')),
+    (Icons.flag_outlined, ('Controls', 'Pontos', 'Posten', 'КП'),
+        ('An orange and white flag with a unit. Check the code, put the chip in until it beeps or flashes.', 'Uma baliza laranja e branca com uma estação. Confirma o código e pica até apitar ou piscar.', 'Ein orange-weißer Posten mit Station. Code prüfen, Chip hineinhalten, bis es piept oder blinkt.', 'Оранжево-белая призма со станцией. Сверь код и отметься до писка или вспышки.')),
+    (Icons.alt_route, ('Your own route', 'O teu caminho', 'Deine Route', 'Свой путь'),
+        ('Between controls you choose the way. Paths are longer but faster; straight is shorter but rougher.', 'Entre pontos escolhes o caminho. Trilhos são mais longos mas rápidos; a direito é mais curto mas duro.', 'Zwischen den Posten wählst du den Weg. Wege sind länger, aber schneller; gerade ist kürzer, aber rauer.', 'Путь между КП выбираешь сам. По тропам дальше, но быстрее; напрямик короче, но тяжелее.')),
+    (Icons.sports_score, ('Finish and download', 'Chegada e descarga', 'Ziel und Auslesen', 'Финиш и считывание'),
+        ('Punch the finish, then read out your chip at the desk — even if you gave up. They count everyone back in.', 'Pica a chegada e descarrega o chip no secretariado — mesmo se desististe. Assim sabem que voltaste.', 'Ziel stempeln, dann Chip auslesen — auch bei Aufgabe. So weiß man, dass du zurück bist.', 'Отметься на финише и считай чип — даже если сошёл. Так знают, что ты вернулся.')),
+  ];
+
+
 class _RaceTab extends StatefulWidget {
   const _RaceTab();
   @override
@@ -730,64 +768,37 @@ class _RaceTabState extends State<_RaceTab> {
     });
   }
 
-  static const List<(IconData, T4, T4)> _steps = [
-    (Icons.how_to_reg_outlined, ('Sign up', 'Inscrição', 'Anmelden', 'Заявка'),
-        ('Pick a class by age and level. Most races have an open or beginner course: no licence needed.', 'Escolhe o escalão por idade e nível. Quase todas as provas têm um percurso aberto ou de iniciação: sem licença.', 'Wähle eine Kategorie nach Alter und Niveau. Fast immer gibt es eine offene oder Anfängerbahn: ohne Lizenz.', 'Выбери группу по возрасту и уровню. Почти везде есть открытая или новичковая дистанция: лицензия не нужна.')),
-    (Icons.credit_card, ('The chip', 'O chip', 'Der Chip', 'Чип'),
-        ('An electronic card on your finger (SPORTident). Rent one at the desk if you have none.', 'Um cartão eletrónico no dedo (SPORTident). Aluga-se no secretariado.', 'Ein elektronischer Chip am Finger (SPORTident). Im Wettkampfbüro ausleihen.', 'Электронный чип на палец (SPORTident). Можно взять напрокат в секретариате.')),
-    (Icons.timer_outlined, ('Start time', 'Hora de partida', 'Startzeit', 'Время старта'),
-        ('Everyone starts alone, a minute or more apart. Clear and check your chip in the start boxes.', 'Cada um parte sozinho, com um minuto ou mais de intervalo. Limpa e verifica o chip nas boxes de partida.', 'Jeder startet allein, mit einer Minute Abstand oder mehr. In den Startboxen Chip löschen und prüfen.', 'Стартуют по одному, с интервалом в минуту или больше. В стартовом коридоре очисти и проверь чип.')),
-    (Icons.map_outlined, ('Map at the start', 'Mapa na partida', 'Karte am Start', 'Карта на старте'),
-        ('You see the map only when your clock starts. Find the triangle, then control 1.', 'Só vês o mapa quando o teu tempo começa. Encontra o triângulo e depois o ponto 1.', 'Die Karte siehst du erst, wenn deine Zeit läuft. Dreieck finden, dann Posten 1.', 'Карту видишь только когда пошло твоё время. Найди треугольник, потом КП 1.')),
-    (Icons.flag_outlined, ('Controls', 'Pontos', 'Posten', 'КП'),
-        ('An orange and white flag with a unit. Check the code, put the chip in until it beeps or flashes.', 'Uma baliza laranja e branca com uma estação. Confirma o código e pica até apitar ou piscar.', 'Ein orange-weißer Posten mit Station. Code prüfen, Chip hineinhalten, bis es piept oder blinkt.', 'Оранжево-белая призма со станцией. Сверь код и отметься до писка или вспышки.')),
-    (Icons.alt_route, ('Your own route', 'O teu caminho', 'Deine Route', 'Свой путь'),
-        ('Between controls you choose the way. Paths are longer but faster; straight is shorter but rougher.', 'Entre pontos escolhes o caminho. Trilhos são mais longos mas rápidos; a direito é mais curto mas duro.', 'Zwischen den Posten wählst du den Weg. Wege sind länger, aber schneller; gerade ist kürzer, aber rauer.', 'Путь между КП выбираешь сам. По тропам дальше, но быстрее; напрямик короче, но тяжелее.')),
-    (Icons.sports_score, ('Finish and download', 'Chegada e descarga', 'Ziel und Auslesen', 'Финиш и считывание'),
-        ('Punch the finish, then read out your chip at the desk — even if you gave up. They count everyone back in.', 'Pica a chegada e descarrega o chip no secretariado — mesmo se desististe. Assim sabem que voltaste.', 'Ziel stempeln, dann Chip auslesen — auch bei Aufgabe. So weiß man, dass du zurück bist.', 'Отметься на финише и считай чип — даже если сошёл. Так знают, что ты вернулся.')),
-  ];
+
 
   // What the Madeira sheets Kirill photographed print around the map.
-  static const List<T4> _sheetNotes = [
-    ('Scale 1:6000 (printed «Escala») — 1 cm on the map is 60 m. Sprint maps are 1:4000 (sometimes 1:3000); local town races also use 1:5000 or 1:6000 like this one; forest races 1:15000 or 1:10000.', 'Escala 1:6000 — 1 cm no mapa são 60 m. Mapas de sprint 1:4000 (às vezes 1:3000); provas urbanas locais também usam 1:5000 ou 1:6000, como esta; floresta 1:15000 ou 1:10000.', 'Maßstab 1:6000 (auf dem Blatt «Escala») — 1 cm auf der Karte sind 60 m. Sprintkarten 1:4000 (manchmal 1:3000); lokale Stadtläufe auch 1:5000 oder 1:6000 wie hier; Wald 1:15000 oder 1:10000.', 'Масштаб 1:6000 — 1 см на карте = 60 м. Спринт — 1:4000 (иногда 1:3000); местные городские старты — также 1:5000 или 1:6000, как здесь; лес — 1:15000 или 1:10000.'),
-    ('Contour interval 10 m (printed «Equidistância»): each brown line is 10 m higher or lower than the next. Lines close together mean steep.', 'Equidistância 10 m — cada curva castanha fica 10 m acima ou abaixo da seguinte. Curvas juntas = íngreme.', 'Äquidistanz 10 m (auf dem Blatt «Equidistância»): jede braune Linie liegt 10 m höher oder tiefer als die nächste. Enge Linien = steil.', 'Сечение 10 м (на листе «Equidistância») — каждая коричневая линия на 10 м выше или ниже соседней. Частые линии — круто.'),
-    ('The blue lines point to magnetic north; hold the map so they match the compass.', 'As linhas azuis apontam o norte magnético; segura o mapa alinhado com a bússola.', 'Die blauen Linien zeigen nach magnetisch Nord; Karte nach dem Kompass ausrichten.', 'Синие линии показывают магнитный север; держи карту по компасу.'),
-    ('Boxes R1, R2, R3: if a SPORTident unit does not beep, punch the pin punch hanging at the control into the next free box.', 'Quadrados R1, R2, R3: se a estação SPORTident não apitar, pica com o picotador do ponto no quadrado livre seguinte.', 'Felder R1, R2, R3: piept die SPORTident-Station nicht, mit der Stiftzange am Posten ins nächste freie Feld stanzen.', 'Клетки R1, R2, R3: если станция SPORTident не пищит, пробей компостером на КП следующую свободную клетку.'),
-    ('Rogaine: no order and no fixed course. Column A shows the points: the code without its last digit (code 152 = 15 points). Collect as many as you can before the time is up.', 'Rogaine: sem ordem nem percurso fixo. A coluna A mostra os pontos: o código sem o último algarismo (código 152 = 15 pontos). Junta o máximo antes do fim do tempo.', 'Rogaine: keine Reihenfolge, keine feste Bahn. Spalte A zeigt die Punkte: der Code ohne die letzte Ziffer (Code 152 = 15 Punkte). So viele wie möglich in der Zeit sammeln.', 'Рогейн: без порядка и без заданной дистанции. В столбце A — очки: код без последней цифры (код 152 = 15 очков). Набери как можно больше до конца времени.'),
-  ];
 
-  static const List<T4> _rules = [
-    ('Phones and GPS may not be used to navigate. A compass is allowed.', 'Telemóvel e GPS não podem ser usados para navegar. A bússola é permitida.', 'Handy und GPS dürfen nicht zur Navigation dienen. Ein Kompass ist erlaubt.', 'Телефон и GPS для навигации нельзя. Компас можно.'),
-    ('Purple stripes and olive green are out of bounds: entering means disqualification.', 'Riscas roxas e verde-oliva são interditos: entrar dá desclassificação.', 'Violette Streifen und Olivgrün sind gesperrt: Betreten heißt Disqualifikation.', 'Пурпурные полосы и оливковый — запрет: зашёл — дисквалификация.'),
-    ('Miss a control or punch in the wrong order and you get no result (mispunch).', 'Falhar um ponto ou a ordem dá desclassificação.', 'Ein fehlender Posten oder falsche Reihenfolge: keine Wertung.', 'Пропуск КП или нарушение порядка — без результата.'),
-    ('Carry a whistle on long forest courses. Someone hurt always comes before your time.', 'Leva um apito nos percursos longos. Um ferido vem sempre antes do teu tempo.', 'Auf langen Waldbahnen eine Pfeife mitnehmen. Verletzte gehen immer vor.', 'На длинных лесных дистанциях бери свисток. Помочь пострадавшему важнее результата.'),
-    ('Do not lead or follow others on purpose.', 'Não guies nem sigas os outros de propósito.', 'Nicht absichtlich führen oder folgen.', 'Не веди других и не иди за другими специально.'),
-  ];
+
+
 
   @override
   Widget build(BuildContext context) {
     final sub = TextStyle(fontSize: 13, color: context.cSubtle, height: 1.35);
     return ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 32), children: [
-      for (var i = 0; i < _steps.length; i++)
+      for (var i = 0; i < kRaceSteps.length; i++)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             CircleAvatar(
                 radius: 16,
                 backgroundColor: context.cGreenTint,
-                child: Icon(_steps[i].$1, size: 18, color: context.cTitle)),
+                child: Icon(kRaceSteps[i].$1, size: 18, color: context.cTitle)),
             const SizedBox(width: 12),
             Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${i + 1}. ${tr(_steps[i].$2)}', style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600)),
-              Text(tr(_steps[i].$3), style: sub),
+              Text('${i + 1}. ${tr(kRaceSteps[i].$2)}', style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600)),
+              Text(tr(kRaceSteps[i].$3), style: sub),
             ])),
           ]),
         ),
       const SizedBox(height: 14),
       Text(tr(('Reading the map sheet', 'Ler o mapa', 'Das Kartenblatt lesen', 'Как читать лист карты')).toUpperCase(),
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: .6, color: context.cTitle)),
-      for (final r in _sheetNotes)
+      for (final r in kSheetNotes)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -799,7 +810,7 @@ class _RaceTabState extends State<_RaceTab> {
       const SizedBox(height: 14),
       Text(tr(('Rules to know', 'Regras a saber', 'Wichtige Regeln', 'Важные правила')).toUpperCase(),
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: .6, color: context.cTitle)),
-      for (final r in _rules)
+      for (final r in kRaceRules)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
