@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'island_now.dart';
 import 'main.dart';
 import 'orienteering_cd.dart';
+import 'orienteering_classes.dart';
+import 'orienteering_drills.dart';
 
 /// Orienteering basics: what the map symbols mean (forest ISOM 2017 and
 /// sprint ISSprOM 2019 — the common ones, drawn here from the published
@@ -42,7 +44,7 @@ class OrienteeringPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 6,
       initialIndex: initialTab,
       child: Scaffold(
         appBar: AppBar(
@@ -55,12 +57,14 @@ class OrienteeringPage extends StatelessWidget {
             tabs: [
               Tab(text: tr(('Map symbols', 'Símbolos', 'Kartenzeichen', 'Знаки карты'))),
               Tab(text: tr(('Control descriptions', 'Sinalética', 'Postenbeschreibung', 'Легенды КП'))),
+              Tab(text: tr(('Classes & entry', 'Escalões e inscrição', 'Kategorien & Anmeldung', 'Группы и заявка'))),
               Tab(text: tr(('How a race works', 'Como é uma prova', 'So läuft ein OL-Wettkampf', 'Как проходит старт'))),
+              Tab(text: tr(('Drills', 'Treino', 'Übungen', 'Тренировка'))),
               Tab(text: tr(('Compass', 'Bússola', 'Kompass', 'Компас'))),
             ],
           ),
         ),
-        body: const TabBarView(children: [_SymbolsTab(), DescriptionsTab(), _RaceTab(), _CompassTab()]),
+        body: const TabBarView(children: [_SymbolsTab(), DescriptionsTab(), ClassesTab(), _RaceTab(), DrillsTab(), _CompassTab()]),
       ),
     );
   }

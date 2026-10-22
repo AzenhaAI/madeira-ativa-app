@@ -46,6 +46,7 @@ dependencies:
   flutter_timezone: ^5.1.0
   webview_flutter: ^4.14.0
   in_app_review: ^2.0.12
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:

@@ -792,6 +792,10 @@ Route<dynamic> _tabSwitch(int i) => PageRouteBuilder(
 Route<dynamic>? deepLinkRoute(RouteSettings s) {
   final page = Uri.tryParse(s.name ?? '')?.pathSegments.firstOrNull;
   if (_tabLinks[page] case final i?) return _tabSwitch(i);
+  if (page == 'orienteering') {
+    final tab = int.tryParse(Uri.tryParse(s.name ?? '')?.queryParameters['tab'] ?? '') ?? 0;
+    return MaterialPageRoute(settings: s, builder: (_) => OrienteeringPage(initialTab: tab.clamp(0, 5)));
+  }
   String? url;
   String title = 'Madeira Ativa';
   switch (page) {
