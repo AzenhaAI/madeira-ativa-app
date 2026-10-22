@@ -12,6 +12,7 @@ import 'gazetteer.dart';
 import 'ask_review.dart';
 import 'island_now.dart';
 import 'levada_page.dart';
+import 'old_pictures.dart';
 import 'orienteering.dart';
 import 'notify.dart';
 import 'roots_page.dart';
@@ -792,6 +793,15 @@ Route<dynamic> _tabSwitch(int i) => PageRouteBuilder(
 Route<dynamic>? deepLinkRoute(RouteSettings s) {
   final page = Uri.tryParse(s.name ?? '')?.pathSegments.firstOrNull;
   if (_tabLinks[page] case final i?) return _tabSwitch(i);
+  if (page == 'history') {
+    // madeiraativa://open/history, …/history/pictures for the old-pictures galleries
+    final sub = Uri.tryParse(s.name ?? '')?.pathSegments.skip(1).firstOrNull;
+    return MaterialPageRoute(
+        settings: s,
+        builder: (_) => sub == 'pictures'
+            ? const OldPicturesPage()
+            : Scaffold(appBar: AppBar(title: Text(t('roots'))), body: const ReadableWidth(child: RootsPage())));
+  }
   if (page == 'orienteering') {
     final tab = int.tryParse(Uri.tryParse(s.name ?? '')?.queryParameters['tab'] ?? '') ?? 0;
     return MaterialPageRoute(settings: s, builder: (_) => OrienteeringPage(initialTab: tab.clamp(0, 6)));

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'eras_data.dart';
 import 'main.dart';
+import 'old_pictures.dart';
+import 'orienteering.dart' show tr;
 import 'roots_data.dart';
 import 'stories_data.dart';
 
@@ -83,6 +85,23 @@ class RootsPage extends StatelessWidget {
             ),
           ),
 
+        Card(
+          color: context.cTerraTint,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
+          child: ListTile(
+            leading: const Text('🎨', style: TextStyle(fontSize: 22)),
+            title: Text(tr(kOldPicturesTitle),
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w600)),
+            subtitle: Text(tr(kOldPicturesSub),
+                style: const TextStyle(fontSize: 12)),
+            trailing: Icon(Icons.chevron_right, color: context.cTerraText),
+            onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const OldPicturesPage())),
+          ),
+        ),
         Card(
           color: context.cTerraTint,
           elevation: 0,
