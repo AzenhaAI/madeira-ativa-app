@@ -125,6 +125,8 @@ const trDe = <String, String>{
   'open_calendar_hint': 'Noch keine Seite für diesen Lauf — ein Saisonkalender',
   'open_site': 'Seite öffnen',
   'organized_by': 'Veranstaltet von',
+  'price_unknown': 'Preis nicht angegeben',
+  'until': 'bis',
   'p_3mo': '3 Mon.',
   'p_6mo': '6 Mon.',
   'p_later': 'Später',

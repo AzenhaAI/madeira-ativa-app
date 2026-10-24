@@ -245,7 +245,7 @@ const _tr = {
     'countries': 'Countries',
     'intl_trend': 'International runners by year',
     'time_dist': 'Median finish time',
-    'stats': 'Trail running statistics','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next day','p_today':'Today','p_weekend':'Weekend','organized_by':'Organised by',
+    'stats': 'Trail running statistics','finishers_year':'Finishers by year','top_clubs':'Top clubs','top_localities':'Top localities','toughest':'Toughest races (DNF %)','finish_hours':'Finish times (hour of day)','loyalty':'Returning runners (years raced)','elev_profile':'Elevation profile','status_changed':'Trail status changed','p_next':'Next day','p_today':'Today','p_weekend':'Weekend','organized_by':'Organised by','price_unknown':'Price not listed','until':'until',
   },
   'pt': {
     'home': 'Início',
@@ -424,7 +424,7 @@ const _tr = {
     'countries': 'Países',
     'intl_trend': 'Corredores estrangeiros por ano',
     'time_dist': 'Tempo mediano',
-    'stats': 'Estatísticas de trail','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo dia','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:',
+    'stats': 'Estatísticas de trail','finishers_year':'Finalistas por ano','top_clubs':'Melhores clubes','top_localities':'Localidades','toughest':'Provas mais duras (DNF %)','finish_hours':'Horas de chegada','loyalty':'Corredores fiéis (anos)','elev_profile':'Perfil altimétrico','status_changed':'Estado do trilho mudou','p_next':'Próximo dia','p_today':'Hoje','p_weekend':'Fim de semana','organized_by':'Organização:','price_unknown':'Preço não indicado','until':'até',
   },
   'de': trDe,
   'ru': trRu,
@@ -569,6 +569,15 @@ const _moName = {
 
 List<String> _wdFor() => _wdName[locale.value] ?? _wdName['en']!;
 List<String> _moFor() => _moName[locale.value] ?? _moName['en']!;
+
+/// "until 30 Nov" for a run of several days without one start time.
+String untilLabel(AtivaEvent e) =>
+    e.dateEnd.isNotEmpty && e.dateEnd.compareTo(e.date) > 0 ? '${t('until')} ${fmtDay(e.dateEnd)}' : '';
+
+/// The price, or for a cultural event an honest "price not listed" instead of
+/// silence, which read as free (Kirill, 24.10.2026).
+String priceOrUnknown(AtivaEvent e) =>
+    e.price.isNotEmpty ? priceLabel(e.price) : (e.isCulture ? t('price_unknown') : '');
 
 /// '2026-07-11' -> 'Sat, 11 Jul' / 'Sáb, 11 jul'
 /// '2026-10-25' -> '25 Oct' / '25 out'
@@ -1271,6 +1280,10 @@ class AtivaEvent {
   // empty on sport rows and on a cached feed from before.
   final String category;
   final Registration? registration;
+  // One or two lines from the event's own page on what it is about, and the
+  // last day of a run (exhibitions, festivals). Empty when the page had none.
+  final String about;
+  final String dateEnd;
 
   bool get isCulture => mode == 'festivals';
 
@@ -1285,7 +1298,9 @@ class AtivaEvent {
         price = j['price'] ?? '',
         organizer = j['organizer'] ?? '',
         category = j['category'] ?? '',
-        registration = j['registration'] is Map ? Registration.fromJson(Map<String, dynamic>.from(j['registration'])) : null;
+        registration = j['registration'] is Map ? Registration.fromJson(Map<String, dynamic>.from(j['registration'])) : null,
+        about = j['about'] ?? '',
+        dateEnd = j['date_end'] ?? '';
 }
 
 /// The list as last loaded, for the Events badge and the alerts.
@@ -1298,7 +1313,9 @@ Future<List<AtivaEvent>> fetchEvents() async {
       .map((e) => AtivaEvent.fromJson(e))
       .where((e) => e.date.compareTo(today) >= 0)
       .toList()
-    ..sort((a, b) => a.date.compareTo(b.date));
+    // Within a day, timed events first; an all-day exhibition or a row with
+    // no start time goes below the ones a reader can plan an evening around.
+    ..sort((a, b) => (a.date + (a.time.isEmpty ? '~' : a.time)).compareTo(b.date + (b.time.isEmpty ? '~' : b.time)));
   latestEvents = list;
   // Not awaited: the list is shown first, the alerts follow.
   syncEventAlerts(list);
@@ -1793,12 +1810,19 @@ void showEventActions(BuildContext context, AtivaEvent e, {bool fromOrienteering
                 dotJoin([
                   fmtDate(e.date),
                   if (e.time.isNotEmpty) e.time,
-                  if (e.price.isNotEmpty) priceLabel(e.price),
+                  if (untilLabel(e).isNotEmpty) untilLabel(e),
+                  if (priceOrUnknown(e).isNotEmpty) priceOrUnknown(e),
                   tidyPlace(e.location),
                   typeFor(e.mode, e.type),
                 ]),
                 style: TextStyle(fontSize: 13, color: ctx.cSubtle)),
           ),
+          // What it is: a line or two from the event's own page.
+          if (e.about.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text(e.about, style: TextStyle(fontSize: 14, height: 1.35, color: ctx.cBody)),
+            ),
           if (e.organizer.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -2938,8 +2962,8 @@ class _EventsPageState extends State<EventsPage> {
                           // which read exactly as before.
                           subtitle: dotJoin([
                             if (_forYou && whyFor(e).isNotEmpty) whyFor(e),
-                            if (e.time.isNotEmpty) e.time,
-                            if (e.price.isNotEmpty) priceLabel(e.price),
+                            if (e.time.isNotEmpty) e.time else if (untilLabel(e).isNotEmpty) untilLabel(e),
+                            if (priceOrUnknown(e).isNotEmpty) priceOrUnknown(e),
                             if (regLabel(e, short: true).isNotEmpty) regLabel(e, short: true),
                             if (g.distances.isNotEmpty) g.distances.join(', '),
                             tidyPlace(e.location),

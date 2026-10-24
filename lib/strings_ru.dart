@@ -124,6 +124,8 @@ const trRu = <String, String>{
   'open_calendar_hint': 'Страницы этого забега пока нет — вот календарь сезона',
   'open_site': 'Открыть сайт',
   'organized_by': 'Организатор',
+  'price_unknown': 'Цена не указана',
+  'until': 'до',
   'p_3mo': '3 мес.',
   'p_6mo': '6 мес.',
   'p_later': 'Позже',
