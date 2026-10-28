@@ -33,6 +33,9 @@ const _de = <String, String>{
   'Sea': 'Meer',
   'Live webcam': 'Live-Webcam',
   'Flight board': 'Flugtafel',
+  'Arrivals board': 'Ankunftstafel',
+  'Webcams': 'Webcams',
+  'Trails': 'Wege',
   'Airport': 'Flughafen',
   'Good morning': 'Guten Morgen', 'Good afternoon': 'Guten Tag', 'Good evening': 'Guten Abend', 'Good night': 'Gute Nacht',
   'in Funchal': 'in Funchal', 'levadas open': 'Levadas offen', 'sunrise': 'Sonnenaufgang', 'sunset': 'Sonnenuntergang',
@@ -58,6 +61,9 @@ const _ru = <String, String>{
   'Sea': 'Море',
   'Live webcam': 'Вебкамера',
   'Flight board': 'Табло рейсов',
+  'Arrivals board': 'Табло прилётов',
+  'Webcams': 'Веб-камеры',
+  'Trails': 'Маршруты',
   'Airport': 'Аэропорт',
   'Good morning': 'Доброе утро', 'Good afternoon': 'Добрый день', 'Good evening': 'Добрый вечер', 'Good night': 'Доброй ночи',
   'in Funchal': 'в Фуншале', 'levadas open': 'левад открыто', 'sunrise': 'восход', 'sunset': 'закат',
@@ -616,20 +622,41 @@ Color _scoreCol(BuildContext context, int s) =>
 /// the island.
 void showGoodDaySheet(BuildContext context, IslandNow now) {
   final scores = dayScores(now);
+  // A verdict with a place to check it goes there: views → the webcams,
+  // flights → the arrivals board, hiking → the trails (testers, 28.10.2026).
+  (String, VoidCallback)? go(String key) => switch (key) {
+        'views' => (_w('Webcams', 'Webcams'), () => openWebcams(context)),
+        'flights' => (_w('Arrivals board', 'Painel de chegadas'), () => openUrl(kArrivalsBoard)),
+        'hiking' => (_w('Trails', 'Percursos'), () => homeTab.value = kTabLevadas),
+        _ => null,
+      };
   _sheet(context, _w('Today is good for', 'Hoje está bom para'), [
     for (final s in scores)
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(children: [
-          Icon(s.icon, size: 22, color: _scoreCol(context, s.score)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${s.label} · ${s.score}/5', style: TextStyle(fontWeight: FontWeight.w600, color: context.cBody)),
-              Text(s.why, style: TextStyle(fontSize: 13, color: context.cSubtle)),
-            ]),
-          ),
-        ]),
+      InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: go(s.key) == null
+            ? null
+            : () {
+                Navigator.pop(context);
+                go(s.key)!.$2();
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(children: [
+            Icon(s.icon, size: 22, color: _scoreCol(context, s.score)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('${s.label} · ${s.score}/5', style: TextStyle(fontWeight: FontWeight.w600, color: context.cBody)),
+                Text(s.why, style: TextStyle(fontSize: 13, color: context.cSubtle)),
+              ]),
+            ),
+            if (go(s.key) != null) ...[
+              const SizedBox(width: 8),
+              Text('${go(s.key)!.$1} ›', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kGreen)),
+            ],
+          ]),
+        ),
       ),
   ]);
 }
@@ -690,7 +717,7 @@ void onIslandTap(BuildContext context, IslandNow n, String? what) {
                 : cross >= 20
                     ? '${_w('gusty', 'rajadas')} · ${_w('delays', 'atrasos')}'
                     : _w('calm for landings', 'calmo para aterrar')),
-      ], button: _w('Flight board', 'Painel de voos'), onButton: () => openUrl('https://www.flightradar24.com/airport/fnc'));
+      ], button: _w('Arrivals board', 'Painel de chegadas'), onButton: () => openUrl(kArrivalsBoard));
     case 'arieiro':
       _sheet(context, 'Pico do Arieiro', [
         if (n.summitT != null) _line(context, '⛰', '${n.summitT!.round()}° · ${_sky(n.summitCode)}'),

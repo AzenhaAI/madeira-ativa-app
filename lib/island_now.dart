@@ -20,10 +20,26 @@ import 'store.dart';
 
 // The card's own words in the reader's language: Portuguese inline, German
 // from this table (keyed by the English); anything missing stays English.
+/// The airport's own arrivals board (ANA): the flights, not a map of planes.
+const kArrivalsBoard = 'https://www.aeroportomadeira.pt/en/fnc/flights-destinations/find-flights/real-time-arrivals';
+
+/// Every ship the port expects, day by day, with passengers ashore (the site's page).
+void openShips(BuildContext context) => Navigator.of(context).push(MaterialPageRoute(
+    builder: (_) => WebPage(
+        title: _l('Ships in Funchal', 'Navios no Funchal'),
+        url: 'https://azenha.ai/ativa/ships?app=1&lang=${locale.value}')));
+
+/// All island webcams, by summit, north, south and east.
+void openWebcams(BuildContext context) => Navigator.of(context).push(MaterialPageRoute(
+    builder: (_) => WebPage(
+        title: locale.value == 'ru' ? 'Веб-камеры' : 'Webcams',
+        url: 'https://azenha.ai/ativa/webcams?app=1&lang=${locale.value}')));
+
 String _l(String en, String pt) =>
     locale.value == 'pt' ? pt : locale.value == 'de' ? (_deIsl[en] ?? en) : locale.value == 'ru' ? (_ruIsl[en] ?? en) : en;
 
 const _deIsl = <String, String>{
+  'Ships in Funchal': 'Schiffe in Funchal',
   'Airport: wind': 'Flughafen: Wind',
   'Best morning': 'Bester Morgen',
   'IPMA WARNINGS': 'IPMA-WARNUNGEN',
@@ -62,6 +78,7 @@ const _deIsl = <String, String>{
 
 // Russian, reached from the menu only (EN → PT → DE → RU); same keys.
 const _ruIsl = <String, String>{
+  'Ships in Funchal': 'Суда в Funchal',
   'Airport: wind': 'Аэропорт: ветер',
   'Best morning': 'Лучшее утро',
   'IPMA WARNINGS': 'ПРЕДУПРЕЖДЕНИЯ IPMA',
@@ -599,7 +616,7 @@ class _IslandNowCardState extends State<IslandNowCard> with WidgetsBindingObserv
       lines.add(line('✈',
           '${_l('Airport: wind', 'Aeroporto: vento')} ${n.airWind?.round()} $_kmh, ${_l('gusts', 'rajadas')} ${n.airGusts?.round()}, '
           '${_l('crosswind', 'cruzado')} $cross $_kmh — $verdict',
-          onTap: () => openUrl('https://www.flightradar24.com/airport/fnc')));
+          onTap: () => openUrl(kArrivalsBoard)));
     }
     if (n.shipsToday.isNotEmpty || n.shipsTomorrow.isNotEmpty) {
       // APRAM's berth says what a ship is: cruise ships at Terminal Sul, the
@@ -625,11 +642,11 @@ class _IslandNowCardState extends State<IslandNowCard> with WidgetsBindingObserv
             : '${_l('Tomorrow', 'Amanhã')}: ${n.shipsTomorrow.map(one).join(', ')}');
       }
       lines.add(line('🛳', parts.join(face ? ' · ' : '\n'),
-          onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
+          onTap: () => openShips(context)));
     } else if (n.nextShip != null) {
       final a = DateTime.parse('${(n.nextShip!['arrival'] as String).substring(0, 10)}T00:00:00Z');
       lines.add(line('🛳', '${_l('Next ship', 'Próximo navio')}: ${n.nextShip!['ship']} · ${_wd(a.weekday)} ${a.day}',
-          onTap: () => openUrl('https://apram.pt/movimento-navios?port=ptfnc')));
+          onTap: () => openShips(context)));
     }
     if (n.sunriseLine != null) {
       // Tapping it opens the summit webcam: the forecast says what should
