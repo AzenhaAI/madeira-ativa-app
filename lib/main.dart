@@ -18,6 +18,7 @@ import 'notify.dart';
 import 'roots_page.dart';
 import 'store.dart';
 import 'stories_data.dart';
+import 'vocab_page.dart';
 import 'strings_de.dart';
 import 'strings_ru.dart';
 import 'interests.dart';
@@ -4262,8 +4263,22 @@ class _NewsPageState extends State<NewsPage> {
       onRefresh: _load,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: shown.length + 1,
+        itemCount: shown.length + 2,
         itemBuilder: (_, i) {
+          // Madeiran words at the very bottom, as the NEW chips sit at the
+          // bottom of Home; Roots keeps the top (Kirill, 28.10.2026).
+          if (i == shown.length + 1) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: PromoBanner(
+                title: tr(kWordsTitle),
+                subtitle: tr(kWordsSub),
+                icon: Icons.record_voice_over_outlined,
+                margin: EdgeInsets.zero,
+                onTap: () => openWords(context),
+              ),
+            );
+          }
           if (i == 0) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,

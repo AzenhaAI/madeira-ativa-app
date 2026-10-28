@@ -18,6 +18,8 @@ import 'package:integration_test/integration_test.dart';
 
 import 'package:ativa/main.dart' as app;
 import 'package:ativa/orienteering.dart' show openOrienteering;
+import 'package:ativa/orienteering.dart' show tr;
+import 'package:ativa/vocab_page.dart' show openWords, kWordsTitle;
 
 const lang = String.fromEnvironment('TOUR_LANG', defaultValue: 'en');
 const mode = String.fromEnvironment('TOUR_MODE', defaultValue: 'video');
@@ -91,6 +93,37 @@ void main() {
     await wait(t, 6); // island card, events and news load
     debugPrint('TOUR:start');
 
+    if (mode == 'words') {
+      // Preview of the Madeiran words entry points (28.10.2026).
+      await tab(t, app.kTabNews);
+      await wait(t, 4);
+      for (var i = 0; i < 12; i++) {
+        await scroll(t, 2000, secs: .3);
+      }
+      await wait(t, 1.5);
+      await shotAndWait(t, 'w1-news-bottom');
+      app.openRoots(ctx(t));
+      await wait(t, 3);
+      final tile = find.text(tr(kWordsTitle));
+      try {
+        await t.scrollUntilVisible(tile, 600, scrollable: find.byType(Scrollable).last, maxScrolls: 200);
+        await scroll(t, 300, secs: .3);
+      } catch (_) {}
+      await wait(t, 1.5);
+      await shotAndWait(t, 'w2-roots');
+      await back(t);
+      openWords(ctx(t));
+      await wait(t, 5);
+      await shotAndWait(t, 'w3-words');
+      await t.enterText(find.byType(TextField).last, 'levada');
+      await t.testTextInput.receiveAction(TextInputAction.done);
+      FocusManager.instance.primaryFocus?.unfocus();
+      await wait(t, 2);
+      await scroll(t, 330, secs: .4);
+      await shotAndWait(t, 'w4-search');
+      debugPrint('TOUR:end');
+      return;
+    }
     if (mode == 'video') {
       await wait(t, 3); // Home
       await scroll(t, 500, secs: 1.6);
