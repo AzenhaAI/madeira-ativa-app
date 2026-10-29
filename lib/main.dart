@@ -1589,7 +1589,8 @@ class _HomePageState extends State<HomePage> {
           else
             for (final e in mix)
               _EventTile(
-                icon: _typeIcons[e.type] ?? Icons.event,
+                // Same icon as on the Events tab: a play has the theatre mask.
+                icon: e.isCulture ? cultureIcon(e.category) : _typeIcons[e.type] ?? Icons.event,
                 title: e.name,
                 subtitle: dotJoin(
                     [fmtDate(e.date), tidyPlace(e.location), typeFor(e.mode, e.type)]),
