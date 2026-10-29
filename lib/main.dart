@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import 'gazetteer.dart';
 import 'ask_review.dart';
@@ -3999,8 +4000,26 @@ class _WebPageState extends State<WebPage> {
     _c.loadRequest(Uri.parse(widget.url));
   }
 
+  static const _location = MethodChannel('ativa/location');
+
   WebViewController _makeController() {
-    return WebViewController()
+    final c = WebViewController();
+    // "I'm at a stop" on the bus page asks for the position. iOS's WebView
+    // asks the reader itself (Info.plist carries the reason); Android's needs
+    // the app to hold the permission and to answer for the page, which only
+    // our own site gets.
+    final p = c.platform;
+    if (p is AndroidWebViewController) {
+      p.setGeolocationPermissionsPromptCallbacks(
+        onShowPrompt: (req) async {
+          final host = Uri.tryParse(req.origin)?.host ?? '';
+          final ours = host == 'azenha.ai' || host.endsWith('.azenha.ai');
+          final ok = ours && (await _location.invokeMethod<bool>('request') ?? false);
+          return GeolocationPermissionsResponse(allow: ok, retain: false);
+        },
+      );
+    }
+    return c
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       // Only onPageFinished was handled, so a navigation that died — no network,
       // captive wifi, a 5xx — left the spinner turning forever, because iOS

@@ -64,6 +64,8 @@
 	<string>Madeira Ativa adds the events you choose to your calendar.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>Madeira Ativa adds the events you choose to your calendar.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>"I'm at a stop" on the bus page finds the bus stop nearest to you. Your location stays on the phone.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>The orienteering compass uses the motion sensors to show which way the phone points.</string>
 	<key>UIApplicationSceneManifest</key>

@@ -1,6 +1,8 @@
 package ai.azenha.ativa
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -11,9 +13,30 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    // "I'm at a stop" on the bus page: Android's WebView only hands the page a
+    // position once the app itself holds the location permission.
+    private var locationResult: MethodChannel.Result? = null
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         HeadingBridge.register(flutterEngine, applicationContext)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "ativa/location")
+            .setMethodCallHandler { call, result ->
+                if (call.method != "request") { result.notImplemented(); return@setMethodCallHandler }
+                val granted = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                if (granted) { result.success(true); return@setMethodCallHandler }
+                locationResult?.success(false)
+                locationResult = result
+                requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 7301)
+            }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != 7301) return
+        locationResult?.success(grantResults.any { it == PackageManager.PERMISSION_GRANTED })
+        locationResult = null
     }
 }
 
