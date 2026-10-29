@@ -1180,9 +1180,11 @@ class _HomeShellState extends State<HomeShell> {
       ),
       // Tab labels stop growing a little past the default size: at 130% text
       // "События" broke onto two lines and the icons jumped (tester, 22.10.2026).
-      bottomNavigationBar: MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-            textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.1)),
+      // Clamped from the bar's own context: a copy of the screen's MediaQuery
+      // put the status-bar inset back on top of the bar, 62 pt of white above
+      // the icons on an iPhone (tester, 29.10.2026).
+      bottomNavigationBar: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.1,
         child: NavigationBar(
           selectedIndex: _tab,
           onDestinationSelected: _goTo,
@@ -3990,6 +3992,14 @@ class _WebPageState extends State<WebPage> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  // The WebView paints black until the page draws: the app's own ground
+  // instead, in either theme.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _c.setBackgroundColor(context.dark ? kDarkBg : kCream);
   }
 
   void _load() {

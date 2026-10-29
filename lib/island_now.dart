@@ -63,6 +63,8 @@ const _deIsl = <String, String>{
   'cruise': 'Kreuzfahrtschiff',
   'extreme': 'extrem',
   'ferry / cargo': 'Fähre / Fracht',
+  'tall ship': 'Großsegler',
+  'expedition ship': 'Expeditionsschiff',
   'from': 'ab',
   'gusts': 'Böen',
   'gusty — delays possible': 'böig — Verspätungen möglich',
@@ -102,6 +104,8 @@ const _ruIsl = <String, String>{
   'cruise': 'круизный лайнер',
   'extreme': 'экстремальный',
   'ferry / cargo': 'паром / грузовое судно',
+  'tall ship': 'парусник',
+  'expedition ship': 'экспедиционное судно',
   'from': 'с',
   'gusts': 'порывы',
   'gusty — delays possible': 'порывисто — возможны задержки',
@@ -331,6 +335,9 @@ class IslandNow {
   String? tide;
   double? uv;
   Map<String, dynamic>? nextShip;
+  // ship_capacity.json: what a ship is, ahead of its berth (a tall ship or a
+  // small cruise ship also ties up at Terminal Norte).
+  Map<String, dynamic> shipKinds = {};
   String? sunriseLine;
   List<IpmaWarning> warnings = [];
 }
@@ -415,6 +422,10 @@ Future<IslandNow> fetchIslandNow() async {
     () async {
       try {
         final d = await cachedJson('https://azenha.ai/ativa/cruise_calls.json');
+        try {
+          final cap = await cachedJson('https://azenha.ai/ativa/ship_capacity.json');
+          n.shipKinds = Map<String, dynamic>.from((cap['ships'] ?? {}) as Map);
+        } catch (_) {}
         final today = madeiraNow().toIso8601String().substring(0, 10);
         final week = madeiraNow().add(const Duration(days: 7)).toIso8601String().substring(0, 10);
         final calls = (d['calls'] as List)
@@ -423,19 +434,24 @@ Future<IslandNow> fetchIslandNow() async {
             .toList();
         // One line per ship: APRAM lists a stay that spans midnight as two
         // movements, which read as "SANTA MARIA MANUELA, SANTA MARIA MANUELA".
+        // Each day counts every ship in port that day; a ship that has
+        // already sailed today is no longer "today".
         final seen = <String>{};
+        final nowIso = madeiraNow().toIso8601String().substring(0, 16);
         n.shipsToday = calls
             .where((c) =>
                 (c['arrival'] as String).substring(0, 10).compareTo(today) <= 0 &&
-                (c['departure'] as String).substring(0, 10).compareTo(today) >= 0)
+                (c['departure'] as String).substring(0, 10).compareTo(today) >= 0 &&
+                (c['departure'] as String).substring(0, 16).compareTo(nowIso) > 0)
             .where((c) => seen.add((c['ship'] as String).toUpperCase()))
             .toList();
+        final seenTmr = <String>{};
         final tmr = madeiraNow().add(const Duration(days: 1)).toIso8601String().substring(0, 10);
         n.shipsTomorrow = calls
             .where((c) =>
                 (c['arrival'] as String).substring(0, 10).compareTo(tmr) <= 0 &&
                 (c['departure'] as String).substring(0, 10).compareTo(tmr) >= 0)
-            .where((c) => seen.add((c['ship'] as String).toUpperCase()))
+            .where((c) => seenTmr.add((c['ship'] as String).toUpperCase()))
             .toList();
         final next = calls.where((c) {
           final a = (c['arrival'] as String).substring(0, 10);
@@ -623,6 +639,10 @@ class _IslandNowCardState extends State<IslandNowCard> with WidgetsBindingObserv
       // Porto Santo ferry and freight at Norte, cement carriers at Cimenteiro —
       // "CEMENT TRADER" alone read like a cruise ship.
       String kind(Map c) {
+        final k = (n.shipKinds[(c['ship'] as String).toUpperCase()] as Map?)?['kind'];
+        if (k == 'sail') return _l('tall ship', 'veleiro');
+        if (k == 'expedition') return _l('expedition ship', 'navio de expedição');
+        if (k != null) return _l('cruise', 'cruzeiro');
         final b = (c['berth'] ?? '') as String;
         if (b.contains('Sul')) return _l('cruise', 'cruzeiro');
         if (b.contains('Cimenteiro')) return _l('cement carrier', 'cimenteiro');
