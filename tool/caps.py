@@ -15,7 +15,7 @@ FRAMES = ['1-home', '5-events', '4b-busroute', '2-levadas', '3b-trail-profile', 
 CAP = {
  'en': [("The island at a glance", "Weather where it is, and what today is good for"),
         ("Races and festas", "With registration alerts for what you follow"),
-        ("Buses by the clock", "Door to door, with changes and real departure times"),
+        ("Buses by the clock", "Door to door, with changes and real times"),
         ("44 levadas, today", "Open, partly open or closed, from the official feed"),
         ("Know the climb", "Elevation, weather on the trail, nearby walks"),
         ("Orienteering, explained", "Every map symbol, control descriptions, a compass"),

@@ -5,7 +5,7 @@
 # store/screenshots/tour-<lang>); video: records the walk to out_dir/rv_<lang>.mov.
 set -u
 L=$1; M=$2
-U=${DEV:-A5C3947B-0475-4523-BC7A-9717404FF00F}  # DEV=<udid> for the iPad
+U=${DEV:-0A7494AE-C5F7-4FAD-8270-511624604128}  # "Ativa Store iPhone 6.9", a clean simulator; DEV=A1C260DC-8F2F-4332-8692-49738A4E6779 for "Ativa Store iPad 13"
 APP=$(cd "$(dirname "$0")/.." && pwd)
 OUT=${3:-$APP/store/screenshots/tour-$L}; mkdir -p "$OUT"
 T=$(mktemp -d); ACK=$T/ack; mkdir -p "$ACK"; LOG=$T/log.txt

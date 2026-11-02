@@ -208,9 +208,11 @@ void main() {
         await Scrollable.ensureVisible(t.element(elev.first), alignment: .02);
       } catch (_) {}
       // ensureVisible stops short while the glossary above is still laying out.
-      // Under the app bar either way: the heading about 150 px from the top.
-      final dy = t.getTopLeft(elev.first).dy - 150;
-      if (dy.abs() > 20) await scroll(t, dy, secs: .6);
+      // The heading just under the app bar, whichever way the page settled.
+      final bar = find.byType(AppBar);
+      final under = bar.evaluate().isEmpty ? 120.0 : t.getBottomLeft(bar.last).dy;
+      final dy = t.getTopLeft(elev.first).dy - under - 12;
+      if (dy.abs() > 8) await scroll(t, dy, secs: .6);
       await wait(t, 2);
       await shotAndWait(t, '3b-trail-profile');
       await back(t);
