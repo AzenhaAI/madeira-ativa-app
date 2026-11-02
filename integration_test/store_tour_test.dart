@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ativa/main.dart' as app;
 import 'package:ativa/orienteering.dart' show openOrienteering;
@@ -87,6 +88,9 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('store tour', (t) async {
+    // A debug build shows iOS's rating prompt every time it is asked for, and
+    // it stays over every screen after the third trail page.
+    (await SharedPreferences.getInstance()).setBool('review_asked', true);
     app.main();
     await wait(t, 4);
     app.setLocale(lang);
@@ -187,8 +191,8 @@ void main() {
       Navigator.of(ctx(t)).push(MaterialPageRoute(
           builder: (_) => app.WebPage(
               title: app.t('bus_one'),
-              url: 'https://azenha.ai/ativa/bus?app=1&lang=$lang&from=Funchal&to=Santana')));
-      await wait(t, 12);
+              url: 'https://azenha.ai/ativa/bus?app=1&lang=$lang&from=Funchal&to=Santana&at=08:30')));
+      await wait(t, 20);
       await shotAndWait(t, '4b-busroute');
       await back(t);
 
@@ -197,7 +201,16 @@ void main() {
       await shotAndWait(t, '2-levadas');
       await tapIf(t, find.text('Vereda do Pico Ruivo'));
       await wait(t, 4);
-      await scroll(t, 560, secs: 1);
+      // The profile heading at the top, wherever new sections push it.
+      final elev = find.text(app.t('elev_profile'));
+      try {
+        await t.scrollUntilVisible(elev, 300, scrollable: find.byType(Scrollable).last, maxScrolls: 30);
+        await Scrollable.ensureVisible(t.element(elev.first), alignment: .02);
+      } catch (_) {}
+      // ensureVisible stops short while the glossary above is still laying out.
+      // Under the app bar either way: the heading about 150 px from the top.
+      final dy = t.getTopLeft(elev.first).dy - 150;
+      if (dy.abs() > 20) await scroll(t, dy, secs: .6);
       await wait(t, 2);
       await shotAndWait(t, '3b-trail-profile');
       await back(t);
@@ -210,17 +223,22 @@ void main() {
       await back(t);
 
       app.openTrailStats(ctx(t));
-      await wait(t, 12);
+      await wait(t, 25);
       await shotAndWait(t, '9-stats');
       await back(t);
 
       await tab(t, app.kTabAsk);
-      await wait(t, 10);
+      await wait(t, 16);
       await shotAndWait(t, '6-ask');
 
       await tab(t, app.kTabNews);
       await wait(t, 4);
       await shotAndWait(t, '7-news');
+
+      openWords(ctx(t));
+      await wait(t, 6);
+      await shotAndWait(t, '10-words');
+      await back(t);
     }
     debugPrint('TOUR:end');
   });

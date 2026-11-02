@@ -163,7 +163,7 @@ const _tr = {
     'descent': 'Descent', 'marking': 'Waymark', 'route_type': 'Route',
     'roundtrip': 'Round trip', 'one_way': 'Point to point',
     'on_foot': 'On foot', 'altitude': 'Altitude', 'steepest': 'Steepest climb',
-    'difficulty': 'Difficulty', 'easy': 'Easy', 'moderate': 'Moderate', 'hard': 'Hard',
+    'difficulty': 'Difficulty', 'easy': 'Easy', 'moderate': 'Moderate', 'hard': 'Difficult',
     'time_note': 'Estimate — 12 min/km, plus climb and descent',
     'website': 'Website',
     'telegram': 'Telegram bot',

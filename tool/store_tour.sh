@@ -3,18 +3,21 @@
 # Runs integration_test/store_tour_test.dart on the iPhone 17 Pro Max simulator.
 # shots/words: a screenshot per "SHOT:<name>" line into out_dir (default
 # store/screenshots/tour-<lang>); video: records the walk to out_dir/rv_<lang>.mov.
-# For words, serve the site locally first (python3 -m http.server 8765 in the
-# azenha worktree) so the app reads the unpublished dictionary.
 set -u
 L=$1; M=$2
-U=A5C3947B-0475-4523-BC7A-9717404FF00F
+U=${DEV:-A5C3947B-0475-4523-BC7A-9717404FF00F}  # DEV=<udid> for the iPad
 APP=$(cd "$(dirname "$0")/.." && pwd)
 OUT=${3:-$APP/store/screenshots/tour-$L}; mkdir -p "$OUT"
 T=$(mktemp -d); ACK=$T/ack; mkdir -p "$ACK"; LOG=$T/log.txt
 cd "$APP"
+# Another app left in front puts a "◂ <app>" back link in the status bar.
+for b in $(xcrun simctl listapps $U 2>/dev/null | grep -o 'CFBundleIdentifier = "[^"]*"' | cut -d'"' -f2 | grep -v '^com\.apple'); do
+  xcrun simctl terminate $U "$b" >/dev/null 2>&1
+done
+xcrun simctl status_bar $U override --time 09:41 --batteryState charged --batteryLevel 100 \
+  --cellularBars 4 --wifiBars 3 --dataNetwork wifi
 flutter test integration_test/store_tour_test.dart -d $U --dart-define=SHOT_TIME=11:20 \
-  --dart-define=TOUR_LANG=$L --dart-define=TOUR_MODE=$M --dart-define=TOUR_ACK=$ACK \
-  --dart-define=WORDS_BASE=http://localhost:8765/ativa/words > "$LOG" 2>&1 &
+  --dart-define=TOUR_LANG=$L --dart-define=TOUR_MODE=$M --dart-define=TOUR_ACK=$ACK > "$LOG" 2>&1 &
 FP=$!; done_shots=""; REC=""
 while kill -0 $FP 2>/dev/null; do
   if [ "$M" != video ]; then
