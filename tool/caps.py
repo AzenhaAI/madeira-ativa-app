@@ -110,10 +110,10 @@ def make(shot_path, title, sub, W, H, out):
 
 # The "Without a car: buses to the trails" custom product page: the planner,
 # the network map, then the trails and the island it gets you to.
-MAP_CAP = {'en': ("Every line on the map", "Tap a stop for its lines and next buses"),
-           'pt': ("Todas as linhas no mapa", "Toque numa paragem: linhas e próximos autocarros"),
-           'de': ("Jede Linie auf der Karte", "Tipp auf eine Haltestelle: Linien und nächste Busse"),
-           'ru': ("Все линии на карте", "Нажмите на остановку: линии и ближайшие автобусы")}
+MAP_CAP = {'en': ("Bus stops on the map", "Tap a stop for its lines and next buses"),
+           'pt': ("Paragens no mapa", "Toque numa paragem: linhas e próximos autocarros"),
+           'de': ("Haltestellen auf der Karte", "Tipp auf eine Haltestelle: Linien und nächste Busse"),
+           'ru': ("Остановки на карте", "Нажмите на остановку: линии и ближайшие автобусы")}
 
 
 def cpp_bus():
