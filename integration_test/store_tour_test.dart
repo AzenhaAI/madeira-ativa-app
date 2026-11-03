@@ -84,6 +84,23 @@ Future<void> until(WidgetTester t, Finder f, {double max = 20}) async {
   }
 }
 
+/// The trail page with its elevation profile heading just under the app bar.
+/// A jump, not a drag: a drag flings on and the heading ends up under the bar.
+Future<void> profileInView(WidgetTester t) async {
+  final elev = find.text(app.t('elev_profile'));
+  try {
+    await t.scrollUntilVisible(elev, 300, scrollable: find.byType(Scrollable).last, maxScrolls: 30);
+  } catch (_) {}
+  await wait(t, 1.5);
+  if (elev.evaluate().isEmpty) return;
+  final pos = t.state<ScrollableState>(find.ancestor(of: elev.first, matching: find.byType(Scrollable)).first).position;
+  final bar = find.byType(AppBar);
+  final under = bar.evaluate().isEmpty ? 120.0 : t.getBottomLeft(bar.last).dy;
+  final dy = t.getTopLeft(elev.first).dy - under - 14;
+  pos.jumpTo((pos.pixels + dy).clamp(pos.minScrollExtent, pos.maxScrollExtent));
+  await wait(t, 2);
+}
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -125,6 +142,25 @@ void main() {
       await wait(t, 2);
       await scroll(t, 330, secs: .4);
       await shotAndWait(t, 'w4-search');
+      debugPrint('TOUR:end');
+      return;
+    }
+    if (mode == 'stats') {
+      // Only the statistics frame: the heaviest page, the one that times out.
+      app.openTrailStats(ctx(t));
+      await wait(t, 35);
+      await shotAndWait(t, '9-stats');
+      debugPrint('TOUR:end');
+      return;
+    }
+    if (mode == 'profile') {
+      // Only the trail-profile frame, to redo it without the whole tour.
+      await tab(t, app.kTabLevadas);
+      await wait(t, 3);
+      await tapIf(t, find.text('Vereda do Pico Ruivo'));
+      await wait(t, 4);
+      await profileInView(t);
+      await shotAndWait(t, '3b-trail-profile');
       debugPrint('TOUR:end');
       return;
     }
@@ -201,19 +237,7 @@ void main() {
       await shotAndWait(t, '2-levadas');
       await tapIf(t, find.text('Vereda do Pico Ruivo'));
       await wait(t, 4);
-      // The profile heading at the top, wherever new sections push it.
-      final elev = find.text(app.t('elev_profile'));
-      try {
-        await t.scrollUntilVisible(elev, 300, scrollable: find.byType(Scrollable).last, maxScrolls: 30);
-        await Scrollable.ensureVisible(t.element(elev.first), alignment: .02);
-      } catch (_) {}
-      // ensureVisible stops short while the glossary above is still laying out.
-      // The heading just under the app bar, whichever way the page settled.
-      final bar = find.byType(AppBar);
-      final under = bar.evaluate().isEmpty ? 120.0 : t.getBottomLeft(bar.last).dy;
-      final dy = t.getTopLeft(elev.first).dy - under - 12;
-      if (dy.abs() > 8) await scroll(t, dy, secs: .6);
-      await wait(t, 2);
+      await profileInView(t);
       await shotAndWait(t, '3b-trail-profile');
       await back(t);
 

@@ -6,7 +6,7 @@ day photo of the island faded in, the app icon and a title on the left.
 Usage (from anywhere; paths are relative to the app repo this file lives in):
 
   python3 tool/fan.py [--set v195b-6.9] [--version 1.9.5-64] [--langs en,pt,de,ru]
-                      [--text orient|ask] [--holes DIR] [--holes-only]
+                      [--text orient|ask|bus] [--holes DIR] [--holes-only]
 
 Inputs:
   store/screenshots/<set>-<lang>/5-events.png, 1-home.png, 4b-busroute.png
@@ -53,6 +53,13 @@ TXT_ORIENT = {
   'pt': ('A Madeira ao ar livre,', 'hoje', 'A ilha num relance · levadas · autocarros · provas e festas · orientação'),
   'de': ('Madeira draußen,', 'heute', 'Die Insel auf einen Blick · Levadas · Busse der Insel · Läufe und Feste · Orientierungslauf'),
   'ru': ('Мадейра,', 'на воздухе, сегодня', 'Остров с первого взгляда · левады · автобусы · забеги и праздники · ориентирование'),
+}
+# 1.9.6: the buses run by the clock now
+TXT_BUS = {
+  'en': ('Madeira, outdoors,', 'today', 'The island at a glance · levadas · buses by the clock · races and festas · orienteering'),
+  'pt': ('A Madeira ao ar livre,', 'hoje', 'A ilha num relance · levadas · autocarros com horas · provas e festas · orientação'),
+  'de': ('Madeira draußen,', 'heute', 'Die Insel auf einen Blick · Levadas · Busse nach Fahrplan · Läufe und Feste · Orientierungslauf'),
+  'ru': ('Мадейра,', 'на воздухе, сегодня', 'Остров с первого взгляда · левады · автобусы по расписанию · забеги и праздники · ориентирование'),
 }
 TXT = TXT_ORIENT
 
@@ -197,12 +204,12 @@ if __name__ == '__main__':
     ap.add_argument('--set', default=SET, help='screenshot set prefix under store/screenshots (default %(default)s)')
     ap.add_argument('--version', default='1.9.5-64', help='output folders store/APPSTORE-<v>, store/PLAY-<v>/promo')
     ap.add_argument('--langs', default='en,pt,de,ru')
-    ap.add_argument('--text', choices=['orient', 'ask'], default='orient', help='subtitle variant')
+    ap.add_argument('--text', choices=['orient', 'ask', 'bus'], default='orient', help='subtitle variant')
     ap.add_argument('--holes', metavar='DIR', help='also write video backgrounds into DIR')
     ap.add_argument('--holes-only', action='store_true', help='only the video backgrounds (needs --holes)')
     a = ap.parse_args()
     SET = a.set
-    TXT = TXT_ORIENT if a.text == 'orient' else TXT_ASK
+    TXT = {'orient': TXT_ORIENT, 'ask': TXT_ASK, 'bus': TXT_BUS}[a.text]
     A, P = f'{ROOT}/APPSTORE-{a.version}', f'{ROOT}/PLAY-{a.version}/promo'
     if a.holes_only and not a.holes: ap.error('--holes-only needs --holes DIR')
     if not a.holes_only: os.makedirs(A, exist_ok=True); os.makedirs(P, exist_ok=True)
