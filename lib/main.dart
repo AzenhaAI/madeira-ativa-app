@@ -623,6 +623,10 @@ const _typeIcons = {
   'triathlon': Icons.timer,
   'orienteering': Icons.explore,
   'festival': Icons.celebration,
+  // Watchlist items carry the calendar shelf, not an event type.
+  'road': Icons.directions_run,
+  'swim': Icons.pool,
+  'festivals': Icons.celebration,
 };
 
 class HomePage extends StatefulWidget {
