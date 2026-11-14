@@ -67,3 +67,7 @@ store/ios/README.txt
 .dev.vars
 *.pem
 *.key
+
+# Store material (screenshots, listing notes, builds) stays on the Mac, out of the
+# public repo. The few store files tracked earlier stay tracked.
+/store/
